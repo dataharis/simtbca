@@ -68,21 +68,26 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: rgba(0, 180, 219, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             color: var(--teal-light);
-            text-decoration: none;
+            border: 1px solid var(--teal-dark);
             padding: 10px 15px;
             border-radius: 10px;
-            border: 1px solid var(--teal-dark);
-            font-weight: 500;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
         }
 
         .home-btn:hover {
             background: var(--teal-light);
             color: var(--black-main);
             box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
         }
 
         .college-info {
@@ -99,8 +104,6 @@
             -webkit-text-fill-color: transparent;
             font-weight: 700;
             letter-spacing: 2px;
-            line-height: 1.1;
-            margin-bottom: 5px;
         }
 
         .instructor-badge {
@@ -165,6 +168,26 @@
             display: flex;
             flex-direction: column;
             gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
         }
 
         .question-card {
@@ -294,6 +317,386 @@
     <aside class="sidebar">
         <!-- Home Button -->
         <a href="index.html" class="home-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 1
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARISH SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 2: Segments of the Environment</h2>
+            <p>Man-Environment Relationship: Determinism vs. Possibilism</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What are the four major segments of the environment?",
+            qH: "पर्यावरण के चार प्रमुख खंड कौन से हैं?",
+            options: [
+                { e: "Troposphere, Stratosphere, Mesosphere, Exosphere", h: "क्षोभमंडल, समताप मंडल, मध्यमंडल, बहिर्मंडल", correct: false },
+                { e: "Lithosphere, Hydrosphere, Atmosphere, Biosphere", h: "स्थलमंडल, जलमंडल, वायुमंडल, जीवमंडल", correct: true },
+                { e: "Biotic, Abiotic, Organic, Inorganic", h: "जैविक, अजैविक, कार्बनिक, अकार्बनिक", correct: false },
+                { e: "Land, Water, Fire, Sky", h: "भूमि, जल, अग्नि, आकाश", correct: false }
+            ],
+            expE: "The Earth's environment is categorized into these four interconnected physical spheres.",
+            expH: "पृथ्वी के पर्यावरण को इन चार परस्पर जुड़े भौतिक क्षेत्रों में वर्गीकृत किया गया है।"
+        },
+        {
+            qE: "The solid outermost layer of the Earth, consisting of rocks, soil, and minerals, is called the:",
+            qH: "पृथ्वी की ठोस सबसे बाहरी परत, जिसमें चट्टानें, मिट्टी और खनिज शामिल हैं, कहलाती है:",
+            options: [
+                { e: "Lithosphere", h: "स्थलमंडल", correct: true },
+                { e: "Biosphere", h: "जीवमंडल", correct: false },
+                { e: "Atmosphere", h: "वायुमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false }
+            ],
+            expE: "Lithosphere provides the physical platform for terrestrial life, agriculture, and human settlements.",
+            expH: "स्थलमंडल स्थलीय जीवन, कृषि और मानव बस्तियों के लिए भौतिक मंच प्रदान करता है।"
+        },
+        {
+            qE: "Which segment encompasses all water bodies, including oceans, rivers, and groundwater?",
+            qH: "किस खंड में महासागरों, नदियों और भूजल सहित सभी जल निकाय शामिल हैं?",
+            options: [
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Atmosphere", h: "वायुमंडल", correct: false },
+                { e: "Biosphere", h: "जीवमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: true }
+            ],
+            expE: "The hydrosphere contains all the solid, liquid, and gaseous water on Earth.",
+            expH: "जलमंडल में पृथ्वी पर मौजूद सभी ठोस, तरल और गैसीय जल शामिल हैं।"
+        },
+        {
+            qE: "The 'Biosphere' can be best described as:",
+            qH: "'जीवमंडल' को सबसे अच्छे तरीके से वर्णित किया जा सकता है:",
+            options: [
+                { e: "The deepest part of the ocean", h: "समुद्र का सबसे गहरा हिस्सा", correct: false },
+                { e: "The zone where land, water, and air interact to support life", h: "वह क्षेत्र जहाँ भूमि, जल और वायु जीवन का समर्थन करने के लिए परस्पर क्रिया करते हैं", correct: true },
+                { e: "The uppermost layer of the atmosphere", h: "वायुमंडल की सबसे ऊपरी परत", correct: false },
+                { e: "An artificial environment created by humans", h: "मनुष्यों द्वारा निर्मित एक कृत्रिम वातावरण", correct: false }
+            ],
+            expE: "It is the narrow life-supporting zone where the other three spheres overlap.",
+            expH: "यह जीवन का समर्थन करने वाला संकीर्ण क्षेत्र है जहां अन्य तीन क्षेत्र ओवरलैप करते हैं।"
+        },
+        {
+            qE: "The theory that the physical environment strictly dictates human culture, behavior, and social development is known as:",
+            qH: "यह सिद्धांत कि भौतिक पर्यावरण मानव संस्कृति, व्यवहार और सामाजिक विकास को सख्ती से तय करता है, कहलाता है:",
+            options: [
+                { e: "Environmental Possibilism", h: "पर्यावरणीय संभववाद", correct: false },
+                { e: "Environmental Determinism", h: "पर्यावरणीय नियतिवाद", correct: true },
+                { e: "Cultural Ecology", h: "सांस्कृतिक पारिस्थितिकी", correct: false },
+                { e: "Eco-feminism", h: "इको-फेमिनिज्म", correct: false }
+            ],
+            expE: "Determinism views nature as the active force and humans as passive agents responding to it.",
+            expH: "नियतिवाद प्रकृति को सक्रिय शक्ति के रूप में और मनुष्यों को इसके प्रति प्रतिक्रिया करने वाले निष्क्रिय एजेंटों के रूप में देखता है।"
+        },
+        {
+            qE: "According to Environmental Possibilism, the environment offers:",
+            qH: "पर्यावरणीय संभववाद (Possibilism) के अनुसार, पर्यावरण क्या प्रदान करता है?",
+            options: [
+                { e: "Strict boundaries that cannot be crossed", h: "सख्त सीमाएं जिन्हें पार नहीं किया जा सकता", correct: false },
+                { e: "Opportunities and choices for humans to select and modify", h: "मनुष्यों को चुनने और संशोधित करने के अवसर और विकल्प", correct: true },
+                { e: "Predetermined paths for human evolution", h: "मानव विकास के लिए पूर्व निर्धारित मार्ग", correct: false },
+                { e: "Total control over human intelligence", h: "मानव बुद्धि पर पूर्ण नियंत्रण", correct: false }
+            ],
+            expE: "Possibilism suggests humans have the capability to choose from various possibilities offered by nature.",
+            expH: "संभववाद बताता है कि मनुष्यों में प्रकृति द्वारा दी गई विभिन्न संभावनाओं में से चुनने की क्षमता है।"
+        },
+        {
+            qE: "Developing advanced irrigation systems to grow crops in a harsh desert is a practical example of:",
+            qH: "कठोर रेगिस्तान में फसल उगाने के लिए उन्नत सिंचाई प्रणाली विकसित करना किसका व्यावहारिक उदाहरण है?",
+            options: [
+                { e: "Determinism", h: "नियतिवाद", correct: false },
+                { e: "Neo-determinism", h: "नव-नियतिवाद", correct: false },
+                { e: "Possibilism", h: "संभववाद", correct: true },
+                { e: "Nihilism", h: "शून्यवाद", correct: false }
+            ],
+            expE: "By overcoming the natural limit (lack of water) using technology, humans demonstrate Possibilism.",
+            expH: "प्रौद्योगिकी का उपयोग करके प्राकृतिक सीमा (पानी की कमी) को पार करके, मनुष्य संभववाद का प्रदर्शन करते हैं।"
+        },
+        {
+            qE: "The concept of 'Stop-and-Go Determinism' (Neo-determinism), which balances both extremes, was introduced by:",
+            qH: "'स्टॉप-एंड-गो डिटरमिनिज्म' (नव-नियतिवाद) की अवधारणा, जो दोनों चरम सीमाओं को संतुलित करती है, किसके द्वारा पेश की गई थी?",
+            options: [
+                { e: "Charles Darwin", h: "चार्ल्स डार्विन", correct: false },
+                { e: "Carl Ritter", h: "कार्ल रिटर", correct: false },
+                { e: "Griffith Taylor", h: "ग्रिफिथ टेलर", correct: true },
+                { e: "Vidal de La Blache", h: "विडाल डे ला ब्लाचे", correct: false }
+            ],
+            expE: "Griffith Taylor argued that humans can accelerate, slow, or stop their progress, but cannot completely ignore nature's 'traffic signals'.",
+            expH: "ग्रिफिथ टेलर ने तर्क दिया कि मनुष्य अपनी प्रगति को तेज, धीमा या रोक सकते हैं, लेकिन प्रकृति के 'ट्रैफिक सिग्नल' को पूरी तरह से नजरअंदाज नहीं कर सकते।"
+        },
+        {
+            qE: "In Environmental Determinism, early human societies were viewed primarily as:",
+            qH: "पर्यावरणीय नियतिवाद में, प्रारंभिक मानव समाजों को मुख्य रूप से किस रूप में देखा जाता था?",
+            options: [
+                { e: "Passive agents controlled by natural forces", h: "प्राकृतिक शक्तियों द्वारा नियंत्रित निष्क्रिय एजेंट", correct: true },
+                { e: "Masters of their environment", h: "अपने पर्यावरण के स्वामी", correct: false },
+                { e: "Creators of synthetic ecosystems", h: "सिंथेटिक पारिस्थितिक तंत्र के निर्माता", correct: false },
+                { e: "Independent of climatic changes", h: "जलवायु परिवर्तनों से स्वतंत्र", correct: false }
+            ],
+            expE: "Early geographers believed climate and geography solely shaped human traits and societal success.",
+            expH: "प्रारंभिक भूगोलवेत्ताओं का मानना था कि जलवायु और भूगोल ही मानव लक्षणों और सामाजिक सफलता को आकार देते हैं।"
+        },
+        {
+            qE: "The gaseous layer extending up to several hundred kilometers above the Earth's surface is the:",
+            qH: "पृथ्वी की सतह से कई सौ किलोमीटर ऊपर तक फैली गैसीय परत है:",
+            options: [
+                { e: "Atmosphere", h: "वायुमंडल", correct: true },
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false },
+                { e: "Cryosphere", h: "क्रायोस्फीयर", correct: false }
+            ],
+            expE: "It is composed mainly of Nitrogen (78%) and Oxygen (21%) and protects the Earth from harmful solar radiation.",
+            expH: "यह मुख्य रूप से नाइट्रोजन (78%) और ऑक्सीजन (21%) से बना है और पृथ्वी को हानिकारक सौर विकिरण से बचाता है।"
+        },
+        {
+            qE: "Which environmental sphere provides humans directly with minerals and fossil fuels?",
+            qH: "कौन सा पर्यावरणीय क्षेत्र मनुष्यों को सीधे तौर पर खनिज और जीवाश्म ईंधन प्रदान करता है?",
+            options: [
+                { e: "Atmosphere", h: "वायुमंडल", correct: false },
+                { e: "Lithosphere", h: "स्थलमंडल", correct: true },
+                { e: "Biosphere", h: "जीवमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false }
+            ],
+            expE: "Minerals, coal, petroleum, and natural gas are extracted from the Earth's crust (Lithosphere).",
+            expH: "खनिज, कोयला, पेट्रोलियम और प्राकृतिक गैस पृथ्वी की पपड़ी (स्थलमंडल) से निकाले जाते हैं।"
+        },
+        {
+            qE: "The interaction between the Hydrosphere and Atmosphere is most clearly visible in the process of:",
+            qH: "जलमंडल और वायुमंडल के बीच की बातचीत किस प्रक्रिया में सबसे स्पष्ट रूप से दिखाई देती है?",
+            options: [
+                { e: "Volcanic Eruption", h: "ज्वालामुखी विस्फोट", correct: false },
+                { e: "Earthquakes", h: "भूकंप", correct: false },
+                { e: "The Water Cycle (Evaporation & Precipitation)", h: "जल चक्र (वाष्पीकरण और वर्षा)", correct: true },
+                { e: "Photosynthesis", h: "प्रकाश संश्लेषण", correct: false }
+            ],
+            expE: "Water evaporates from the hydrosphere into the atmosphere, condenses, and falls back as rain.",
+            expH: "जलमंडल से पानी वाष्पित होकर वायुमंडल में जाता है, संघनित होता है, और बारिश के रूप में वापस गिरता है।"
+        },
+        {
+            qE: "The phrase 'Nature sets the stage, but man acts upon it' aligns best with which philosophy?",
+            qH: "यह मुहावरा कि 'प्रकृति मंच तैयार करती है, लेकिन मनुष्य उस पर अभिनय करता है' किस दर्शन के साथ सबसे अच्छा मेल खाता है?",
+            options: [
+                { e: "Strict Determinism", h: "सख्त नियतिवाद", correct: false },
+                { e: "Environmental Possibilism", h: "पर्यावरणीय संभववाद", correct: true },
+                { e: "Deep Ecology", h: "गहन पारिस्थितिकी", correct: false },
+                { e: "Anthropocentrism", h: "मानवकेन्द्रवाद", correct: false }
+            ],
+            expE: "It implies that while nature provides a framework, human ingenuity determines the outcome.",
+            expH: "इसका तात्पर्य यह है कि यद्यपि प्रकृति एक ढांचा प्रदान करती है, लेकिन मानव की सरलता परिणाम निर्धारित करती है।"
+        },
+        {
+            qE: "What is the primary cause of rapid, human-induced changes in the Biosphere today?",
+            qH: "आज जीवमंडल में तेजी से मानव-प्रेरित परिवर्तनों का प्राथमिक कारण क्या है?",
+            options: [
+                { e: "Industrialization and Technological Advancement", h: "औद्योगीकरण और तकनीकी प्रगति", correct: true },
+                { e: "Natural evolution of species", h: "प्रजातियों का प्राकृतिक विकास", correct: false },
+                { e: "Changes in Earth's orbit", h: "पृथ्वी की कक्षा में परिवर्तन", correct: false },
+                { e: "Increased volcanic activity", h: "बढ़ी हुई ज्वालामुखी गतिविधि", correct: false }
+            ],
+            expE: "Human technology has allowed us to alter the biosphere at an unprecedented rate, often leading to ecological degradation.",
+            expH: "मानव प्रौद्योगिकी ने हमें अभूतपूर्व दर पर जीवमंडल को बदलने की अनुमति दी है, जिससे अक्सर पारिस्थितिक क्षरण होता है।"
+        },
+        {
+            qE: "Which of the following is NOT a segment of the Physical (Abiotic) Environment?",
+            qH: "निम्नलिखित में से कौन सा भौतिक (अजैविक) पर्यावरण का खंड नहीं है?",
+            options: [
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false },
+                { e: "Microorganisms (Biosphere)", h: "सूक्ष्मजीव (जीवमंडल)", correct: true },
+                { e: "Atmosphere", h: "वायुमंडल", correct: false }
+            ],
+            expE: "Microorganisms belong to the biotic (living) component of the environment.",
+            expH: "सूक्ष्मजीव पर्यावरण के जैविक (जीवित) घटक से संबंधित हैं।"
+        },
+        {
+            qE: "Which approach views humans as an active force capable of overcoming geographical barriers through intelligence?",
+            qH: "कौन सा दृष्टिकोण मनुष्यों को एक सक्रिय शक्ति के रूप में देखता है जो बुद्धि के माध्यम से भौगोलिक बाधाओं को दूर करने में सक्षम है?",
+            options: [
+                { e: "Determinism", h: "नियतिवाद", correct: false },
+                { e: "Possibilism", h: "संभववाद", correct: true },
+                { e: "Naturalism", h: "प्रकृतिवाद", correct: false },
+                { e: "Fatalism", h: "भाग्यवाद", correct: false }
+            ],
+            expE: "Possibilism emphasizes human choice, culture, and technology over environmental constraints.",
+            expH: "संभववाद पर्यावरणीय बाधाओं पर मानवीय पसंद, संस्कृति और प्रौद्योगिकी पर जोर देता है।"
+        },
+        {
+            qE: "The troposphere, stratosphere, and mesosphere are primary subdivisions of the:",
+            qH: "क्षोभमंडल, समताप मंडल और मध्यमंडल किसके प्राथमिक उपखंड हैं?",
+            options: [
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Atmosphere", h: "वायुमंडल", correct: true },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false },
+                { e: "Biosphere", h: "जीवमंडल", correct: false }
+            ],
+            expE: "These are distinct layers of the Earth's atmosphere, each with specific temperature profiles.",
+            expH: "ये पृथ्वी के वायुमंडल की अलग-अलग परतें हैं, जिनमें से प्रत्येक की विशिष्ट तापमान रूपरेखा है।"
+        },
+        {
+            qE: "Why is the study of man-environment interactions essential for BBA/BCA students?",
+            qH: "BBA/BCA छात्रों के लिए मानव-पर्यावरण अंतःक्रियाओं का अध्ययन क्यों आवश्यक है?",
+            options: [
+                { e: "To understand resource limits and promote sustainable business/IT practices", h: "संसाधन सीमाओं को समझने और टिकाऊ व्यापार/आईटी प्रथाओं को बढ़ावा देने के लिए", correct: true },
+                { e: "To learn how to predict the weather", h: "मौसम की भविष्यवाणी करना सीखने के लिए", correct: false },
+                { e: "To become professional geologists", h: "पेशेवर भूवैज्ञानिक बनने के लिए", correct: false },
+                { e: "It is only required for passing exams", h: "यह केवल परीक्षा पास करने के लिए आवश्यक है", correct: false }
+            ],
+            expE: "Future managers and developers must align technological and business growth with ecological sustainability.",
+            expH: "भविष्य के प्रबंधकों और डेवलपर्स को पारिस्थितिक स्थिरता के साथ तकनीकी और व्यावसायिक विकास को संरेखित करना चाहिए।"
+        },
+        {
+            qE: "A symbiotic man-environment relationship implies:",
+            qH: "एक सहजीवी (symbiotic) मानव-पर्यावरण संबंध का तात्पर्य है:",
+            options: [
+                { e: "Total destruction of nature by man", h: "मनुष्य द्वारा प्रकृति का पूर्ण विनाश", correct: false },
+                { e: "Nature completely overpowering human settlements", h: "प्रकृति का मानव बस्तियों पर पूरी तरह से हावी होना", correct: false },
+                { e: "Mutual dependence and a balanced interaction", h: "पारस्परिक निर्भरता और एक संतुलित संपर्क", correct: true },
+                { e: "No interaction between man and environment", h: "मनुष्य और पर्यावरण के बीच कोई संपर्क नहीं", correct: false }
+            ],
+            expE: "Symbiosis in this context means humans use natural resources responsibly while actively protecting the ecosystem.",
+            expH: "इस संदर्भ में सहजीवन का मतलब है कि मनुष्य पारिस्थितिकी तंत्र की सक्रिय रूप से रक्षा करते हुए जिम्मेदारी से प्राकृतिक संसाधनों का उपयोग करते हैं।"
+        },
+        {
+            qE: "Which philosophy asserts that 'there are no necessities, but everywhere possibilities, and man is the master of these possibilities'?",
+            qH: "कौन सा दर्शन यह दावा करता है कि 'कोई आवश्यकताएं नहीं हैं, बल्कि हर जगह संभावनाएं हैं, और मनुष्य इन संभावनाओं का स्वामी है'?",
+            options: [
+                { e: "Environmental Possibilism (Vidal de La Blache)", h: "पर्यावरणीय संभववाद (विडाल डे ला ब्लाचे)", correct: true },
+                { e: "Environmental Determinism (Ratzel)", h: "पर्यावरणीय नियतिवाद (रैटज़ेल)", correct: false },
+                { e: "Neo-determinism (Taylor)", h: "नव-नियतिवाद (टेलर)", correct: false },
+                { e: "Ecological Imbalance", h: "पारिस्थितिक असंतुलन", correct: false }
+            ],
+            expE: "This is the core definition of Possibilism, placing human free will and technology above environmental constraints.",
+            expH: "यह संभववाद की मुख्य परिभाषा है, जो पर्यावरणीय बाधाओं से ऊपर मानव स्वतंत्र इच्छा और प्रौद्योगिकी को रखती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
