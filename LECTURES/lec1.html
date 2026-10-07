@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCA Quiz - SIMT - Lecture 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science (Lecture 1)</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content" id="quiz-container">
+        <!-- JS will generate questions here -->
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "The word 'Environment' is derived from which language?",
+            qH: "'Environment' शब्द किस भाषा से लिया गया है?",
+            options: [
+                { e: "Latin", h: "लैटिन", correct: false },
+                { e: "French", h: "फ्रेंच", correct: true },
+                { e: "Greek", h: "ग्रीक", correct: false },
+                { e: "English", h: "अंग्रेजी", correct: false }
+            ],
+            expE: "The word comes from the French word 'Environner' which means to encircle or surround.",
+            expH: "यह शब्द फ्रेंच शब्द 'Environner' से आया है जिसका अर्थ है 'घेरना' या 'चारो ओर से घेरना'।"
+        },
+        {
+            qE: "Which of the following is considered an abiotic component of the environment?",
+            qH: "निम्नलिखित में से किसे पर्यावरण का अजैविक (Abiotic) घटक माना जाता है?",
+            options: [
+                { e: "Soil", h: "मिट्टी", correct: true },
+                { e: "Fungi", h: "कवक", correct: false },
+                { e: "Plants", h: "पौधे", correct: false },
+                { e: "Bacteria", h: "बैक्टीरिया", correct: false }
+            ],
+            expE: "Abiotic components are non-living physical and chemical elements like soil, water, air, and sunlight.",
+            expH: "अजैविक घटक निर्जीव भौतिक और रासायनिक तत्व होते हैं जैसे मिट्टी, पानी, हवा और धूप।"
+        },
+        {
+            qE: "In the context of business operations, what does CSR stand for?",
+            qH: "व्यावसायिक संचालन के संदर्भ में, CSR का पूर्ण रूप क्या है?",
+            options: [
+                { e: "Corporate Sales Revenue", h: "कॉर्पोरेट बिक्री राजस्व", correct: false },
+                { e: "Corporate Social Responsibility", h: "कॉर्पोरेट सामाजिक उत्तरदायित्व", correct: true },
+                { e: "Company Sustainability Report", h: "कंपनी स्थिरता रिपोर्ट", correct: false },
+                { e: "Consumer Safety Regulations", h: "उपभोक्ता सुरक्षा नियम", correct: false }
+            ],
+            expE: "CSR is a management concept whereby companies integrate social and environmental concerns in their business operations.",
+            expH: "CSR एक प्रबंधन अवधारणा है जिसके तहत कंपनियां अपने व्यावसायिक संचालन में सामाजिक और पर्यावरणीय चिंताओं को शामिल करती हैं।"
+        },
+        {
+            qE: "The 'Triple Bottom Line' in sustainable business evaluates which three factors?",
+            qH: "टिकाऊ व्यापार में 'ट्रिपल बॉटम लाइन' किन तीन कारकों का मूल्यांकन करता है?",
+            options: [
+                { e: "Profit, Product, Placement", h: "लाभ, उत्पाद, स्थान", correct: false },
+                { e: "Planning, Process, Profit", h: "योजना, प्रक्रिया, लाभ", correct: false },
+                { e: "People, Planet, Profit", h: "लोग, ग्रह, लाभ", correct: true },
+                { e: "Production, Pricing, Promotion", h: "उत्पादन, मूल्य निर्धारण, प्रचार", correct: false }
+            ],
+            expE: "It expands the traditional accounting framework to include social (People) and environmental (Planet) performance alongside financial (Profit).",
+            expH: "यह वित्तीय (लाभ) के साथ-साथ सामाजिक (लोग) और पर्यावरणीय (ग्रह) प्रदर्शन को शामिल करने के लिए पारंपरिक ढांचे का विस्तार करता है।"
+        },
+        {
+            qE: "Environmental Science is best described as a ____________ discipline.",
+            qH: "पर्यावरण विज्ञान को सबसे अच्छे तरीके से एक ____________ विषय के रूप में वर्णित किया गया है।",
+            options: [
+                { e: "Purely biological", h: "विशुद्ध रूप से जैविक", correct: false },
+                { e: "Multidisciplinary", h: "बहु-विषयक", correct: true },
+                { e: "Purely physical", h: "विशुद्ध रूप से भौतिक", correct: false },
+                { e: "Single-disciplinary", h: "एकल-विषयक", correct: false }
+            ],
+            expE: "It draws on multiple fields including biology, chemistry, physics, geography, and social sciences to understand environmental problems.",
+            expH: "यह पर्यावरणीय समस्याओं को समझने के लिए जीव विज्ञान, रसायन विज्ञान, भौतिकी और सामाजिक विज्ञान सहित कई क्षेत्रों का उपयोग करता है।"
+        },
+        {
+            qE: "The narrow zone where the lithosphere, hydrosphere, and atmosphere interact to support life is called the:",
+            qH: "वह संकीर्ण क्षेत्र जहाँ स्थलमंडल, जलमंडल और वायुमंडल जीवन का समर्थन करने के लिए परस्पर क्रिया करते हैं, कहलाता है:",
+            options: [
+                { e: "Biosphere", h: "जीवमंडल", correct: true },
+                { e: "Stratosphere", h: "समताप मंडल", correct: false },
+                { e: "Exosphere", h: "बहिर्मंडल", correct: false },
+                { e: "Troposphere", h: "क्षोभ मंडल", correct: false }
+            ],
+            expE: "The biosphere is the global sum of all ecosystems; it integrates all living beings and their relationships.",
+            expH: "जीवमंडल सभी पारिस्थितिक तंत्रों का वैश्विक योग है; यह सभी जीवित प्राणियों और उनके संबंधों को एकीकृत करता है।"
+        },
+        {
+            qE: "When a business makes false or misleading claims about the environmental benefits of its products, it is known as:",
+            qH: "जब कोई व्यवसाय अपने उत्पादों के पर्यावरणीय लाभों के बारे में झूठे दावे करता है, तो उसे कहा जाता है:",
+            options: [
+                { e: "Eco-marketing", h: "इको-मार्केटिंग", correct: false },
+                { e: "Greenwashing", h: "ग्रीनवाशिंग", correct: true },
+                { e: "Sustainable scaling", h: "सस्टेनेबल स्केलिंग", correct: false },
+                { e: "Carbon offsetting", h: "कार्बन ऑफसेटिंग", correct: false }
+            ],
+            expE: "Greenwashing misleads consumers who prefer to buy goods and services from environmentally conscious brands.",
+            expH: "ग्रीनवाशिंग उन उपभोक्ताओं को गुमराह करता है जो पर्यावरण के प्रति जागरूक ब्रांडों से सामान खरीदना पसंद करते हैं।"
+        },
+        {
+            qE: "Which of the following is a direct dependency of businesses on the natural environment?",
+            qH: "निम्नलिखित में से कौन सी प्राकृतिक पर्यावरण पर व्यवसायों की प्रत्यक्ष निर्भरता है?",
+            options: [
+                { e: "Supply of labor", h: "श्रम की आपूर्ति", correct: false },
+                { e: "Market competition", h: "बाजार की प्रतिस्पर्धा", correct: false },
+                { e: "Raw materials and energy", h: "कच्चा माल और ऊर्जा", correct: true },
+                { e: "Government subsidies", h: "सरकारी सब्सिडी", correct: false }
+            ],
+            expE: "Every industry fundamentally relies on natural resources (minerals, water, timber) and energy generated from the environment.",
+            expH: "हर उद्योग मौलिक रूप से प्राकृतिक संसाधनों (खनिज, पानी, लकड़ी) और पर्यावरण से उत्पन्न ऊर्जा पर निर्भर करता है।"
+        },
+        {
+            qE: "The physical environment is also known as the ___________ environment.",
+            qH: "भौतिक पर्यावरण को ___________ पर्यावरण भी कहा जाता है।",
+            options: [
+                { e: "Biotic", h: "जैविक", correct: false },
+                { e: "Abiotic", h: "अजैविक", correct: true },
+                { e: "Biological", h: "जैविक (बायोलॉजिकल)", correct: false },
+                { e: "Organic", h: "कार्बनिक", correct: false }
+            ],
+            expE: "The physical or abiotic environment consists of non-living entities like land, air, and water that determine the habitat.",
+            expH: "भौतिक या अजैविक पर्यावरण में भूमि, वायु और जल जैसी निर्जीव संस्थाएं शामिल हैं जो निवास स्थान निर्धारित करती हैं।"
+        },
+        {
+            qE: "What does a 'Carbon Footprint' measure for a business?",
+            qH: "किसी व्यवसाय के लिए 'कार्बन फुटप्रिंट' क्या मापता है?",
+            options: [
+                { e: "Physical space occupied", h: "घेरा गया भौतिक स्थान", correct: false },
+                { e: "Amount of waste sent to landfills", h: "लैंडफिल में भेजे गए कचरे की मात्रा", correct: false },
+                { e: "Total greenhouse gas emissions caused", h: "इसके कारण होने वाला कुल ग्रीनहाउस गैस उत्सर्जन", correct: true },
+                { e: "Number of commuting employees", h: "यात्रा करने वाले कर्मचारियों की संख्या", correct: false }
+            ],
+            expE: "It calculates the total set of greenhouse gas emissions caused directly and indirectly by an individual, event, organization, or product.",
+            expH: "यह किसी व्यक्ति, संगठन या उत्पाद द्वारा प्रत्यक्ष और अप्रत्यक्ष रूप से होने वाले कुल ग्रीनहाउस गैस उत्सर्जन की गणना करता है।"
+        },
+        {
+            qE: "The sum total of all conditions and influences that affect the development and life of organisms is called:",
+            qH: "उन सभी स्थितियों और प्रभावों का योग जो जीवों के विकास और जीवन को प्रभावित करते हैं, कहलाता है:",
+            options: [
+                { e: "Environment", h: "पर्यावरण", correct: true },
+                { e: "Ecology", h: "पारिस्थितिकी (Ecology)", correct: false },
+                { e: "Biology", h: "जीव विज्ञान", correct: false },
+                { e: "Topography", h: "स्थलाकृति", correct: false }
+            ],
+            expE: "This is the classic comprehensive definition of 'Environment' in scientific terms.",
+            expH: "यह वैज्ञानिक दृष्टि से 'पर्यावरण' की क्लासिक व्यापक परिभाषा है।"
+        },
+        {
+            qE: "Which business practice is most aligned with fundamental sustainability concepts?",
+            qH: "कौन सी व्यावसायिक प्रथा स्थिरता (sustainability) की अवधारणाओं के सबसे अधिक अनुरूप है?",
+            options: [
+                { e: "Maximizing single-use plastics", h: "सिंगल-यूज़ प्लास्टिक को अधिकतम करना", correct: false },
+                { e: "Implementing a circular economy model", h: "सर्कुलर इकोनॉमी मॉडल लागू करना", correct: true },
+                { e: "Ignoring waste disposal regulations", h: "कचरा निपटान नियमों की अनदेखी करना", correct: false },
+                { e: "Rapid depletion of local resources", h: "स्थानीय संसाधनों का तेजी से ह्रास", correct: false }
+            ],
+            expE: "A circular economy aims to eliminate waste and the continual use of resources by designing processes where materials are reused.",
+            expH: "सर्कुलर इकोनॉमी का उद्देश्य कचरे को खत्म करना और संसाधनों का ऐसा उपयोग करना है जहां सामग्रियों का पुन: उपयोग किया जा सके।"
+        },
+        {
+            qE: "The segment of the environment that comprises all water bodies on Earth is the:",
+            qH: "पर्यावरण का वह खंड जिसमें पृथ्वी के सभी जल निकाय शामिल हैं:",
+            options: [
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Atmosphere", h: "वायुमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: true },
+                { e: "Biosphere", h: "जीवमंडल", correct: false }
+            ],
+            expE: "The hydrosphere includes oceans, seas, lakes, rivers, underground water, and even water vapor in the air.",
+            expH: "जलमंडल में महासागर, समुद्र, झीलें, नदियाँ, भूमिगत जल और हवा में मौजूद जलवाष्प भी शामिल हैं।"
+        },
+        {
+            qE: "Why is environmental awareness critical for IT and BCA professionals?",
+            qH: "आईटी (IT) और बीसीए (BCA) पेशेवरों के लिए पर्यावरण जागरूकता क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "To manage e-waste and design green computing solutions", h: "ई-कचरे का प्रबंधन और ग्रीन कंप्यूटिंग समाधान डिजाइन करने के लिए", correct: true },
+                { e: "To write longer software code", h: "लंबे सॉफ्टवेयर कोड लिखने के लिए", correct: false },
+                { e: "To increase hardware prices", h: "हार्डवेयर की कीमतें बढ़ाने के लिए", correct: false },
+                { e: "It has no relevance to IT", h: "इसका आईटी से कोई संबंध नहीं है", correct: false }
+            ],
+            expE: "Tech professionals must tackle the massive e-waste problem and optimize server energy usage (Green Computing).",
+            expH: "तकनीकी पेशेवरों को बड़े पैमाने पर ई-कचरे की समस्या से निपटना चाहिए और ऊर्जा उपयोग (ग्रीन कंप्यूटिंग) को अनुकूलित करना चाहिए।"
+        },
+        {
+            qE: "The solid crust of the earth, consisting of rocks and soil, is known as the:",
+            qH: "पृथ्वी की ठोस पपड़ी (crust), जिसमें चट्टानें और मिट्टी शामिल हैं, को जाना जाता है:",
+            options: [
+                { e: "Asthenosphere", h: "एस्थेनोस्फीयर", correct: false },
+                { e: "Lithosphere", h: "स्थलमंडल", correct: true },
+                { e: "Mesosphere", h: "मध्यमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false }
+            ],
+            expE: "The lithosphere provides us with land for settlement, agriculture, and minerals crucial for industries.",
+            expH: "स्थलमंडल हमें बस्तियों, कृषि के लिए भूमि और उद्योगों के लिए महत्वपूर्ण खनिज प्रदान करता है।"
+        },
+        {
+            qE: "Which of the following is an example of a biotic factor influencing a business?",
+            qH: "निम्नलिखित में से कौन सा किसी व्यवसाय को प्रभावित करने वाले जैविक (Biotic) कारक का एक उदाहरण है?",
+            options: [
+                { e: "Climate change altering shipping routes", h: "शिपिंग मार्गों को बदलने वाला जलवायु परिवर्तन", correct: false },
+                { e: "An earthquake disrupting supply chains", h: "आपूर्ति श्रृंखलाओं को बाधित करने वाला भूकंप", correct: false },
+                { e: "Mineral depletion in a mining area", h: "खनन क्षेत्र में खनिज की कमी", correct: false },
+                { e: "A pest infestation destroying agricultural raw materials", h: "कृषि कच्चे माल को नष्ट करने वाला कीट प्रकोप", correct: true }
+            ],
+            expE: "Pests (insects/fungi) are living organisms, hence 'biotic', that can severely disrupt food and textile supply chains.",
+            expH: "कीट (कीड़े/कवक) जीवित जीव हैं, इसलिए वे 'जैविक' हैं, जो खाद्य और कपड़ा आपूर्ति श्रृंखलाओं को गंभीर रूप से बाधित कर सकते हैं।"
+        },
+        {
+            qE: "Sustainable business operations aim to:",
+            qH: "टिकाऊ (Sustainable) व्यापार संचालन का मुख्य उद्देश्य है:",
+            options: [
+                { e: "Maximize short-term profits regardless of cost", h: "लागत की परवाह किए बिना अल्पकालिक लाभ को अधिकतम करना", correct: false },
+                { e: "Meet current needs without compromising future generations", h: "भविष्य की पीढ़ियों से समझौता किए बिना वर्तमान जरूरतों को पूरा करना", correct: true },
+                { e: "Completely stop all manufacturing", h: "सभी विनिर्माण को पूरी तरह से रोकना", correct: false },
+                { e: "Move all operations to rural areas", h: "सभी कार्यों को ग्रामीण क्षेत्रों में ले जाना", correct: false }
+            ],
+            expE: "This aligns with the Brundtland Commission's classic definition of Sustainable Development (1987).",
+            expH: "यह ब्रंटलैंड कमीशन (1987) की सतत विकास की क्लासिक परिभाषा के अनुरूप है।"
+        },
+        {
+            qE: "The gaseous envelope surrounding the Earth is called the:",
+            qH: "पृथ्वी को घेरने वाले गैसीय आवरण को कहा जाता है:",
+            options: [
+                { e: "Stratosphere", h: "समताप मंडल", correct: false },
+                { e: "Lithosphere", h: "स्थलमंडल", correct: false },
+                { e: "Hydrosphere", h: "जलमंडल", correct: false },
+                { e: "Atmosphere", h: "वायुमंडल", correct: true }
+            ],
+            expE: "The atmosphere protects life on Earth by absorbing ultraviolet solar radiation and regulating temperature.",
+            expH: "वायुमंडल पराबैंगनी सौर विकिरण को अवशोषित करके और तापमान को नियंत्रित करके पृथ्वी पर जीवन की रक्षा करता है।"
+        },
+        {
+            qE: "How does environmental pollution primarily pose a financial risk to modern businesses?",
+            qH: "पर्यावरण प्रदूषण मुख्य रूप से आधुनिक व्यवसायों के लिए वित्तीय जोखिम कैसे पैदा करता है?",
+            options: [
+                { e: "It lowers employee salaries", h: "यह कर्मचारियों के वेतन को कम करता है", correct: false },
+                { e: "Through regulatory fines, cleanup costs, and reputational damage", h: "नियामक जुर्माने, सफाई की लागत और प्रतिष्ठा को नुकसान के माध्यम से", correct: true },
+                { e: "It increases the speed of production", h: "यह उत्पादन की गति को बढ़ाता है", correct: false },
+                { e: "It reduces the need for CSR", h: "यह CSR की आवश्यकता को कम करता है", correct: false }
+            ],
+            expE: "Governments enforce strict penalties for pollution, and consumers boycott brands that harm the environment.",
+            expH: "सरकारें प्रदूषण के लिए सख्त दंड लागू करती हैं, और उपभोक्ता उन ब्रांडों का बहिष्कार करते हैं जो पर्यावरण को नुकसान पहुंचाते हैं।"
+        },
+        {
+            qE: "Which element is the most abundant in the Earth's atmosphere?",
+            qH: "पृथ्वी के वायुमंडल में कौन सा तत्व सबसे प्रचुर मात्रा में (लगभग 78%) है?",
+            options: [
+                { e: "Oxygen", h: "ऑक्सीजन", correct: false },
+                { e: "Carbon Dioxide", h: "कार्बन डाइऑक्साइड", correct: false },
+                { e: "Nitrogen", h: "नाइट्रोजन", correct: true },
+                { e: "Argon", h: "आर्गन", correct: false }
+            ],
+            expE: "Nitrogen makes up about 78% of the Earth's atmosphere, crucial for plant growth via the nitrogen cycle.",
+            expH: "नाइट्रोजन पृथ्वी के वायुमंडल का लगभग 78% हिस्सा बनाता है, जो नाइट्रोजन चक्र के माध्यम से पौधों के विकास के लिए महत्वपूर्ण है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    // Initialize Quiz
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    // Handle User Answer
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
