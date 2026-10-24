@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 3 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARISH SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 3: Historical Environmental Movements</h2>
+            <p>Environmental Movements in India & The Concept of Sustainability</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "The famous 'Chipko Movement', focused on protecting trees, originated in which country?",
+            qH: "पेड़ों की रक्षा पर केंद्रित प्रसिद्ध 'चिपको आंदोलन' की उत्पत्ति किस देश में हुई थी?",
+            options: [
+                { e: "USA", h: "अमेरिका", correct: false },
+                { e: "Brazil", h: "ब्राज़ील", correct: false },
+                { e: "India", h: "भारत", correct: true },
+                { e: "Kenya", h: "केन्या", correct: false }
+            ],
+            expE: "The Chipko Movement started in the early 1970s in the Garhwal Himalayas of Uttarakhand, India.",
+            expH: "चिपको आंदोलन 1970 के दशक की शुरुआत में भारत के उत्तराखंड के गढ़वाल हिमालय में शुरू हुआ था।"
+        },
+        {
+            qE: "What does the word 'Chipko' literally mean in Hindi?",
+            qH: "हिंदी में 'चिपको' शब्द का शाब्दिक अर्थ क्या है?",
+            options: [
+                { e: "To cut down", h: "काट गिराना", correct: false },
+                { e: "To embrace / To hug", h: "गले लगाना / चिपक जाना", correct: true },
+                { e: "To plant seeds", h: "बीज बोना", correct: false },
+                { e: "To protest loudly", h: "जोर से विरोध करना", correct: false }
+            ],
+            expE: "Villagers literally hugged the trees to prevent loggers from cutting them down.",
+            expH: "लकड़हारों को पेड़ काटने से रोकने के लिए ग्रामीण सचमुच पेड़ों से चिपक गए (गले लगा लिया)।"
+        },
+        {
+            qE: "The Chipko movement was primarily aimed at protecting what?",
+            qH: "चिपको आंदोलन का मुख्य उद्देश्य किसकी रक्षा करना था?",
+            options: [
+                { e: "Rivers", h: "नदियाँ", correct: false },
+                { e: "Wild Animals", h: "जंगली जानवर", correct: false },
+                { e: "Forests / Trees", h: "जंगल / पेड़", correct: true },
+                { e: "Agricultural Land", h: "कृषि भूमि", correct: false }
+            ],
+            expE: "It was a forest conservation movement where people fought against rapid deforestation.",
+            expH: "यह एक वन संरक्षण आंदोलन था जहां लोगों ने तेजी से हो रही वनों की कटाई के खिलाफ लड़ाई लड़ी।"
+        },
+        {
+            qE: "Who among the following is a prominent leader of the Narmada Bachao Andolan (NBA)?",
+            qH: "निम्नलिखित में से कौन नर्मदा बचाओ आंदोलन (NBA) की एक प्रमुख नेता हैं?",
+            options: [
+                { e: "Medha Patkar", h: "मेधा पाटकर", correct: true },
+                { e: "Kiran Bedi", h: "किरण बेदी", correct: false },
+                { e: "Mahatma Gandhi", h: "महात्मा गांधी", correct: false },
+                { e: "Anna Hazare", h: "अन्ना हजारे", correct: false }
+            ],
+            expE: "Medha Patkar is the central figure and activist leading the Narmada Bachao Andolan.",
+            expH: "मेधा पाटकर नर्मदा बचाओ आंदोलन का नेतृत्व करने वाली केंद्रीय हस्ती और कार्यकर्ता हैं।"
+        },
+        {
+            qE: "The 'Appiko Movement', inspired by the Chipko movement, took place in which Indian state?",
+            qH: "चिपको आंदोलन से प्रेरित 'अप्पिको आंदोलन' भारत के किस राज्य में हुआ था?",
+            options: [
+                { e: "Kerala", h: "केरल", correct: false },
+                { e: "Karnataka", h: "कर्नाटक", correct: true },
+                { e: "Gujarat", h: "गुजरात", correct: false },
+                { e: "Punjab", h: "पंजाब", correct: false }
+            ],
+            expE: "The Appiko movement started in the Uttara Kannada district of Karnataka in 1983.",
+            expH: "अप्पिको आंदोलन 1983 में कर्नाटक के उत्तर कन्नड़ जिले में शुरू हुआ था।"
+        },
+        {
+            qE: "Which famous commission defined Sustainable Development as 'meeting the needs of the present without compromising the ability of future generations to meet their own needs'?",
+            qH: "किस प्रसिद्ध आयोग ने सतत विकास (Sustainable Development) को 'भविष्य की पीढ़ियों की अपनी जरूरतों को पूरा करने की क्षमता से समझौता किए बिना वर्तमान की जरूरतों को पूरा करना' के रूप में परिभाषित किया?",
+            options: [
+                { e: "The Kyoto Commission", h: "क्योटो आयोग", correct: false },
+                { e: "The Brundtland Commission", h: "ब्रंटलैंड आयोग", correct: true },
+                { e: "The Paris Committee", h: "पेरिस समिति", correct: false },
+                { e: "The Niti Aayog", h: "नीति आयोग", correct: false }
+            ],
+            expE: "This definition is universally accepted and was given by the UN's Brundtland Commission in 1987.",
+            expH: "यह परिभाषा सार्वभौमिक रूप से स्वीकृत है और 1987 में संयुक्त राष्ट्र के ब्रंटलैंड आयोग द्वारा दी गई थी।"
+        },
+        {
+            qE: "In which year was the Brundtland Report (Our Common Future) published?",
+            qH: "ब्रंटलैंड रिपोर्ट (हमारा साझा भविष्य) किस वर्ष प्रकाशित हुई थी?",
+            options: [
+                { e: "1972", h: "1972", correct: false },
+                { e: "1987", h: "1987", correct: true },
+                { e: "1992", h: "1992", correct: false },
+                { e: "2000", h: "2000", correct: false }
+            ],
+            expE: "The report 'Our Common Future' was published by the World Commission on Environment and Development in 1987.",
+            expH: "'हमारा साझा भविष्य' रिपोर्ट विश्व पर्यावरण और विकास आयोग द्वारा 1987 में प्रकाशित की गई थी।"
+        },
+        {
+            qE: "The Narmada Bachao Andolan (NBA) is a social movement primarily protesting against:",
+            qH: "नर्मदा बचाओ आंदोलन (NBA) एक सामाजिक आंदोलन है जो मुख्य रूप से किसका विरोध कर रहा है?",
+            options: [
+                { e: "Deforestation in the Himalayas", h: "हिमालय में वनों की कटाई", correct: false },
+                { e: "Air pollution in Delhi", h: "दिल्ली में वायु प्रदूषण", correct: false },
+                { e: "Construction of large dams on the Narmada river", h: "नर्मदा नदी पर बड़े बांधों का निर्माण", correct: true },
+                { e: "Plastic waste in oceans", h: "महासागरों में प्लास्टिक कचरा", correct: false }
+            ],
+            expE: "NBA protests against large multi-purpose dams (like Sardar Sarovar) which displace millions of tribal people and farmers.",
+            expH: "NBA बड़े बहुउद्देश्यीय बांधों (जैसे सरदार सरोवर) का विरोध करता है जो लाखों आदिवासियों और किसानों को विस्थापित करते हैं।"
+        },
+        {
+            qE: "The Silent Valley Movement in Kerala was organized to save tropical evergreen forests from being destroyed by a:",
+            qH: "केरल में 'साइलेंट वैली आंदोलन' को उष्णकटिबंधीय सदाबहार वनों को किसके द्वारा नष्ट होने से बचाने के लिए आयोजित किया गया था?",
+            options: [
+                { e: "Hydroelectric Dam Project", h: "जलविद्युत बांध परियोजना", correct: true },
+                { e: "Coal Mining Project", h: "कोयला खनन परियोजना", correct: false },
+                { e: "Highway Construction", h: "राजमार्ग निर्माण", correct: false },
+                { e: "Nuclear Power Plant", h: "परमाणु ऊर्जा संयंत्र", correct: false }
+            ],
+            expE: "It was aimed at stopping a hydroelectric dam on the Kunthipuzha River that would submerge the Silent Valley forests.",
+            expH: "इसका उद्देश्य कुंथीपुझा नदी पर एक जलविद्युत बांध को रोकना था जो साइलेंट वैली के जंगलों को जलमग्न कर देता।"
+        },
+        {
+            qE: "Which community in Rajasthan is historically known for sacrificing their lives to protect Khejri trees in the 1730s?",
+            qH: "राजस्थान का कौन सा समुदाय 1730 के दशक में खेजड़ी के पेड़ों की रक्षा के लिए अपने प्राणों की आहुति देने के लिए ऐतिहासिक रूप से जाना जाता है?",
+            options: [
+                { e: "Bhil community", h: "भील समुदाय", correct: false },
+                { e: "Rajput community", h: "राजपूत समुदाय", correct: false },
+                { e: "Bishnoi community", h: "बिश्नोई समुदाय", correct: true },
+                { e: "Gond community", h: "गोंड समुदाय", correct: false }
+            ],
+            expE: "The Bishnoi movement is one of the earliest environmental movements where 363 Bishnois sacrificed their lives for trees.",
+            expH: "बिश्नोई आंदोलन सबसे शुरुआती पर्यावरण आंदोलनों में से एक है जहां 363 बिश्नोइयों ने पेड़ों के लिए अपने प्राणों की आहुति दी थी।"
+        },
+        {
+            qE: "Sustainability focuses on balancing three main pillars: Economic, Environmental, and ________.",
+            qH: "स्थिरता (Sustainability) तीन मुख्य स्तंभों को संतुलित करने पर केंद्रित है: आर्थिक, पर्यावरणीय, और ________।",
+            options: [
+                { e: "Political", h: "राजनीतिक", correct: false },
+                { e: "Social", h: "सामाजिक", correct: true },
+                { e: "Technological", h: "तकनीकी", correct: false },
+                { e: "Industrial", h: "औद्योगिक", correct: false }
+            ],
+            expE: "The three pillars of sustainability are Environment (Planet), Economy (Profit), and Society (People).",
+            expH: "स्थिरता के तीन स्तंभ पर्यावरण (ग्रह), अर्थव्यवस्था (लाभ) और समाज (लोग) हैं।"
+        },
+        {
+            qE: "Amrita Devi is a famous figure associated with which historical environmental movement?",
+            qH: "अमृता देवी किस ऐतिहासिक पर्यावरण आंदोलन से जुड़ी एक प्रसिद्ध हस्ती हैं?",
+            options: [
+                { e: "Chipko Movement", h: "चिपको आंदोलन", correct: false },
+                { e: "Appiko Movement", h: "अप्पिको आंदोलन", correct: false },
+                { e: "Bishnoi Movement", h: "बिश्नोई आंदोलन", correct: true },
+                { e: "Navdanya Movement", h: "नवदान्य आंदोलन", correct: false }
+            ],
+            expE: "Amrita Devi led the Bishnoi resistance in 1730, hugging the Khejri trees to protect them from the King's soldiers.",
+            expH: "अमृता देवी ने 1730 में बिश्नोई प्रतिरोध का नेतृत्व किया, और राजा के सैनिकों से बचाने के लिए खेजड़ी के पेड़ों को गले लगाया।"
+        },
+        {
+            qE: "What is the primary goal of Sustainable Development?",
+            qH: "सतत विकास (Sustainable Development) का प्राथमिक लक्ष्य क्या है?",
+            options: [
+                { e: "To consume all natural resources quickly for rapid economic growth", h: "तीव्र आर्थिक विकास के लिए सभी प्राकृतिक संसाधनों का शीघ्रता से उपभोग करना", correct: false },
+                { e: "To stop all human development and industrial activities entirely", h: "सभी मानव विकास और औद्योगिक गतिविधियों को पूरी तरह से रोकना", correct: false },
+                { e: "To achieve a long-term balance between economic progress and environmental protection", h: "आर्थिक प्रगति और पर्यावरण संरक्षण के बीच दीर्घकालिक संतुलन प्राप्त करना", correct: true },
+                { e: "To increase the carbon footprint of businesses", h: "व्यवसायों के कार्बन फुटप्रिंट को बढ़ाना", correct: false }
+            ],
+            expE: "Sustainable development ensures that economic growth does not permanently damage the environment.",
+            expH: "सतत विकास यह सुनिश्चित करता है कि आर्थिक विकास पर्यावरण को स्थायी रूप से नुकसान न पहुँचाए।"
+        },
+        {
+            qE: "The term 'Sustainable Development' was officially popularized by a UN report titled:",
+            qH: "'सतत विकास' (Sustainable Development) शब्द को आधिकारिक तौर पर संयुक्त राष्ट्र की एक रिपोर्ट द्वारा लोकप्रिय बनाया गया था, जिसका शीर्षक था:",
+            options: [
+                { e: "The Earth Charter", h: "द अर्थ चार्टर", correct: false },
+                { e: "Our Common Future", h: "हमारा साझा भविष्य", correct: true },
+                { e: "Limits to Growth", h: "लिमिट्स टू ग्रोथ", correct: false },
+                { e: "Agenda 21", h: "एजेंडा 21", correct: false }
+            ],
+            expE: "'Our Common Future' (1987), also known as the Brundtland Report, brought the concept of sustainable development to global attention.",
+            expH: "'हमारा साझा भविष्य' (1987), जिसे ब्रंटलैंड रिपोर्ट के रूप में भी जाना जाता है, सतत विकास की अवधारणा को वैश्विक ध्यान में लाया।"
+        },
+        {
+            qE: "Sunderlal Bahuguna was a key leader and philosopher of which environmental movement?",
+            qH: "सुंदरलाल बहुगुणा किस पर्यावरण आंदोलन के प्रमुख नेता और दार्शनिक थे?",
+            options: [
+                { e: "Chipko Movement", h: "चिपको आंदोलन", correct: true },
+                { e: "Silent Valley Movement", h: "साइलेंट वैली आंदोलन", correct: false },
+                { e: "Jungle Bachao Andolan", h: "जंगल बचाओ आंदोलन", correct: false },
+                { e: "Narmada Bachao Andolan", h: "नर्मदा बचाओ आंदोलन", correct: false }
+            ],
+            expE: "He was a prominent environmentalist who gave the Chipko movement its famous slogan 'Ecology is permanent economy'.",
+            expH: "वह एक प्रमुख पर्यावरणविद् थे जिन्होंने चिपको आंदोलन को इसका प्रसिद्ध नारा 'पारिस्थितिकी स्थायी अर्थव्यवस्था है' दिया था।"
+        },
+        {
+            qE: "Which movement used the famous slogan 'Ecology is permanent economy'?",
+            qH: "किस आंदोलन ने 'पारिस्थितिकी (Ecology) ही स्थायी अर्थव्यवस्था है' के प्रसिद्ध नारे का इस्तेमाल किया?",
+            options: [
+                { e: "Narmada Bachao Andolan", h: "नर्मदा बचाओ आंदोलन", correct: false },
+                { e: "Chipko Movement", h: "चिपको आंदोलन", correct: true },
+                { e: "Bishnoi Movement", h: "बिश्नोई आंदोलन", correct: false },
+                { e: "Save Soil Movement", h: "मिट्टी बचाओ आंदोलन", correct: false }
+            ],
+            expE: "Coined by Sunderlal Bahuguna, this slogan highlighted that protecting nature is essential for long-term economic survival.",
+            expH: "सुंदरलाल बहुगुणा द्वारा गढ़े गए इस नारे ने इस बात पर प्रकाश डाला कि दीर्घकालिक आर्थिक अस्तित्व के लिए प्रकृति की रक्षा आवश्यक है।"
+        },
+        {
+            qE: "Sustainable development implies:",
+            qH: "सतत विकास का तात्पर्य है:",
+            options: [
+                { e: "Sacrificing environmental health for business profit", h: "व्यापारिक लाभ के लिए पर्यावरण के स्वास्थ्य का बलिदान करना", correct: false },
+                { e: "Banning all forms of technology", h: "सभी प्रकार की तकनीक पर प्रतिबंध लगाना", correct: false },
+                { e: "Balancing economic growth, social equity, and environmental protection", h: "आर्थिक विकास, सामाजिक समानता और पर्यावरण संरक्षण को संतुलित करना", correct: true },
+                { e: "Only focusing on wildlife conservation", h: "केवल वन्यजीव संरक्षण पर ध्यान केंद्रित करना", correct: false }
+            ],
+            expE: "It is a holistic approach combining economic, social, and environmental goals.",
+            expH: "यह आर्थिक, सामाजिक और पर्यावरणीय लक्ष्यों को जोड़ने वाला एक समग्र दृष्टिकोण है।"
+        },
+        {
+            qE: "The Appiko Movement in South India, which focused on saving the Western Ghats, was led by:",
+            qH: "दक्षिण भारत में अप्पिको आंदोलन, जो पश्चिमी घाट को बचाने पर केंद्रित था, का नेतृत्व किसके द्वारा किया गया था?",
+            options: [
+                { e: "Medha Patkar", h: "मेधा पाटकर", correct: false },
+                { e: "Vandana Shiva", h: "वंदना शिवा", correct: false },
+                { e: "Pandurang Hegde", h: "पांडुरंग हेगड़े", correct: true },
+                { e: "Chandi Prasad Bhatt", h: "चंडी प्रसाद भट्ट", correct: false }
+            ],
+            expE: "Pandurang Hegde launched the Appiko movement in Karnataka to protest the felling of trees in the ecologically sensitive Western Ghats.",
+            expH: "पांडुरंग हेगड़े ने पारिस्थितिक रूप से संवेदनशील पश्चिमी घाटों में पेड़ों की कटाई का विरोध करने के लिए कर्नाटक में अप्पिको आंदोलन शुरू किया।"
+        },
+        {
+            qE: "Which of the following is NOT one of the 'Three Pillars of Sustainability'?",
+            qH: "निम्नलिखित में से कौन 'स्थिरता के तीन स्तंभों' (Three Pillars of Sustainability) में से एक नहीं है?",
+            options: [
+                { e: "Environmental Protection", h: "पर्यावरण संरक्षण", correct: false },
+                { e: "Social Equity", h: "सामाजिक समानता", correct: false },
+                { e: "Political Dominance", h: "राजनीतिक प्रभुत्व", correct: true },
+                { e: "Economic Viability", h: "आर्थिक व्यवहार्यता", correct: false }
+            ],
+            expE: "Political dominance is not a pillar. The three pillars are Social, Economic, and Environmental.",
+            expH: "राजनीतिक प्रभुत्व कोई स्तंभ नहीं है। तीन स्तंभ सामाजिक, आर्थिक और पर्यावरणीय हैं।"
+        },
+        {
+            qE: "The Narmada Bachao Andolan primarily focuses on the construction of dams across which river?",
+            qH: "नर्मदा बचाओ आंदोलन मुख्य रूप से किस नदी पर बांधों के निर्माण पर केंद्रित है?",
+            options: [
+                { e: "Ganga", h: "गंगा", correct: false },
+                { e: "Yamuna", h: "यमुना", correct: false },
+                { e: "Godavari", h: "गोदावरी", correct: false },
+                { e: "Narmada", h: "नर्मदा", correct: true }
+            ],
+            expE: "The movement is named after the Narmada River, which flows through Gujarat, Madhya Pradesh, and Maharashtra.",
+            expH: "आंदोलन का नाम नर्मदा नदी के नाम पर रखा गया है, जो गुजरात, मध्य प्रदेश और महाराष्ट्र से होकर बहती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
