@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 6 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 6: Land Degradation & Deforestation</h2>
+            <p>Land Use Change, Soil Erosion, and Desertification</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the term 'Deforestation' refer to?",
+            qH: "'वनों की कटाई' (Deforestation) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Planting new trees", h: "नए पेड़ लगाना", correct: false },
+                { e: "The large-scale removal or clearing of forests", h: "बड़े पैमाने पर जंगलों को हटाना या साफ करना", correct: true },
+                { e: "Protecting wild animals", h: "जंगली जानवरों की रक्षा करना", correct: false },
+                { e: "Building dams", h: "बांध बनाना", correct: false }
+            ],
+            expE: "Deforestation is the intentional clearing of forested land, usually to make space for agriculture or urban use.",
+            expH: "वनों की कटाई जंगलों को जानबूझकर साफ करना है, आमतौर पर कृषि या शहरी उपयोग के लिए जगह बनाने के लिए।"
+        },
+        {
+            qE: "Which of the following is a major human-made cause of deforestation?",
+            qH: "निम्नलिखित में से कौन वनों की कटाई का एक प्रमुख मानव निर्मित कारण है?",
+            options: [
+                { e: "Expansion of agriculture and urbanization", h: "कृषि और शहरीकरण का विस्तार", correct: true },
+                { e: "Earthquakes", h: "भूकंप", correct: false },
+                { e: "Tornadoes", h: "बवंडर", correct: false },
+                { e: "Heavy rainfall", h: "भारी वर्षा", correct: false }
+            ],
+            expE: "Clearing land to grow crops or build cities is the biggest driver of deforestation globally.",
+            expH: "फसल उगाने या शहर बनाने के लिए भूमि को साफ करना विश्व स्तर पर वनों की कटाई का सबसे बड़ा कारण है।"
+        },
+        {
+            qE: "What is 'Soil Erosion'?",
+            qH: "'मृदा अपरदन' (Soil Erosion) क्या है?",
+            options: [
+                { e: "Adding fertilizers to soil", h: "मिट्टी में उर्वरक मिलाना", correct: false },
+                { e: "The removal of the fertile top layer of soil by wind or water", h: "हवा या पानी द्वारा मिट्टी की उपजाऊ ऊपरी परत का हटना", correct: true },
+                { e: "Growing crops continuously", h: "लगातार फसल उगाना", correct: false },
+                { e: "Hardening of soil into rocks", h: "मिट्टी का चट्टानों में सख्त होना", correct: false }
+            ],
+            expE: "Soil erosion washes or blows away the topsoil, which contains the most nutrients for plants.",
+            expH: "मृदा अपरदन से ऊपरी मिट्टी बह जाती है या उड़ जाती है, जिसमें पौधों के लिए सबसे अधिक पोषक तत्व होते हैं।"
+        },
+        {
+            qE: "Which of these acts as a natural barrier to prevent soil erosion?",
+            qH: "इनमें से कौन मिट्टी के कटाव को रोकने के लिए प्राकृतिक अवरोध के रूप में कार्य करता है?",
+            options: [
+                { e: "Roots of trees and plants", h: "पेड़ों और पौधों की जड़ें", correct: true },
+                { e: "Plastic waste", h: "प्लास्टिक कचरा", correct: false },
+                { e: "Concrete roads", h: "कंक्रीट की सड़कें", correct: false },
+                { e: "Strong winds", h: "तेज हवाएं", correct: false }
+            ],
+            expE: "Plant roots bind the soil particles together, making it difficult for wind or water to wash them away.",
+            expH: "पौधों की जड़ें मिट्टी के कणों को एक साथ बांधती हैं, जिससे हवा या पानी के लिए उन्हें बहा ले जाना मुश्किल हो जाता है।"
+        },
+        {
+            qE: "The process by which fertile land becomes a desert is called:",
+            qH: "वह प्रक्रिया जिसके द्वारा उपजाऊ भूमि मरुस्थल (रेगिस्तान) बन जाती है, कहलाती है:",
+            options: [
+                { e: "Afforestation", h: "वनीकरण", correct: false },
+                { e: "Desertification", h: "मरुस्थलीकरण (Desertification)", correct: true },
+                { e: "Urbanization", h: "शहरीकरण", correct: false },
+                { e: "Salinization", h: "लवणीकरण", correct: false }
+            ],
+            expE: "Desertification is caused by drought, deforestation, and inappropriate agriculture, turning good land into desert.",
+            expH: "मरुस्थलीकरण सूखे, वनों की कटाई और अनुचित कृषि के कारण होता है, जिससे अच्छी भूमि रेगिस्तान में बदल जाती है।"
+        },
+        {
+            qE: "Overgrazing by cattle and sheep on grasslands primarily leads to:",
+            qH: "घास के मैदानों पर मवेशियों और भेड़ों द्वारा अत्यधिक चराई (Overgrazing) से मुख्य रूप से क्या होता है?",
+            options: [
+                { e: "Better soil fertility", h: "बेहतर मिट्टी की उर्वरता", correct: false },
+                { e: "Increased rainfall", h: "वर्षा में वृद्धि", correct: false },
+                { e: "Soil erosion and land degradation", h: "मिट्टी का कटाव और भूमि का क्षरण", correct: true },
+                { e: "More dense forests", h: "अधिक घने जंगल", correct: false }
+            ],
+            expE: "When animals eat grass down to the roots, the bare soil is easily blown away or washed away.",
+            expH: "जब जानवर घास को जड़ों तक खा जाते हैं, तो नंगी मिट्टी आसानी से उड़ जाती है या पानी से बह जाती है।"
+        },
+        {
+            qE: "What does 'Land Degradation' mean?",
+            qH: "'भूमि क्षरण' (Land Degradation) का क्या अर्थ है?",
+            options: [
+                { e: "A decline in the overall quality and productivity of the land", h: "भूमि की समग्र गुणवत्ता और उत्पादकता में गिरावट", correct: true },
+                { e: "Building new houses on land", h: "जमीन पर नए घर बनाना", correct: false },
+                { e: "Buying and selling of land", h: "जमीन की खरीद-फरोख्त", correct: false },
+                { e: "Planting a large number of seeds", h: "बड़ी संख्या में बीज बोना", correct: false }
+            ],
+            expE: "It means the land loses its ability to support plant and animal life due to human or natural causes.",
+            expH: "इसका मतलब है कि मानव या प्राकृतिक कारणों से भूमि पौधे और पशु जीवन का समर्थन करने की अपनी क्षमता खो देती है।"
+        },
+        {
+            qE: "Which agricultural practice is a major cause of deforestation in some tropical regions?",
+            qH: "कुछ उष्णकटिबंधीय क्षेत्रों में कौन सी कृषि पद्धति वनों की कटाई का एक प्रमुख कारण है?",
+            options: [
+                { e: "Terrace farming", h: "सीढ़ीदार खेती", correct: false },
+                { e: "Shifting cultivation (Slash and burn)", h: "स्थानांतरित खेती (काटो और जलाओ)", correct: true },
+                { e: "Crop rotation", h: "फसल चक्र", correct: false },
+                { e: "Organic farming", h: "जैविक खेती", correct: false }
+            ],
+            expE: "In 'slash and burn' agriculture, parts of the forest are burned down to create fertile ash for temporary farming.",
+            expH: "'काटो और जलाओ' कृषि में, अस्थायी खेती के लिए उपजाऊ राख बनाने के लिए जंगल के कुछ हिस्सों को जला दिया जाता है।"
+        },
+        {
+            qE: "Planting rows of trees along the edges of fields to reduce wind speed and protect soil is called:",
+            qH: "हवा की गति को कम करने और मिट्टी की रक्षा करने के लिए खेतों के किनारों पर पेड़ों की पंक्तियां लगाने को क्या कहा जाता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Shelterbelts", h: "शेल्टरबेल्ट (Shelterbelts)", correct: true },
+                { e: "Overgrazing", h: "अत्यधिक चराई", correct: false },
+                { e: "Mining", h: "खनन", correct: false }
+            ],
+            expE: "Shelterbelts act as windbreaks, significantly reducing soil erosion by wind in dry areas.",
+            expH: "शेल्टरबेल्ट विंडब्रेक के रूप में कार्य करते हैं, जो शुष्क क्षेत्रों में हवा द्वारा मिट्टी के कटाव को काफी कम करते हैं।"
+        },
+        {
+            qE: "What happens to the level of Carbon Dioxide (CO2) in the atmosphere when deforestation occurs?",
+            qH: "वनों की कटाई होने पर वायुमंडल में कार्बन डाइऑक्साइड (CO2) के स्तर का क्या होता है?",
+            options: [
+                { e: "It decreases significantly", h: "यह काफी कम हो जाता है", correct: false },
+                { e: "It remains completely unchanged", h: "यह पूरी तरह से अपरिवर्तित रहता है", correct: false },
+                { e: "It turns into Oxygen", h: "यह ऑक्सीजन में बदल जाता है", correct: false },
+                { e: "It increases, contributing to global warming", h: "यह बढ़ता है, जो ग्लोबल वार्मिंग में योगदान देता है", correct: true }
+            ],
+            expE: "Trees absorb CO2. Cutting them down means less CO2 is absorbed, and burning them releases stored CO2 back into the air.",
+            expH: "पेड़ CO2 सोखते हैं। उन्हें काटने का मतलब है कि कम CO2 सोखी जाती है, और उन्हें जलाने से संग्रहित CO2 हवा में वापस आ जाती है।"
+        },
+        {
+            qE: "Which of these human activities directly leads to both land degradation AND deforestation?",
+            qH: "इनमें से कौन सी मानवीय गतिविधि सीधे तौर पर भूमि क्षरण और वनों की कटाई दोनों की ओर ले जाती है?",
+            options: [
+                { e: "Open-cast Mining", h: "ओपन-कास्ट खनन (Mining)", correct: true },
+                { e: "Using solar panels", h: "सौर पैनलों का उपयोग करना", correct: false },
+                { e: "Recycling paper", h: "कागज का पुनर्चक्रण (Recycling)", correct: false },
+                { e: "Rainwater harvesting", h: "वर्षा जल संचयन", correct: false }
+            ],
+            expE: "Mining requires clearing forests and digging up the earth, deeply damaging the land surface.",
+            expH: "खनन के लिए जंगलों को साफ करने और जमीन खोदने की आवश्यकता होती है, जिससे भूमि की सतह को गहरा नुकसान होता है।"
+        },
+        {
+            qE: "Terrace farming (making steps on mountain slopes) is primarily done to:",
+            qH: "सीढ़ीदार खेती (पहाड़ की ढलानों पर सीढ़ियां बनाना) मुख्य रूप से किस लिए की जाती है?",
+            options: [
+                { e: "Make the mountains look beautiful", h: "पहाड़ों को सुंदर बनाने के लिए", correct: false },
+                { e: "Reduce the flow of water and prevent soil erosion", h: "पानी के बहाव को कम करने और मिट्टी के कटाव को रोकने के लिए", correct: true },
+                { e: "Increase the speed of wind", h: "हवा की गति बढ़ाने के लिए", correct: false },
+                { e: "Cut down more trees easily", h: "अधिक पेड़ों को आसानी से काटने के लिए", correct: false }
+            ],
+            expE: "The flat steps slow down the rainwater rushing down the hill, preventing the soil from washing away.",
+            expH: "सपाट सीढ़ियाँ पहाड़ी से नीचे आने वाले बारिश के पानी को धीमा कर देती हैं, जिससे मिट्टी बहने से बच जाती है।"
+        },
+        {
+            qE: "The phrase 'Land Use Change' commonly refers to:",
+            qH: "'भूमि उपयोग परिवर्तन' (Land Use Change) वाक्यांश आमतौर पर किसको संदर्भित करता है?",
+            options: [
+                { e: "Changing the seasons of the year", h: "वर्ष के मौसम बदलना", correct: false },
+                { e: "Converting natural landscapes into agricultural or urban areas", h: "प्राकृतिक परिदृश्य को कृषि या शहरी क्षेत्रों में परिवर्तित करना", correct: true },
+                { e: "Changing the type of tractor used", h: "इस्तेमाल किए गए ट्रैक्टर के प्रकार को बदलना", correct: false },
+                { e: "Moving soil from one country to another", h: "मिट्टी को एक देश से दूसरे देश ले जाना", correct: false }
+            ],
+            expE: "When forests or grasslands are converted into farms, factories, or cities, it is called land use change.",
+            expH: "जब जंगलों या घास के मैदानों को खेतों, कारखानों या शहरों में बदल दिया जाता है, तो इसे भूमि उपयोग परिवर्तन कहा जाता है।"
+        },
+        {
+            qE: "How does urbanization negatively impact soil?",
+            qH: "शहरीकरण (Urbanization) मिट्टी पर नकारात्मक प्रभाव कैसे डालता है?",
+            options: [
+                { e: "It adds more humus to the soil", h: "यह मिट्टी में अधिक ह्यूमस जोड़ता है", correct: false },
+                { e: "It seals the soil under concrete and asphalt, preventing water absorption", h: "यह मिट्टी को कंक्रीट और डामर के नीचे सील कर देता है, जिससे पानी का अवशोषण रुक जाता है", correct: true },
+                { e: "It increases agricultural production", h: "यह कृषि उत्पादन बढ़ाता है", correct: false },
+                { e: "It makes the soil softer", h: "यह मिट्टी को नरम बनाता है", correct: false }
+            ],
+            expE: "Paving over land kills the soil underneath and prevents rainwater from recharging groundwater.",
+            expH: "जमीन पर पक्की सड़क बनाने से नीचे की मिट्टी मर जाती है और बारिश का पानी भूजल को रिचार्ज नहीं कर पाता है।"
+        },
+        {
+            qE: "Droughts and lack of rainfall accelerate which environmental problem?",
+            qH: "सूखा और कम वर्षा किस पर्यावरणीय समस्या को तेज करते हैं?",
+            options: [
+                { e: "Floods", h: "बाढ़", correct: false },
+                { e: "Desertification", h: "मरुस्थलीकरण", correct: true },
+                { e: "Ozone depletion", h: "ओजोन परत का क्षरण", correct: false },
+                { e: "Noise pollution", h: "ध्वनि प्रदूषण", correct: false }
+            ],
+            expE: "Without water, vegetation dies, and dry soil is easily blown away, turning the area into a desert.",
+            expH: "पानी के बिना वनस्पति मर जाती है, और सूखी मिट्टी आसानी से उड़ जाती है, जिससे क्षेत्र रेगिस्तान में बदल जाता है।"
+        },
+        {
+            qE: "Planting trees to create a forest on land that was NOT previously a forest is called:",
+            qH: "उस भूमि पर जंगल बनाने के लिए पेड़ लगाना जो पहले जंगल नहीं था, क्या कहलाता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Afforestation", h: "वनीकरण (Afforestation)", correct: true },
+                { e: "Desertification", h: "मरुस्थलीकरण", correct: false },
+                { e: "Logging", h: "लकड़ी काटना (Logging)", correct: false }
+            ],
+            expE: "Afforestation is the establishment of a forest or stand of trees in an area where there was no previous tree cover.",
+            expH: "वनीकरण उस क्षेत्र में जंगल या पेड़ों की स्थापना है जहां पहले कोई पेड़ नहीं था।"
+        },
+        {
+            qE: "Building large hydroelectric dams often causes which major problem?",
+            qH: "बड़े जलविद्युत बांध बनाने से अक्सर कौन सी बड़ी समस्या उत्पन्न होती है?",
+            options: [
+                { e: "It decreases water supply", h: "यह पानी की आपूर्ति कम करता है", correct: false },
+                { e: "Submergence of large areas of forests and agricultural land", h: "वनों और कृषि भूमि के बड़े क्षेत्रों का जलमग्न होना", correct: true },
+                { e: "It causes soil to become highly fertile instantly", h: "यह मिट्टी को तुरंत अत्यधिक उपजाऊ बना देता है", correct: false },
+                { e: "It stops all earthquakes", h: "यह सभी भूकंपों को रोकता है", correct: false }
+            ],
+            expE: "The reservoir created behind a large dam floods vast tracts of forests and villages.",
+            expH: "बड़े बांध के पीछे बना जलाशय वनों और गांवों के विशाल भूभाग को जलमग्न कर देता है।"
+        },
+        {
+            qE: "Which of the following does NOT cause soil erosion?",
+            qH: "निम्नलिखित में से किससे मिट्टी का कटाव (Soil erosion) नहीं होता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Overgrazing", h: "अत्यधिक चराई", correct: false },
+                { e: "Heavy floods", h: "भारी बाढ़", correct: false },
+                { e: "Afforestation (planting trees)", h: "वनीकरण (पेड़ लगाना)", correct: true }
+            ],
+            expE: "Planting trees actually prevents soil erosion by holding the soil firmly with roots.",
+            expH: "पेड़ लगाना वास्तव में जड़ों के साथ मिट्टी को मजबूती से पकड़कर मिट्टी के कटाव को रोकता है।"
+        },
+        {
+            qE: "How does deforestation affect the local water cycle?",
+            qH: "वनों की कटाई स्थानीय जल चक्र को कैसे प्रभावित करती है?",
+            options: [
+                { e: "It reduces transpiration, leading to less rainfall in the area", h: "यह वाष्पोत्सर्जन (transpiration) को कम करता है, जिससे क्षेत्र में कम वर्षा होती है", correct: true },
+                { e: "It increases groundwater levels automatically", h: "यह भूजल स्तर को स्वचालित रूप से बढ़ाता है", correct: false },
+                { e: "It makes rivers flow backward", h: "यह नदियों को पीछे की ओर बहाता है", correct: false },
+                { e: "It has zero effect on the water cycle", h: "जल चक्र पर इसका शून्य प्रभाव पड़ता है", correct: false }
+            ],
+            expE: "Trees release water vapor into the air through their leaves (transpiration). Fewer trees mean less moisture in the air.",
+            expH: "पेड़ अपनी पत्तियों (वाष्पोत्सर्जन) के माध्यम से हवा में जलवाष्प छोड़ते हैं। कम पेड़ों का मतलब है हवा में कम नमी।"
+        },
+        {
+            qE: "Excessive use of chemical fertilizers and pesticides primarily leads to:",
+            qH: "रासायनिक खादों और कीटनाशकों के अत्यधिक उपयोग से मुख्य रूप से क्या होता है?",
+            options: [
+                { e: "Soil degradation and loss of soil health", h: "मिट्टी का क्षरण और मिट्टी के स्वास्थ्य का नुकसान", correct: true },
+                { e: "Rapid forest growth", h: "जंगल का तीव्र विकास", correct: false },
+                { e: "Prevention of desertification", h: "मरुस्थलीकरण की रोकथाम", correct: false },
+                { e: "Increase in pure drinking water", h: "शुद्ध पेयजल में वृद्धि", correct: false }
+            ],
+            expE: "Chemicals can destroy beneficial microorganisms in the soil, leading to long-term soil degradation.",
+            expH: "रसायन मिट्टी में लाभकारी सूक्ष्मजीवों को नष्ट कर सकते हैं, जिससे दीर्घकालिक मिट्टी का क्षरण हो सकता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>

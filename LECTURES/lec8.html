@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 8 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 8: Water Resources</h2>
+            <p>Uses, Over-exploitation, Floods, Droughts, and Water Conflicts</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "Approximately what percentage of the Earth's surface is covered by water?",
+            qH: "पृथ्वी की सतह का लगभग कितना प्रतिशत भाग पानी से ढका है?",
+            options: [
+                { e: "30%", h: "30%", correct: false },
+                { e: "50%", h: "50%", correct: false },
+                { e: "71%", h: "71%", correct: true },
+                { e: "90%", h: "90%", correct: false }
+            ],
+            expE: "About 71% of the Earth's surface is covered with water, mostly by oceans.",
+            expH: "पृथ्वी की सतह का लगभग 71% हिस्सा पानी से ढका है, जिसमें मुख्य रूप से महासागर शामिल हैं।"
+        },
+        {
+            qE: "Out of all the water on Earth, roughly what percentage is fresh water available for human use?",
+            qH: "पृथ्वी पर मौजूद कुल पानी में से लगभग कितना प्रतिशत मीठा पानी (Fresh water) मानव उपयोग के लिए उपलब्ध है?",
+            options: [
+                { e: "50%", h: "50%", correct: false },
+                { e: "25%", h: "25%", correct: false },
+                { e: "10%", h: "10%", correct: false },
+                { e: "Less than 3%", h: "3% से कम", correct: true }
+            ],
+            expE: "Only about 2.5% to 3% of Earth's water is freshwater, and most of that is trapped in glaciers.",
+            expH: "पृथ्वी का केवल 2.5% से 3% पानी मीठा है, और उसमें से अधिकांश ग्लेशियरों में फंसा हुआ है।"
+        },
+        {
+            qE: "Globally, which sector consumes the largest amount of freshwater?",
+            qH: "विश्व स्तर पर, कौन सा क्षेत्र सबसे अधिक मीठे पानी की खपत करता है?",
+            options: [
+                { e: "Domestic (Homes)", h: "घरेलू (घर)", correct: false },
+                { e: "Agriculture (Irrigation)", h: "कृषि (सिंचाई)", correct: true },
+                { e: "Industry (Factories)", h: "उद्योग (कारखाने)", correct: false },
+                { e: "Power generation", h: "बिजली उत्पादन", correct: false }
+            ],
+            expE: "Agriculture accounts for roughly 70% of global freshwater withdrawals for irrigation.",
+            expH: "सिंचाई के लिए वैश्विक मीठे पानी की निकासी में कृषि का हिस्सा लगभग 70% है।"
+        },
+        {
+            qE: "What does the 'Over-exploitation' of groundwater mean?",
+            qH: "भूजल (Groundwater) के 'अत्यधिक दोहन' (Over-exploitation) का क्या अर्थ है?",
+            options: [
+                { e: "Using water for drinking only", h: "केवल पीने के लिए पानी का उपयोग करना", correct: false },
+                { e: "Extracting more water than nature can recharge", h: "प्रकृति जितना रिचार्ज कर सकती है, उससे अधिक पानी निकालना", correct: true },
+                { e: "Boiling water to purify it", h: "पानी को शुद्ध करने के लिए उबालना", correct: false },
+                { e: "Building dams over rivers", h: "नदियों पर बांध बनाना", correct: false }
+            ],
+            expE: "Over-exploitation happens when the rate of pumping out groundwater is higher than the rate of rainfall refilling it.",
+            expH: "अत्यधिक दोहन तब होता है जब भूजल को बाहर निकालने की दर बारिश के पानी द्वारा उसे फिर से भरने की दर से अधिक होती है।"
+        },
+        {
+            qE: "Which of the following is a direct consequence of the over-exploitation of groundwater?",
+            qH: "निम्नलिखित में से कौन सा भूजल के अत्यधिक दोहन का प्रत्यक्ष परिणाम है?",
+            options: [
+                { e: "Lowering of the water table", h: "जल स्तर (Water table) का गिरना", correct: true },
+                { e: "Increase in forest cover", h: "वन क्षेत्र में वृद्धि", correct: false },
+                { e: "Purer drinking water", h: "पीने का शुद्ध पानी", correct: false },
+                { e: "More frequent rainfall", h: "अधिक बार वर्षा होना", correct: false }
+            ],
+            expE: "Continuous pumping causes the water table to drop, leading to dried-up wells and tube-wells.",
+            expH: "लगातार पानी निकालने से जल स्तर गिर जाता है, जिससे कुएं और ट्यूबवेल सूख जाते हैं।"
+        },
+        {
+            qE: "A natural disaster caused by an overflow of water onto land that is normally dry is called a:",
+            qH: "उस प्राकृतिक आपदा को क्या कहा जाता है जो आम तौर पर सूखी रहने वाली भूमि पर पानी के बहाव (overflow) के कारण होती है?",
+            options: [
+                { e: "Drought", h: "सूखा (Drought)", correct: false },
+                { e: "Flood", h: "बाढ़ (Flood)", correct: true },
+                { e: "Tornado", h: "बवंडर", correct: false },
+                { e: "Earthquake", h: "भूकंप", correct: false }
+            ],
+            expE: "Floods are usually caused by heavy continuous rainfall, melting snow, or broken dams.",
+            expH: "बाढ़ आमतौर पर भारी लगातार वर्षा, बर्फ पिघलने या टूटे हुए बांधों के कारण होती है।"
+        },
+        {
+            qE: "A prolonged period of abnormally low rainfall leading to a shortage of water is known as:",
+            qH: "असामान्य रूप से कम वर्षा की एक लंबी अवधि जिससे पानी की कमी हो जाती है, क्या कहलाती है?",
+            options: [
+                { e: "Flood", h: "बाढ़", correct: false },
+                { e: "Cyclone", h: "चक्रवात", correct: false },
+                { e: "Drought", h: "सूखा (Drought)", correct: true },
+                { e: "Tsunami", h: "सुनामी", correct: false }
+            ],
+            expE: "Droughts severely affect agriculture, reduce drinking water supplies, and cause economic distress.",
+            expH: "सूखा कृषि को गंभीर रूप से प्रभावित करता है, पीने के पानी की आपूर्ति कम करता है और आर्थिक संकट पैदा करता है।"
+        },
+        {
+            qE: "The underground layer of water-bearing permeable rock or gravel is called an:",
+            qH: "पानी ले जाने वाली पारगम्य चट्टान या बजरी की भूमिगत परत को क्या कहा जाता है?",
+            options: [
+                { e: "Atmosphere", h: "वायुमंडल", correct: false },
+                { e: "Aquifer", h: "जलभृत (Aquifer)", correct: true },
+                { e: "Asthenosphere", h: "एस्थेनोस्फीयर", correct: false },
+                { e: "Abyss", h: "अथाह गहराई (Abyss)", correct: false }
+            ],
+            expE: "Aquifers act as underground reservoirs from which we pump out groundwater using wells.",
+            expH: "जलभृत (Aquifers) भूमिगत जलाशयों के रूप में कार्य करते हैं जिनसे हम कुओं का उपयोग करके भूजल निकालते हैं।"
+        },
+        {
+            qE: "Which of these is a famous inter-state water dispute in Southern India?",
+            qH: "दक्षिण भारत में इनमें से कौन सा एक प्रसिद्ध अंतर-राज्यीय जल विवाद है?",
+            options: [
+                { e: "Ganga water dispute", h: "गंगा जल विवाद", correct: false },
+                { e: "Cauvery (Kaveri) water dispute", h: "कावेरी जल विवाद", correct: true },
+                { e: "Yamuna water dispute", h: "यमुना जल विवाद", correct: false },
+                { e: "Brahmaputra water dispute", h: "ब्रह्मपुत्र जल विवाद", correct: false }
+            ],
+            expE: "The Cauvery river dispute is a major historical conflict over water sharing primarily between Karnataka and Tamil Nadu.",
+            expH: "कावेरी नदी विवाद मुख्य रूप से कर्नाटक और तमिलनाडु के बीच पानी के बंटवारे को लेकर एक बड़ा ऐतिहासिक संघर्ष है।"
+        },
+        {
+            qE: "What does the term 'Water Conflict' refer to?",
+            qH: "'जल संघर्ष' (Water Conflict) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Fighting fire with water", h: "पानी से आग बुझाना", correct: false },
+                { e: "Disputes between regions or countries over access to water resources", h: "जल संसाधनों तक पहुंच को लेकर क्षेत्रों या देशों के बीच विवाद", correct: true },
+                { e: "Fish fighting in rivers", h: "नदियों में मछलियों की लड़ाई", correct: false },
+                { e: "Boiling water for purification", h: "शुद्धिकरण के लिए पानी उबालना", correct: false }
+            ],
+            expE: "Water conflicts arise when demand for a shared water resource exceeds the available supply.",
+            expH: "जल संघर्ष तब उत्पन्न होता है जब साझा जल संसाधन की मांग उपलब्ध आपूर्ति से अधिक हो जाती है।"
+        },
+        {
+            qE: "Which of the following is considered a 'Surface Water' resource?",
+            qH: "निम्नलिखित में से किसे 'सतही जल' (Surface Water) संसाधन माना जाता है?",
+            options: [
+                { e: "Deep wells", h: "गहरे कुएं", correct: false },
+                { e: "Underground aquifers", h: "भूमिगत जलभृत", correct: false },
+                { e: "Rivers and Lakes", h: "नदियाँ और झीलें", correct: true },
+                { e: "Soil moisture", h: "मिट्टी की नमी", correct: false }
+            ],
+            expE: "Surface water is any body of water found on the Earth's surface, like rivers, lakes, and wetlands.",
+            expH: "सतही जल पृथ्वी की सतह पर पाया जाने वाला पानी का कोई भी निकाय है, जैसे नदियां, झीलें और आर्द्रभूमि (wetlands)।"
+        },
+        {
+            qE: "What is an effective way to conserve water at the household level?",
+            qH: "घरेलू स्तर पर जल संरक्षण का एक प्रभावी तरीका क्या है?",
+            options: [
+                { e: "Leaving the tap running while brushing teeth", h: "दांत ब्रश करते समय नल खुला छोड़ देना", correct: false },
+                { e: "Fixing leaking pipes and taps immediately", h: "लीक हो रहे पाइप और नल को तुरंत ठीक करना", correct: true },
+                { e: "Washing a single cloth in the washing machine daily", h: "वाशिंग मशीन में रोजाना एक कपड़ा धोना", correct: false },
+                { e: "Using a hose pipe to clean the driveway", h: "ड्राइववे को साफ करने के लिए नली (hose) का उपयोग करना", correct: false }
+            ],
+            expE: "A dripping tap can waste thousands of liters of water a year. Fixing leaks is a basic step in conservation.",
+            expH: "एक टपकने वाला नल एक वर्ष में हजारों लीटर पानी बर्बाद कर सकता है। रिसाव को ठीक करना संरक्षण का एक बुनियादी कदम है।"
+        },
+        {
+            qE: "Which irrigation technique minimizes water loss by delivering water directly to the roots of plants?",
+            qH: "कौन सी सिंचाई तकनीक पौधों की जड़ों तक सीधे पानी पहुंचाकर पानी की बर्बादी को कम करती है?",
+            options: [
+                { e: "Flood irrigation", h: "बाढ़ (Flood) सिंचाई", correct: false },
+                { e: "Sprinkler irrigation", h: "स्प्रिंकलर (Sprinkler) सिंचाई", correct: false },
+                { e: "Drip irrigation", h: "ड्रिप (Drip) सिंचाई", correct: true },
+                { e: "Canal irrigation", h: "नहर सिंचाई", correct: false }
+            ],
+            expE: "Drip irrigation prevents evaporation and runoff, saving a massive amount of water in agriculture.",
+            expH: "ड्रिप सिंचाई वाष्पीकरण और पानी के बहने को रोकती है, जिससे कृषि में भारी मात्रा में पानी की बचत होती है।"
+        },
+        {
+            qE: "Water that is safe and suitable for drinking is called:",
+            qH: "जो पानी पीने के लिए सुरक्षित और उपयुक्त होता है, उसे क्या कहा जाता है?",
+            options: [
+                { e: "Potable water", h: "पीने योग्य पानी (Potable water)", correct: true },
+                { e: "Saline water", h: "खारा पानी", correct: false },
+                { e: "Contaminated water", h: "दूषित पानी", correct: false },
+                { e: "Hard water", h: "कठोर पानी", correct: false }
+            ],
+            expE: "Potable water is free from harmful chemicals, bacteria, and safe for human consumption.",
+            expH: "पीने योग्य पानी हानिकारक रसायनों, जीवाणुओं से मुक्त होता है और मानव उपभोग के लिए सुरक्षित होता है।"
+        },
+        {
+            qE: "How does large-scale deforestation increase the risk of floods?",
+            qH: "बड़े पैमाने पर वनों की कटाई से बाढ़ का खतरा कैसे बढ़ जाता है?",
+            options: [
+                { e: "Trees drink too much water", h: "पेड़ बहुत ज्यादा पानी पीते हैं", correct: false },
+                { e: "Roots are no longer there to absorb water and slow down surface runoff", h: "पानी को सोखने और सतही बहाव को धीमा करने के लिए जड़ें अब वहां नहीं हैं", correct: true },
+                { e: "Trees create rain clouds", h: "पेड़ बारिश के बादल बनाते हैं", correct: false },
+                { e: "Wood directly stops rivers from flowing", h: "लकड़ी सीधे नदियों को बहने से रोकती है", correct: false }
+            ],
+            expE: "Forests act like giant sponges. Without them, rainwater quickly rushes into rivers, overflowing them.",
+            expH: "जंगल विशाल स्पंज की तरह काम करते हैं। उनके बिना, बारिश का पानी तेजी से नदियों में चला जाता है, जिससे वे उफन जाती हैं।"
+        },
+        {
+            qE: "What is 'Rainwater Harvesting'?",
+            qH: "'वर्षा जल संचयन' (Rainwater Harvesting) क्या है?",
+            options: [
+                { e: "Making artificial rain using chemicals", h: "रसायनों का उपयोग करके कृत्रिम वर्षा कराना", correct: false },
+                { e: "Collecting and storing rainwater for future use", h: "भविष्य में उपयोग के लिए वर्षा जल को इकट्ठा करना और उसका भंडारण करना", correct: true },
+                { e: "Selling rainwater in plastic bottles", h: "प्लास्टिक की बोतलों में बारिश का पानी बेचना", correct: false },
+                { e: "Using machines to stop rainfall", h: "बारिश रोकने के लिए मशीनों का उपयोग करना", correct: false }
+            ],
+            expE: "It is a highly effective conservation method where rainwater is captured from rooftops and stored or sent underground.",
+            expH: "यह एक अत्यधिक प्रभावी संरक्षण पद्धति है जहां वर्षा जल को छतों से एकत्र किया जाता है और संग्रहित किया जाता है या भूमिगत भेजा जाता है।"
+        },
+        {
+            qE: "Why do urban areas often face artificial droughts despite getting normal rainfall?",
+            qH: "सामान्य वर्षा होने के बावजूद शहरी क्षेत्रों को अक्सर कृत्रिम सूखे का सामना क्यों करना पड़ता है?",
+            options: [
+                { e: "Cities use only bottled water", h: "शहर केवल बोतलबंद पानी का उपयोग करते हैं", correct: false },
+                { e: "Concrete surfaces prevent rainwater from soaking into the ground to recharge aquifers", h: "कंक्रीट की सतहें बारिश के पानी को जमीन में सोखने और जलभृतों को रिचार्ज करने से रोकती हैं", correct: true },
+                { e: "Rain evaporates faster in cities", h: "शहरों में बारिश तेजी से वाष्पित होती है", correct: false },
+                { e: "People drink all the rainwater instantly", h: "लोग बारिश का सारा पानी तुरंत पी जाते हैं", correct: false }
+            ],
+            expE: "Because of asphalt and concrete, rainwater becomes runoff instead of percolating into the soil to become groundwater.",
+            expH: "डामर और कंक्रीट के कारण, वर्षा जल मिट्टी में रिसकर भूजल बनने के बजाय बह जाता है।"
+        },
+        {
+            qE: "Why is water generally considered a renewable resource?",
+            qH: "पानी को आमतौर पर नवीकरणीय (renewable) संसाधन क्यों माना जाता है?",
+            options: [
+                { e: "Because we can make it in laboratories", h: "क्योंकि हम इसे प्रयोगशालाओं में बना सकते हैं", correct: false },
+                { e: "Because it continuously circulates through evaporation and precipitation (Water Cycle)", h: "क्योंकि यह वाष्पीकरण और वर्षा (जल चक्र) के माध्यम से लगातार घूमता रहता है", correct: true },
+                { e: "Because oceans never dry up", h: "क्योंकि महासागर कभी नहीं सूखते", correct: false },
+                { e: "Because it comes from outer space", h: "क्योंकि यह बाहरी अंतरिक्ष से आता है", correct: false }
+            ],
+            expE: "Through the hydrological cycle, water is constantly renewed; however, usable freshwater is limited.",
+            expH: "जल विज्ञान चक्र के माध्यम से, पानी का लगातार नवीनीकरण होता है; हालाँकि, उपयोग करने योग्य मीठा पानी सीमित है।"
+        },
+        {
+            qE: "Which international water dispute exists between India and Pakistan?",
+            qH: "भारत और पाकिस्तान के बीच कौन सा अंतर्राष्ट्रीय जल विवाद मौजूद है?",
+            options: [
+                { e: "Nile River Dispute", h: "नील नदी विवाद", correct: false },
+                { e: "Mekong River Dispute", h: "मेकांग नदी विवाद", correct: false },
+                { e: "Indus Water Treaty / Dispute", h: "सिंधु जल संधि / विवाद", correct: true },
+                { e: "Colorado River Dispute", h: "कोलोराडो नदी विवाद", correct: false }
+            ],
+            expE: "The Indus Water Treaty (1960) dictates the sharing of the Indus river and its tributaries between India and Pakistan.",
+            expH: "सिंधु जल संधि (1960) भारत और पाकिस्तान के बीच सिंधु नदी और उसकी सहायक नदियों के बंटवारे को निर्धारित करती है।"
+        },
+        {
+            qE: "The slow movement of water from the surface into the soil and underground rocks is called:",
+            qH: "सतह से मिट्टी और भूमिगत चट्टानों में पानी की धीमी गति (movement) को क्या कहा जाता है?",
+            options: [
+                { e: "Condensation", h: "संघनन", correct: false },
+                { e: "Transpiration", h: "वाष्पोत्सर्जन", correct: false },
+                { e: "Infiltration / Percolation", h: "अंतःस्यंदन (Infiltration) / रिसाव", correct: true },
+                { e: "Evaporation", h: "वाष्पीकरण", correct: false }
+            ],
+            expE: "Percolation or infiltration is the process that naturally recharges our groundwater levels.",
+            expH: "रिसाव या अंतःस्यंदन वह प्रक्रिया है जो हमारे भूजल स्तर को स्वाभाविक रूप से रिचार्ज करती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>

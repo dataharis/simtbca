@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 7 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 7: Impacts of Mining & Dams</h2>
+            <p>Effects on Environment, Forests, Biodiversity, and Tribal Communities</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "The process of extracting valuable minerals or other geological materials from the Earth is called:",
+            qH: "पृथ्वी से मूल्यवान खनिजों या अन्य भूवैज्ञानिक सामग्रियों को निकालने की प्रक्रिया क्या कहलाती है?",
+            options: [
+                { e: "Farming", h: "खेती", correct: false },
+                { e: "Mining", h: "खनन (Mining)", correct: true },
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Irrigation", h: "सिंचाई", correct: false }
+            ],
+            expE: "Mining involves digging into the earth to extract resources like coal, iron, gold, etc.",
+            expH: "खनन में कोयला, लोहा, सोना आदि जैसे संसाधनों को निकालने के लिए पृथ्वी की खुदाई शामिल है।"
+        },
+        {
+            qE: "Which type of mining causes the maximum surface destruction and deforestation?",
+            qH: "किस प्रकार का खनन सतह का अधिकतम विनाश और वनों की कटाई का कारण बनता है?",
+            options: [
+                { e: "Underground Mining", h: "भूमिगत खनन", correct: false },
+                { e: "Open-cast Mining (Surface Mining)", h: "ओपन-कास्ट खनन (सतही खनन)", correct: true },
+                { e: "Deep-sea Mining", h: "गहरे समुद्र में खनन", correct: false },
+                { e: "Space Mining", h: "अंतरिक्ष खनन", correct: false }
+            ],
+            expE: "Open-cast mining requires removing the entire top layer of soil and forests to reach the minerals below.",
+            expH: "ओपन-कास्ट खनन में नीचे के खनिजों तक पहुंचने के लिए मिट्टी और जंगलों की पूरी ऊपरी परत को हटाने की आवश्यकता होती है।"
+        },
+        {
+            qE: "What is a major negative environmental impact of building large dams?",
+            qH: "बड़े बांध बनाने का एक प्रमुख नकारात्मक पर्यावरणीय प्रभाव क्या है?",
+            options: [
+                { e: "It creates new deserts", h: "यह नए रेगिस्तान बनाता है", correct: false },
+                { e: "Submergence (drowning) of large forest areas and wildlife habitats", h: "बड़े वन क्षेत्रों और वन्यजीव आवासों का जलमग्न होना (डूबना)", correct: true },
+                { e: "It stops all rainfall in the area", h: "यह क्षेत्र में सभी वर्षा को रोकता है", correct: false },
+                { e: "It increases the number of trees automatically", h: "यह पेड़ों की संख्या को स्वचालित रूप से बढ़ाता है", correct: false }
+            ],
+            expE: "The huge reservoir created behind a dam permanently floods and destroys terrestrial ecosystems.",
+            expH: "बांध के पीछे बना विशाल जलाशय स्थलीय पारिस्थितिक तंत्र को स्थायी रूप से जलमग्न कर देता है और नष्ट कर देता है।"
+        },
+        {
+            qE: "How do large dams specifically affect fish and aquatic biodiversity?",
+            qH: "बड़े बांध विशेष रूप से मछलियों और जलीय जैव विविधता को कैसे प्रभावित करते हैं?",
+            options: [
+                { e: "They block the natural migration routes of fish", h: "वे मछलियों के प्राकृतिक प्रवास मार्गों को अवरुद्ध करते हैं", correct: true },
+                { e: "They provide fish with more food", h: "वे मछलियों को अधिक भोजन प्रदान करते हैं", correct: false },
+                { e: "They teach fish how to swim faster", h: "वे मछलियों को तेजी से तैरना सिखाते हैं", correct: false },
+                { e: "They have no effect on fish", h: "मछलियों पर इनका कोई प्रभाव नहीं पड़ता", correct: false }
+            ],
+            expE: "Dams act as physical barriers, preventing migratory fish (like Salmon) from reaching their breeding grounds.",
+            expH: "बांध भौतिक बाधाओं के रूप में कार्य करते हैं, जो प्रवासी मछलियों (जैसे सैल्मन) को उनके प्रजनन आधार तक पहुँचने से रोकते हैं।"
+        },
+        {
+            qE: "In the context of dams and mining, what does 'Displacement' mean?",
+            qH: "बांधों और खनन के संदर्भ में, 'विस्थापन' (Displacement) का क्या अर्थ है?",
+            options: [
+                { e: "Moving rocks from one place to another", h: "चट्टानों को एक स्थान से दूसरे स्थान पर ले जाना", correct: false },
+                { e: "Forcing local people and tribes to leave their homes and land", h: "स्थानीय लोगों और जनजातियों को उनके घर और जमीन छोड़ने के लिए मजबूर करना", correct: true },
+                { e: "Building new homes for animals", h: "जानवरों के लिए नए घर बनाना", correct: false },
+                { e: "Stopping the flow of a river", h: "नदी के प्रवाह को रोकना", correct: false }
+            ],
+            expE: "When forests are cleared or submerged, the people living there are forced to relocate, often losing their livelihoods.",
+            expH: "जब जंगलों को साफ किया जाता है या जलमग्न किया जाता है, तो वहां रहने वाले लोगों को स्थानांतरित होने के लिए मजबूर होना पड़ता है, जिससे अक्सर उनकी आजीविका छिन जाती है।"
+        },
+        {
+            qE: "Which social movement in India strongly opposed the displacement of tribal people due to a large dam project?",
+            qH: "भारत में किस सामाजिक आंदोलन ने एक बड़ी बांध परियोजना के कारण आदिवासी लोगों के विस्थापन का कड़ा विरोध किया?",
+            options: [
+                { e: "Chipko Movement", h: "चिपको आंदोलन", correct: false },
+                { e: "Swadeshi Movement", h: "स्वदेशी आंदोलन", correct: false },
+                { e: "Narmada Bachao Andolan", h: "नर्मदा बचाओ आंदोलन", correct: true },
+                { e: "Green Revolution", h: "हरित क्रांति", correct: false }
+            ],
+            expE: "Led by Medha Patkar, this movement fought for the rights of indigenous people displaced by the Sardar Sarovar Dam.",
+            expH: "मेधा पाटकर के नेतृत्व में, इस आंदोलन ने सरदार सरोवर बांध से विस्थापित स्वदेशी लोगों के अधिकारों के लिए लड़ाई लड़ी।"
+        },
+        {
+            qE: "What happens to wildlife when a forest is cleared for mining operations?",
+            qH: "जब खनन कार्यों के लिए जंगल साफ किया जाता है तो वन्यजीवों का क्या होता है?",
+            options: [
+                { e: "They experience severe habitat loss and may die or migrate", h: "उन्हें गंभीर आवास हानि का अनुभव होता है और वे मर सकते हैं या पलायन कर सकते हैं", correct: true },
+                { e: "They learn to live underground in the mines", h: "वे खदानों में भूमिगत रहना सीखते हैं", correct: false },
+                { e: "Their population increases rapidly", h: "उनकी जनसंख्या तेजी से बढ़ती है", correct: false },
+                { e: "They are given new homes by the mining companies", h: "खनन कंपनियों द्वारा उन्हें नए घर दिए जाते हैं", correct: false }
+            ],
+            expE: "Mining destroys the natural habitat (food and shelter) of wildlife, leading to a decline in biodiversity.",
+            expH: "खनन वन्यजीवों के प्राकृतिक आवास (भोजन और आश्रय) को नष्ट कर देता है, जिससे जैव विविधता में गिरावट आती है।"
+        },
+        {
+            qE: "Which toxic phenomenon occurs when rainwater mixes with exposed minerals in a mine, heavily polluting local rivers?",
+            qH: "कौन सी जहरीली घटना तब होती है जब वर्षा जल खदान में खुले खनिजों के साथ मिल जाता है, जिससे स्थानीय नदियां भारी रूप से प्रदूषित होती हैं?",
+            options: [
+                { e: "Acid Rain", h: "अम्ल वर्षा (Acid Rain)", correct: false },
+                { e: "Acid Mine Drainage", h: "एसिड माइन ड्रेनेज (Acid Mine Drainage)", correct: true },
+                { e: "Greenhouse Effect", h: "ग्रीनहाउस प्रभाव", correct: false },
+                { e: "Water Purification", h: "जल शुद्धिकरण", correct: false }
+            ],
+            expE: "Acid Mine Drainage (AMD) creates highly acidic water containing heavy metals, which is toxic to aquatic life.",
+            expH: "एसिड माइन ड्रेनेज (AMD) अत्यधिक अम्लीय जल बनाता है जिसमें भारी धातुएँ होती हैं, जो जलीय जीवन के लिए विषैला होता है।"
+        },
+        {
+            qE: "Why are tribal (indigenous) communities the most vulnerable to the impacts of mining and dams?",
+            qH: "खनन और बांधों के प्रभाव के प्रति आदिवासी (स्वदेशी) समुदाय सबसे अधिक संवेदनशील क्यों हैं?",
+            options: [
+                { e: "Because they rely directly on the forest for food, medicine, and livelihood", h: "क्योंकि वे भोजन, दवा और आजीविका के लिए सीधे जंगल पर निर्भर हैं", correct: true },
+                { e: "Because they work as managers in mining companies", h: "क्योंकि वे खनन कंपनियों में प्रबंधक के रूप में काम करते हैं", correct: false },
+                { e: "Because they build the dams themselves", h: "क्योंकि वे स्वयं बांध बनाते हैं", correct: false },
+                { e: "Because they live in modern cities", h: "क्योंकि वे आधुनिक शहरों में रहते हैं", correct: false }
+            ],
+            expE: "Forests are the life support system for tribals. Losing the forest means losing their entire way of life.",
+            expH: "जंगल आदिवासियों के लिए जीवन समर्थन प्रणाली हैं। जंगल खोने का मतलब है उनके जीने का पूरा तरीका खो देना।"
+        },
+        {
+            qE: "The artificial lake created behind a dam to store water is called a:",
+            qH: "पानी जमा करने के लिए बांध के पीछे बनाई गई कृत्रिम झील को क्या कहा जाता है?",
+            options: [
+                { e: "Pond", h: "तालाब", correct: false },
+                { e: "Reservoir", h: "जलाशय (Reservoir)", correct: true },
+                { e: "Estuary", h: "मुहाना (Estuary)", correct: false },
+                { e: "Glacier", h: "ग्लेशियर", correct: false }
+            ],
+            expE: "A reservoir stores water for irrigation, drinking, and generating hydroelectric power.",
+            expH: "एक जलाशय सिंचाई, पीने और जलविद्युत शक्ति उत्पन्न करने के लिए पानी जमा करता है।"
+        },
+        {
+            qE: "How does mining affect air quality in the surrounding areas?",
+            qH: "खनन आस-पास के क्षेत्रों में वायु की गुणवत्ता को कैसे प्रभावित करता है?",
+            options: [
+                { e: "It purifies the air by releasing oxygen", h: "यह ऑक्सीजन छोड़कर हवा को शुद्ध करता है", correct: false },
+                { e: "It releases massive amounts of dust, particulate matter, and toxic gases", h: "यह भारी मात्रा में धूल, सूक्ष्म कण (PM) और जहरीली गैसें छोड़ता है", correct: true },
+                { e: "It has zero impact on the air", h: "हवा पर इसका शून्य प्रभाव पड़ता है", correct: false },
+                { e: "It adds pleasant fragrances to the air", h: "यह हवा में सुखद सुगंध जोड़ता है", correct: false }
+            ],
+            expE: "Blasting, drilling, and transporting minerals generate heavy dust, causing respiratory diseases in local populations.",
+            expH: "विस्फोट, ड्रिलिंग और खनिजों के परिवहन से भारी धूल उत्पन्न होती है, जिससे स्थानीय आबादी में श्वसन संबंधी बीमारियाँ होती हैं।"
+        },
+        {
+            qE: "What is 'Mine Rehabilitation' (or Reclamation)?",
+            qH: "'खदान पुनर्ग्रहण' (Mine Rehabilitation) क्या है?",
+            options: [
+                { e: "The process of digging deeper into a mine", h: "खदान में गहराई तक खुदाई करने की प्रक्रिया", correct: false },
+                { e: "The process of restoring mined land to a natural or economically usable state", h: "खनन की गई भूमि को प्राकृतिक या आर्थिक रूप से उपयोगी स्थिति में बहाल करने की प्रक्रिया", correct: true },
+                { e: "Abandoning a mine without cleaning it", h: "बिना सफाई किए खदान को छोड़ देना", correct: false },
+                { e: "Selling the mine to another company", h: "खदान को दूसरी कंपनी को बेचना", correct: false }
+            ],
+            expE: "It involves filling pits, stabilizing soil, and planting vegetation to restore the ecosystem after mining ends.",
+            expH: "इसमें खनन समाप्त होने के बाद पारिस्थितिक तंत्र को बहाल करने के लिए गड्ढों को भरना, मिट्टी को स्थिर करना और वनस्पति लगाना शामिल है।"
+        },
+        {
+            qE: "The immense weight of water stored in large dam reservoirs can sometimes trigger natural disasters known as:",
+            qH: "बड़े बांध के जलाशयों में जमा पानी का अत्यधिक भार कभी-कभी किस प्राकृतिक आपदा को ट्रिगर कर सकता है?",
+            options: [
+                { e: "Tornadoes", h: "बवंडर", correct: false },
+                { e: "Reservoir-Induced Seismicity (Earthquakes)", h: "जलाशय-प्रेरित भूकंप (Reservoir-Induced Seismicity)", correct: true },
+                { e: "Volcanic Eruptions", h: "ज्वालामुखी विस्फोट", correct: false },
+                { e: "Solar Flares", h: "सौर प्रज्वाल (Solar Flares)", correct: false }
+            ],
+            expE: "The massive pressure of the water can cause faults in the earth's crust to slip, causing localized earthquakes.",
+            expH: "पानी के भारी दबाव के कारण पृथ्वी की पपड़ी में दरारें खिसक सकती हैं, जिससे स्थानीय भूकंप आ सकते हैं।"
+        },
+        {
+            qE: "How do large dams affect the downstream areas of a river?",
+            qH: "बड़े बांध नदी के निचले क्षेत्रों (Downstream) को कैसे प्रभावित करते हैं?",
+            options: [
+                { e: "They increase the flow of nutrient-rich silt downstream", h: "वे बहाव के नीचे पोषक तत्वों से भरपूर गाद (silt) का प्रवाह बढ़ाते हैं", correct: false },
+                { e: "They reduce water flow and trap fertile sediments, degrading downstream agriculture", h: "वे जल प्रवाह को कम करते हैं और उपजाऊ तलछट को रोकते हैं, जिससे कृषि का क्षरण होता है", correct: true },
+                { e: "They completely dry up the ocean", h: "वे समुद्र को पूरी तरह सुखा देते हैं", correct: false },
+                { e: "They create new mountain ranges", h: "वे नई पर्वत श्रृंखलाएँ बनाते हैं", correct: false }
+            ],
+            expE: "Dams trap the silt that naturally fertilizes downstream floodplains, making farming difficult for downstream communities.",
+            expH: "बांध उस गाद को फंसा लेते हैं जो स्वाभाविक रूप से निचले बाढ़ के मैदानों को उपजाऊ बनाती है, जिससे निचले इलाकों के समुदायों के लिए खेती करना मुश्किल हो जाता है।"
+        },
+        {
+            qE: "Before starting a new mining or dam project, which mandatory study must be conducted to assess potential ecological damage?",
+            qH: "कोई नई खनन या बांध परियोजना शुरू करने से पहले, संभावित पारिस्थितिक क्षति का आकलन करने के लिए कौन सा अनिवार्य अध्ययन किया जाना चाहिए?",
+            options: [
+                { e: "Financial Profit Analysis", h: "वित्तीय लाभ विश्लेषण", correct: false },
+                { e: "Environmental Impact Assessment (EIA)", h: "पर्यावरण प्रभाव आकलन (EIA)", correct: true },
+                { e: "Marketing Strategy", h: "मार्केटिंग रणनीति", correct: false },
+                { e: "Consumer Behavior Survey", h: "उपभोक्ता व्यवहार सर्वेक्षण", correct: false }
+            ],
+            expE: "EIA is a formal process used to predict the environmental consequences of a proposed project.",
+            expH: "EIA एक औपचारिक प्रक्रिया है जिसका उपयोग प्रस्तावित परियोजना के पर्यावरणीय परिणामों की भविष्यवाणी करने के लिए किया जाता है।"
+        },
+        {
+            qE: "Which of the following is a POSITIVE economic impact of mining?",
+            qH: "निम्नलिखित में से कौन खनन का एक सकारात्मक आर्थिक प्रभाव है?",
+            options: [
+                { e: "Loss of biodiversity", h: "जैव विविधता का नुकसान", correct: false },
+                { e: "Generation of employment and raw materials for industries", h: "रोजगार का सृजन और उद्योगों के लिए कच्चे माल की प्राप्ति", correct: true },
+                { e: "Increase in noise pollution", h: "ध्वनि प्रदूषण में वृद्धि", correct: false },
+                { e: "Contamination of groundwater", h: "भूजल का दूषित होना", correct: false }
+            ],
+            expE: "While environmentally damaging, mining provides essential raw materials and jobs for the economy.",
+            expH: "यद्यपि यह पर्यावरण को नुकसान पहुंचाता है, खनन अर्थव्यवस्था के लिए आवश्यक कच्चे माल और रोजगार प्रदान करता है।"
+        },
+        {
+            qE: "Waterlogging and Salinization of soil are common negative impacts associated with:",
+            qH: "जलभराव (Waterlogging) और मिट्टी का लवणीकरण (Salinization) किसके सामान्य नकारात्मक प्रभाव हैं?",
+            options: [
+                { e: "Excessive irrigation facilitated by canal systems from dams", h: "बांधों से नहर प्रणालियों द्वारा सुगम अत्यधिक सिंचाई", correct: true },
+                { e: "Wind energy generation", h: "पवन ऊर्जा उत्पादन", correct: false },
+                { e: "Underground coal mining", h: "भूमिगत कोयला खनन", correct: false },
+                { e: "Planting too many trees", h: "बहुत अधिक पेड़ लगाना", correct: false }
+            ],
+            expE: "Over-irrigation raises the water table, bringing harmful salts to the surface and degrading soil fertility.",
+            expH: "अत्यधिक सिंचाई जल स्तर को बढ़ाती है, हानिकारक लवणों को सतह पर लाती है और मिट्टी की उर्वरता को कम करती है।"
+        },
+        {
+            qE: "Which sector relies heavily on heavy explosives to break rocks, causing massive noise and vibration pollution?",
+            qH: "कौन सा क्षेत्र चट्टानों को तोड़ने के लिए भारी विस्फोटकों पर बहुत अधिक निर्भर करता है, जिससे बड़े पैमाने पर ध्वनि और कंपन प्रदूषण होता है?",
+            options: [
+                { e: "Agriculture", h: "कृषि", correct: false },
+                { e: "Textile Industry", h: "कपड़ा उद्योग", correct: false },
+                { e: "Mining", h: "खनन (Mining)", correct: true },
+                { e: "Information Technology", h: "सूचना प्रौद्योगिकी", correct: false }
+            ],
+            expE: "Blasting is a routine activity in mining that disturbs wildlife and nearby human settlements.",
+            expH: "विस्फोट खनन में एक नियमित गतिविधि है जो वन्यजीवों और आस-पास की मानव बस्तियों को परेशान करती है।"
+        },
+        {
+            qE: "What does 'Rehabilitation' mean for people displaced by dams or mines?",
+            qH: "बांधों या खदानों से विस्थापित लोगों के लिए 'पुनर्वास' (Rehabilitation) का क्या अर्थ है?",
+            options: [
+                { e: "Giving them a warning to leave", h: "उन्हें जाने की चेतावनी देना", correct: false },
+                { e: "Providing them with new homes, land, and livelihood opportunities in a new location", h: "उन्हें एक नए स्थान पर नए घर, जमीन और आजीविका के अवसर प्रदान करना", correct: true },
+                { e: "Arresting them for protesting", h: "विरोध करने पर उन्हें गिरफ्तार करना", correct: false },
+                { e: "Making them work in the mines for free", h: "उनसे खदानों में मुफ्त में काम करवाना", correct: false }
+            ],
+            expE: "Rehabilitation aims to restore the social and economic well-being of Project Affected People (PAP).",
+            expH: "पुनर्वास का उद्देश्य परियोजना प्रभावित लोगों (PAP) की सामाजिक और आर्थिक भलाई को बहाल करना है।"
+        },
+        {
+            qE: "The Tehri Dam, one of the highest dams in India, caused controversy primarily due to:",
+            qH: "टिहरी बांध, जो भारत के सबसे ऊंचे बांधों में से एक है, मुख्य रूप से किस कारण विवाद का विषय बना?",
+            options: [
+                { e: "Its beautiful architecture", h: "इसकी सुंदर वास्तुकला", correct: false },
+                { e: "Environmental concerns and the displacement of the old Tehri town", h: "पर्यावरणीय चिंताएँ और पुराने टिहरी शहर का विस्थापन", correct: true },
+                { e: "It produced too much electricity", h: "इसने बहुत अधिक बिजली का उत्पादन किया", correct: false },
+                { e: "It was built too quickly", h: "इसे बहुत जल्दी बनाया गया था", correct: false }
+            ],
+            expE: "The old Tehri town was completely submerged, displacing thousands, and raised seismic (earthquake) safety concerns.",
+            expH: "पुराना टिहरी शहर पूरी तरह से जलमग्न हो गया, जिससे हजारों लोग विस्थापित हुए, और भूकंपीय सुरक्षा संबंधी चिंताएँ पैदा हुईं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>

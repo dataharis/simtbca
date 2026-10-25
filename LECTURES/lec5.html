@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 5 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 5: Forest Products & Livelihoods</h2>
+            <p>Natural Forest Products, Medicinal Plants, and Forest-Based Industries</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the abbreviation NTFP stand for in the context of forests?",
+            qH: "वनों के संदर्भ में संक्षेप NTFP का क्या अर्थ है?",
+            options: [
+                { e: "New Timber Forest Plants", h: "न्यू टिम्बर फॉरेस्ट प्लांट्स", correct: false },
+                { e: "National Tree and Forest Protection", h: "नेशनल ट्री एंड फॉरेस्ट प्रोटेक्शन", correct: false },
+                { e: "Non-Timber Forest Products", h: "गैर-इमारती लकड़ी वन उत्पाद", correct: true },
+                { e: "Natural Timber For Paper", h: "नेचुरल टिम्बर फॉर पेपर", correct: false }
+            ],
+            expE: "NTFPs include all biological materials other than timber, such as fruits, nuts, honey, and medicinal plants.",
+            expH: "NTFP में इमारती लकड़ी के अलावा अन्य सभी जैविक सामग्रियां शामिल हैं, जैसे फल, मेवे, शहद और औषधीय पौधे।"
+        },
+        {
+            qE: "Which of the following is an example of a Non-Timber Forest Product (NTFP)?",
+            qH: "निम्नलिखित में से कौन सा गैर-इमारती लकड़ी वन उत्पाद (NTFP) का एक उदाहरण है?",
+            options: [
+                { e: "Teak wood logs", h: "सागौन की लकड़ी के लट्ठे", correct: false },
+                { e: "Honey", h: "शहद", correct: true },
+                { e: "Plastic", h: "प्लास्टिक", correct: false },
+                { e: "Steel", h: "स्टील", correct: false }
+            ],
+            expE: "Honey is gathered from forests without cutting down trees, making it a classic NTFP.",
+            expH: "शहद पेड़ों को काटे बिना जंगलों से इकट्ठा किया जाता है, जिससे यह एक क्लासिक NTFP बन जाता है।"
+        },
+        {
+            qE: "Which famous medicinal plant is widely used in India for its natural antibacterial and antifungal properties?",
+            qH: "प्राकृतिक जीवाणुरोधी (antibacterial) और एंटीफंगल गुणों के लिए भारत में किस प्रसिद्ध औषधीय पौधे का व्यापक रूप से उपयोग किया जाता है?",
+            options: [
+                { e: "Neem", h: "नीम", correct: true },
+                { e: "Cactus", h: "कैक्टस", correct: false },
+                { e: "Rose", h: "गुलाब", correct: false },
+                { e: "Wheat", h: "गेहूँ", correct: false }
+            ],
+            expE: "Neem (Azadirachta indica) is traditionally known as the 'village pharmacy' in India for its healing properties.",
+            expH: "नीम को भारत में इसके उपचार गुणों के कारण पारंपरिक रूप से 'गांव की फार्मेसी' के रूप में जाना जाता है।"
+        },
+        {
+            qE: "What is the primary traditional use of the 'Tulsi' (Holy Basil) plant?",
+            qH: "'तुलसी' (होली बेसिल) पौधे का प्राथमिक पारंपरिक उपयोग क्या है?",
+            options: [
+                { e: "Making wooden furniture", h: "लकड़ी का फर्नीचर बनाना", correct: false },
+                { e: "Extracting oil for vehicles", h: "वाहनों के लिए तेल निकालना", correct: false },
+                { e: "Building houses", h: "घर बनाना", correct: false },
+                { e: "Curing common cough, cold, and respiratory issues", h: "सामान्य खांसी, सर्दी और सांस की समस्याओं को ठीक करना", correct: true }
+            ],
+            expE: "Tulsi has strong immunomodulatory and therapeutic properties, widely used in Ayurveda.",
+            expH: "तुलसी में मजबूत इम्यूनोमॉड्यूलेटरी और उपचारात्मक गुण होते हैं, जिनका आयुर्वेद में व्यापक रूप से उपयोग किया जाता है।"
+        },
+        {
+            qE: "The leaves of which tree are primarily used for making 'Bidis' (traditional Indian cigarettes) and support tribal livelihoods?",
+            qH: "किस पेड़ की पत्तियों का उपयोग मुख्य रूप से 'बीड़ी' बनाने के लिए किया जाता है और यह आदिवासी आजीविका का समर्थन करता है?",
+            options: [
+                { e: "Mango", h: "आम", correct: false },
+                { e: "Tendu", h: "तेंदू", correct: true },
+                { e: "Banyan", h: "बरगद", correct: false },
+                { e: "Peepal", h: "पीपल", correct: false }
+            ],
+            expE: "Tendu leaf collection is a major source of income for forest-dwelling communities in central India.",
+            expH: "तेंदू पत्ता संग्रह मध्य भारत में वन-निवासी समुदायों के लिए आय का एक प्रमुख स्रोत है।"
+        },
+        {
+            qE: "Bamboo, often called 'green gold', is technically classified biologically as a type of:",
+            qH: "बांस, जिसे अक्सर 'हरा सोना' कहा जाता है, तकनीकी रूप से जैविक दृष्टि से किस प्रकार का माना जाता है?",
+            options: [
+                { e: "Grass", h: "घास", correct: true },
+                { e: "Tree", h: "पेड़", correct: false },
+                { e: "Bush", h: "झाड़ी", correct: false },
+                { e: "Herb", h: "जड़ी-बूटी", correct: false }
+            ],
+            expE: "Although it grows tall like a tree, bamboo belongs to the grass family (Poaceae) and grows very fast.",
+            expH: "हालाँकि यह एक पेड़ की तरह लंबा होता है, बाँस घास परिवार (Poaceae) का है और बहुत तेज़ी से बढ़ता है।"
+        },
+        {
+            qE: "Which of the following is a classic example of a 'Forest-based industry'?",
+            qH: "निम्नलिखित में से कौन सा 'वन-आधारित उद्योग' का एक उत्कृष्ट उदाहरण है?",
+            options: [
+                { e: "Iron and Steel", h: "लोहा और इस्पात", correct: false },
+                { e: "IT and Software", h: "आईटी और सॉफ्टवेयर", correct: false },
+                { e: "Paper and Pulp", h: "कागज और लुगदी (Paper and Pulp)", correct: true },
+                { e: "Automobile Manufacturing", h: "ऑटोमोबाइल विनिर्माण", correct: false }
+            ],
+            expE: "The paper and pulp industry relies heavily on softwoods, bamboo, and eucalyptus from forests as raw materials.",
+            expH: "कागज और लुगदी उद्योग कच्चे माल के रूप में जंगलों से सॉफ्टवुड, बांस और नीलगिरी पर बहुत अधिक निर्भर करता है।"
+        },
+        {
+            qE: "The term 'Silviculture' refers to:",
+            qH: "'सिल्वीकल्चर' (Silviculture) शब्द का तात्पर्य है:",
+            options: [
+                { e: "Rearing of silkworms", h: "रेशम के कीड़ों का पालन", correct: false },
+                { e: "The science of growing and cultivating forest trees", h: "वन वृक्षों को उगाने और खेती करने का विज्ञान", correct: true },
+                { e: "Farming of freshwater fish", h: "मीठे पानी की मछलियों की खेती", correct: false },
+                { e: "Extracting silver from mines", h: "खदानों से चांदी निकालना", correct: false }
+            ],
+            expE: "Silviculture is the practice of controlling the growth, composition, health, and quality of forests.",
+            expH: "सिल्वीकल्चर वनों के विकास, संरचना, स्वास्थ्य और गुणवत्ता को नियंत्रित करने का अभ्यास है।"
+        },
+        {
+            qE: "Amla (Indian Gooseberry), a famous forest product, is one of the richest natural sources of which vitamin?",
+            qH: "आंवला (Indian Gooseberry), एक प्रसिद्ध वन उत्पाद, किस विटामिन के सबसे समृद्ध प्राकृतिक स्रोतों में से एक है?",
+            options: [
+                { e: "Vitamin A", h: "विटामिन ए", correct: false },
+                { e: "Vitamin D", h: "विटामिन डी", correct: false },
+                { e: "Vitamin B12", h: "विटामिन बी12", correct: false },
+                { e: "Vitamin C", h: "विटामिन सी", correct: true }
+            ],
+            expE: "Amla is packed with Vitamin C and antioxidants, boosting immunity and skin health.",
+            expH: "आंवला विटामिन सी और एंटीऑक्सीडेंट से भरपूर होता है, जो रोग प्रतिरोधक क्षमता और त्वचा के स्वास्थ्य को बढ़ाता है।"
+        },
+        {
+            qE: "Which of the following plants is well-known for treating skin burns, wounds, and providing skincare benefits?",
+            qH: "निम्नलिखित में से कौन सा पौधा त्वचा के जलने, घावों के इलाज और त्वचा की देखभाल के लाभ प्रदान करने के लिए प्रसिद्ध है?",
+            options: [
+                { e: "Neem", h: "नीम", correct: false },
+                { e: "Tulsi", h: "तुलसी", correct: false },
+                { e: "Aloe Vera", h: "एलोवेरा (घृतकुमारी)", correct: true },
+                { e: "Mint", h: "पुदीना", correct: false }
+            ],
+            expE: "Aloe Vera gel has soothing, moisturizing, and cooling properties ideal for burns and skin care.",
+            expH: "एलोवेरा जेल में सुखदायक, मॉइस्चराइजिंग और शीतलन गुण होते हैं जो जलन और त्वचा की देखभाल के लिए आदर्श हैं।"
+        },
+        {
+            qE: "The extraction of resin and turpentine is primarily associated with which type of trees?",
+            qH: "राल (Resin) और तारपीन का निष्कर्षण मुख्य रूप से किस प्रकार के पेड़ों से जुड़ा है?",
+            options: [
+                { e: "Pine trees", h: "चीड़ के पेड़ (Pine trees)", correct: true },
+                { e: "Apple trees", h: "सेब के पेड़", correct: false },
+                { e: "Banana plants", h: "केले के पौधे", correct: false },
+                { e: "Coconut trees", h: "नारियल के पेड़", correct: false }
+            ],
+            expE: "Pine trees produce resin, which is processed to make turpentine, used in paints and varnishes.",
+            expH: "चीड़ के पेड़ राल का उत्पादन करते हैं, जिसे तारपीन बनाने के लिए संसाधित किया जाता है, जिसका उपयोग पेंट और वार्निश में किया जाता है।"
+        },
+        {
+            qE: "How do natural forests most directly support the livelihoods of local and tribal communities?",
+            qH: "प्राकृतिक वन स्थानीय और आदिवासी समुदायों की आजीविका को सबसे सीधे तौर पर कैसे समर्थन देते हैं?",
+            options: [
+                { e: "By providing free WiFi and electricity", h: "मुफ्त वाईफाई और बिजली प्रदान करके", correct: false },
+                { e: "By supplying them with modern cars", h: "उन्हें आधुनिक कारों की आपूर्ति करके", correct: false },
+                { e: "By providing essential food, medicine, fuel, and income through NTFPs", h: "NTFP के माध्यम से आवश्यक भोजन, दवा, ईंधन और आय प्रदान करके", correct: true },
+                { e: "By giving them corporate factory jobs", h: "उन्हें कॉर्पोरेट फैक्ट्री की नौकरियाँ देकर", correct: false }
+            ],
+            expE: "Millions of indigenous people depend on gathering forest produce to sustain their daily lives and earn a modest income.",
+            expH: "लाखों स्वदेशी लोग अपने दैनिक जीवन को बनाए रखने और मामूली आय अर्जित करने के लिए वनोपज इकट्ठा करने पर निर्भर हैं।"
+        },
+        {
+            qE: "Which plant's bark is historically famous for producing Quinine, a medicine used to treat Malaria?",
+            qH: "मलेरिया के इलाज के लिए इस्तेमाल की जाने वाली दवा कुनैन (Quinine) के उत्पादन के लिए ऐतिहासिक रूप से किस पौधे की छाल प्रसिद्ध है?",
+            options: [
+                { e: "Eucalyptus", h: "नीलगिरी (Eucalyptus)", correct: false },
+                { e: "Cinchona", h: "सिनकोना (Cinchona)", correct: true },
+                { e: "Sandalwood", h: "चंदन", correct: false },
+                { e: "Bamboo", h: "बांस", correct: false }
+            ],
+            expE: "Cinchona bark was the first effective treatment for malaria due to its high quinine content.",
+            expH: "सिनकोना की छाल अपने उच्च कुनैन सामग्री के कारण मलेरिया का पहला प्रभावी उपचार था।"
+        },
+        {
+            qE: "Sandalwood (Chandan) is highly valued in forest-based industries primarily for its:",
+            qH: "वन-आधारित उद्योगों में चंदन का अत्यधिक मूल्य मुख्य रूप से किसके लिए है?",
+            options: [
+                { e: "Edible fruits", h: "खाने योग्य फल", correct: false },
+                { e: "Medicinal roots for fever", h: "बुखार के लिए औषधीय जड़ें", correct: false },
+                { e: "Fragrant wood and essential oil", h: "सुगंधित लकड़ी और आवश्यक तेल", correct: true },
+                { e: "Strong leaves used for roofs", h: "छतों के लिए उपयोग किए जाने वाले मजबूत पत्ते", correct: false }
+            ],
+            expE: "Sandalwood is expensive and used in perfumes, incense, cosmetics, and religious ceremonies.",
+            expH: "चंदन महंगा है और इसका उपयोग इत्र, धूप, सौंदर्य प्रसाधन और धार्मिक समारोहों में किया जाता है।"
+        },
+        {
+            qE: "In environmental science, the term 'Flora' refers to:",
+            qH: "पर्यावरण विज्ञान में, 'फ्लोरा' (Flora) शब्द का तात्पर्य है:",
+            options: [
+                { e: "Animals of a particular region", h: "किसी विशेष क्षेत्र के जानवर", correct: false },
+                { e: "Microorganisms in the soil", h: "मिट्टी में सूक्ष्मजीव", correct: false },
+                { e: "Minerals found in rocks", h: "चट्टानों में पाए जाने वाले खनिज", correct: false },
+                { e: "The plant life of a particular region or period", h: "किसी विशेष क्षेत्र या काल का वनस्पति जीवन", correct: true }
+            ],
+            expE: "Flora means all the plants, while 'Fauna' refers to all the animals in a region.",
+            expH: "फ्लोरा का अर्थ सभी पौधे हैं, जबकि 'फौना' (Fauna) किसी क्षेत्र के सभी जानवरों को संदर्भित करता है।"
+        },
+        {
+            qE: "Which forest product is extracted by tapping trees and is widely used to manufacture tires?",
+            qH: "कौन सा वन उत्पाद पेड़ों को टैप करके (छेद करके) निकाला जाता है और जिसका व्यापक रूप से टायर बनाने के लिए उपयोग किया जाता है?",
+            options: [
+                { e: "Latex (Natural Rubber)", h: "लेटेक्स (प्राकृतिक रबर)", correct: true },
+                { e: "Resin", h: "राल (Resin)", correct: false },
+                { e: "Gum", h: "गोंद", correct: false },
+                { e: "Nectar", h: "मकरंद (Nectar)", correct: false }
+            ],
+            expE: "Latex is a milky fluid found in rubber trees, which is coagulated to make natural rubber.",
+            expH: "लेटेक्स रबर के पेड़ों में पाया जाने वाला एक दूधिया तरल पदार्थ है, जिसे प्राकृतिक रबर बनाने के लिए जमाया जाता है।"
+        },
+        {
+            qE: "What is the main objective of 'Joint Forest Management' (JFM) in India?",
+            qH: "भारत में 'संयुक्त वन प्रबंधन' (JFM) का मुख्य उद्देश्य क्या है?",
+            options: [
+                { e: "To clear forests to build modern cities", h: "आधुनिक शहर बनाने के लिए जंगलों को साफ करना", correct: false },
+                { e: "To involve local communities in the protection and sustainable management of forests", h: "वनों की सुरक्षा और स्थायी प्रबंधन में स्थानीय समुदायों को शामिल करना", correct: true },
+                { e: "To sell all forest land to private multinational companies", h: "सभी वन भूमि निजी बहुराष्ट्रीय कंपनियों को बेचना", correct: false },
+                { e: "To completely ban humans from entering any forest", h: "किसी भी जंगल में इंसानों के प्रवेश पर पूरी तरह प्रतिबंध लगाना", correct: false }
+            ],
+            expE: "JFM is a partnership where local communities help protect forests and in return get access to non-timber forest products.",
+            expH: "JFM एक साझेदारी है जहां स्थानीय समुदाय वनों की रक्षा करने में मदद करते हैं और बदले में गैर-इमारती वन उत्पादों तक पहुंच प्राप्त करते हैं।"
+        },
+        {
+            qE: "Ashwagandha is a popular medicinal plant mainly used in Ayurveda for:",
+            qH: "अश्वगंधा एक लोकप्रिय औषधीय पौधा है जिसका उपयोग मुख्य रूप से आयुर्वेद में किसके लिए किया जाता है?",
+            options: [
+                { e: "Curing broken bones instantly", h: "टूटी हुई हड्डियों को तुरंत ठीक करना", correct: false },
+                { e: "Reducing stress and boosting energy/immunity", h: "तनाव कम करना और ऊर्जा/प्रतिरक्षा बढ़ाना", correct: true },
+                { e: "Treating malaria", h: "मलेरिया का इलाज", correct: false },
+                { e: "Polishing wooden furniture", h: "लकड़ी के फर्नीचर को पॉलिश करना", correct: false }
+            ],
+            expE: "It is classified as an 'adaptogen', meaning it helps the body manage stress and enhances vitality.",
+            expH: "इसे एक 'एडेप्टोजेन' के रूप में वर्गीकृत किया गया है, जिसका अर्थ है कि यह शरीर को तनाव का प्रबंधन करने में मदद करता है और जीवन शक्ति को बढ़ाता है।"
+        },
+        {
+            qE: "What is the economic significance of 'Lac' (लाख) produced in Indian forests?",
+            qH: "भारतीय वनों में उत्पादित 'लाख' (Lac) का आर्थिक महत्व क्या है?",
+            options: [
+                { e: "It is used as a staple food grain", h: "इसका उपयोग मुख्य खाद्यान्न के रूप में किया जाता है", correct: false },
+                { e: "It is used for making clothes", h: "इसका उपयोग कपड़े बनाने के लिए किया जाता है", correct: false },
+                { e: "It is a resin used in making bangles, dyes, and polish", h: "यह एक राल है जिसका उपयोग चूड़ियाँ, रंग और पॉलिश बनाने में किया जाता है", correct: true },
+                { e: "It is used as a hard construction material", h: "इसका उपयोग एक कठोर निर्माण सामग्री के रूप में किया जाता है", correct: false }
+            ],
+            expE: "Lac is a natural resin secreted by lac insects on certain trees, heavily gathered by tribal communities.",
+            expH: "लाख एक प्राकृतिक राल है जो कुछ पेड़ों पर लाख के कीड़ों द्वारा स्रावित होता है, जिसे आदिवासी समुदायों द्वारा भारी मात्रा में इकट्ठा किया जाता है।"
+        },
+        {
+            qE: "Why is the sustainable harvesting of forest products important?",
+            qH: "वन उत्पादों की टिकाऊ (Sustainable) कटाई/संग्रहण क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "To ensure these resources remain available for future generations without harming the ecosystem", h: "यह सुनिश्चित करने के लिए कि ये संसाधन पारिस्थितिकी तंत्र को नुकसान पहुंचाए बिना भविष्य की पीढ़ियों के लिए उपलब्ध रहें", correct: true },
+                { e: "To destroy the forest quickly and make room for factories", h: "जंगल को जल्दी से नष्ट करना और कारखानों के लिए जगह बनाना", correct: false },
+                { e: "To artificially increase the market price of wood", h: "लकड़ी के बाजार मूल्य को कृत्रिम रूप से बढ़ाने के लिए", correct: false },
+                { e: "To force tribal communities to migrate to cities", h: "आदिवासी समुदायों को शहरों की ओर पलायन करने के लिए मजबूर करना", correct: false }
+            ],
+            expE: "Sustainability means meeting today's needs without compromising the ability of tomorrow's generations to meet theirs.",
+            expH: "स्थिरता का अर्थ है कल की पीढ़ियों की जरूरतों को पूरा करने की क्षमता से समझौता किए बिना आज की जरूरतों को पूरा करना।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
