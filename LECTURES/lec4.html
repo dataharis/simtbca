@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 4 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 4: Natural & Land Resources</h2>
+            <p>Classification of Resources, Minerals, Soil, and Crops</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "Resources drawn from Nature and used without much modification are called:",
+            qH: "प्रकृति से प्राप्त और बिना अधिक संशोधन के उपयोग किए जाने वाले संसाधनों को क्या कहा जाता है?",
+            options: [
+                { e: "Human-made resources", h: "मानव निर्मित संसाधन", correct: false },
+                { e: "Natural resources", h: "प्राकृतिक संसाधन", correct: true },
+                { e: "Artificial resources", h: "कृत्रिम संसाधन", correct: false },
+                { e: "Synthetic resources", h: "सिंथेटिक संसाधन", correct: false }
+            ],
+            expE: "Natural resources include air, water, soils, minerals, and forests provided directly by nature.",
+            expH: "प्राकृतिक संसाधनों में सीधे प्रकृति द्वारा प्रदान की गई हवा, पानी, मिट्टी, खनिज और जंगल शामिल हैं।"
+        },
+        {
+            qE: "Which of the following is an example of a renewable resource?",
+            qH: "निम्नलिखित में से कौन सा एक नवीकरणीय (Renewable) संसाधन का उदाहरण है?",
+            options: [
+                { e: "Coal", h: "कोयला", correct: false },
+                { e: "Petroleum", h: "पेट्रोलियम", correct: false },
+                { e: "Solar Energy", h: "सौर ऊर्जा", correct: true },
+                { e: "Natural Gas", h: "प्राकृतिक गैस", correct: false }
+            ],
+            expE: "Solar energy is inexhaustible and gets renewed quickly naturally.",
+            expH: "सौर ऊर्जा अक्षय है और स्वाभाविक रूप से जल्दी नवीनीकृत हो जाती है।"
+        },
+        {
+            qE: "Resources that take millions of years to form and cannot be easily replaced once used up are called:",
+            qH: "वे संसाधन जिन्हें बनने में लाखों वर्ष लगते हैं और एक बार समाप्त हो जाने पर आसानी से बदले नहीं जा सकते, कहलाते हैं:",
+            options: [
+                { e: "Renewable resources", h: "नवीकरणीय संसाधन", correct: false },
+                { e: "Non-renewable resources", h: "गैर-नवीकरणीय संसाधन", correct: true },
+                { e: "Inexhaustible resources", h: "अक्षय संसाधन", correct: false },
+                { e: "Unlimited resources", h: "असीमित संसाधन", correct: false }
+            ],
+            expE: "Fossil fuels and minerals are non-renewable because their stock is limited.",
+            expH: "जीवाश्म ईंधन और खनिज गैर-नवीकरणीय हैं क्योंकि उनका भंडार सीमित है।"
+        },
+        {
+            qE: "The uppermost layer of the Earth's crust, which is capable of supporting plant life, is called:",
+            qH: "पृथ्वी की पपड़ी (crust) की सबसे ऊपरी परत, जो पौधों के जीवन का समर्थन करने में सक्षम है, कहलाती है:",
+            options: [
+                { e: "Bedrock", h: "आधार-शैल (Bedrock)", correct: false },
+                { e: "Soil", h: "मिट्टी (Soil)", correct: true },
+                { e: "Magma", h: "मैग्मा", correct: false },
+                { e: "Core", h: "क्रोड (Core)", correct: false }
+            ],
+            expE: "Soil is a vital land resource that takes hundreds of years to form just a few centimeters.",
+            expH: "मिट्टी एक महत्वपूर्ण भूमि संसाधन है जिसे कुछ सेंटीमीटर बनने में ही सैकड़ों साल लग जाते हैं।"
+        },
+        {
+            qE: "Which of these is considered a fossil fuel?",
+            qH: "इनमें से किसे जीवाश्म ईंधन (Fossil fuel) माना जाता है?",
+            options: [
+                { e: "Wind", h: "हवा", correct: false },
+                { e: "Water", h: "पानी", correct: false },
+                { e: "Coal", h: "कोयला", correct: true },
+                { e: "Sunlight", h: "धूप", correct: false }
+            ],
+            expE: "Coal, petroleum, and natural gas are formed from the remains of ancient plants and animals.",
+            expH: "कोयला, पेट्रोलियम और प्राकृतिक गैस प्राचीन पौधों और जानवरों के अवशेषों से बनते हैं।"
+        },
+        {
+            qE: "The process of the breakdown of rocks into smaller particles to form soil is known as:",
+            qH: "मिट्टी बनाने के लिए चट्टानों के छोटे कणों में टूटने की प्रक्रिया को किस रूप में जाना जाता है?",
+            options: [
+                { e: "Erosion", h: "कटाव (Erosion)", correct: false },
+                { e: "Weathering", h: "अपक्षय (Weathering)", correct: true },
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Mining", h: "खनन", correct: false }
+            ],
+            expE: "Weathering is caused by physical (temperature, wind, water) and chemical changes over time.",
+            expH: "अपक्षय समय के साथ भौतिक (तापमान, हवा, पानी) और रासायनिक परिवर्तनों के कारण होता है।"
+        },
+        {
+            qE: "What does 'Humus' refer to in the context of soil?",
+            qH: "मिट्टी के संदर्भ में 'ह्यूमस' (Humus) का क्या अर्थ है?",
+            options: [
+                { e: "A type of hard rock", h: "एक प्रकार की कठोर चट्टान", correct: false },
+                { e: "Dead and decaying organic matter", h: "मृत और सड़ने वाले कार्बनिक पदार्थ", correct: true },
+                { e: "A chemical pesticide", h: "एक रासायनिक कीटनाशक", correct: false },
+                { e: "Deep underground water", h: "गहरा भूमिगत जल", correct: false }
+            ],
+            expE: "Humus provides essential nutrients to plants and increases the water-holding capacity of the soil.",
+            expH: "ह्यूमस पौधों को आवश्यक पोषक तत्व प्रदान करता है और मिट्टी की जल धारण क्षमता को बढ़ाता है।"
+        },
+        {
+            qE: "Which soil horizon generally contains the most organic matter (Humus)?",
+            qH: "किस मृदा संस्तर (Soil horizon) में आमतौर पर सबसे अधिक कार्बनिक पदार्थ (ह्यूमस) होता है?",
+            options: [
+                { e: "Topsoil (A Horizon)", h: "ऊपरी मिट्टी (A Horizon)", correct: true },
+                { e: "Subsoil (B Horizon)", h: "उप-मिट्टी (B Horizon)", correct: false },
+                { e: "Bedrock (R Horizon)", h: "आधार-शैल (R Horizon)", correct: false },
+                { e: "Parent material (C Horizon)", h: "मूल सामग्री (C Horizon)", correct: false }
+            ],
+            expE: "The topsoil or 'A horizon' is dark in color as it is rich in humus and minerals.",
+            expH: "ऊपरी मिट्टी या 'A क्षितिज' रंग में गहरा होता है क्योंकि यह ह्यूमस और खनिजों से भरपूर होता है।"
+        },
+        {
+            qE: "Minerals from which metals can be profitably extracted are called:",
+            qH: "वे खनिज जिनसे धातुओं को लाभप्रद रूप से निकाला जा सकता है, कहलाते हैं:",
+            options: [
+                { e: "Gems", h: "रत्न", correct: false },
+                { e: "Ores", h: "अयस्क (Ores)", correct: true },
+                { e: "Sand", h: "रेत", correct: false },
+                { e: "Clay", h: "मिट्टी", correct: false }
+            ],
+            expE: "For example, Bauxite is an ore from which Aluminum is extracted.",
+            expH: "उदाहरण के लिए, बॉक्साइट एक अयस्क है जिससे एल्युमिनियम निकाला जाता है।"
+        },
+        {
+            qE: "Which of the following is a metallic mineral?",
+            qH: "निम्नलिखित में से कौन सा एक धात्विक (Metallic) खनिज है?",
+            options: [
+                { e: "Limestone", h: "चूना पत्थर", correct: false },
+                { e: "Mica", h: "अभ्रक (Mica)", correct: false },
+                { e: "Iron", h: "लोहा", correct: true },
+                { e: "Gypsum", h: "जिप्सम", correct: false }
+            ],
+            expE: "Iron, copper, and gold are metallic minerals, whereas limestone and mica are non-metallic.",
+            expH: "लोहा, तांबा और सोना धात्विक खनिज हैं, जबकि चूना पत्थर और अभ्रक अधात्विक हैं।"
+        },
+        {
+            qE: "Land covers approximately what percentage of the Earth's total surface area?",
+            qH: "भूमि (Land) पृथ्वी के कुल सतह क्षेत्र का लगभग कितना प्रतिशत भाग कवर करती है?",
+            options: [
+                { e: "70%", h: "70%", correct: false },
+                { e: "30%", h: "30%", correct: true },
+                { e: "50%", h: "50%", correct: false },
+                { e: "90%", h: "90%", correct: false }
+            ],
+            expE: "About 70% of the Earth's surface is covered by water, leaving only 30% as land.",
+            expH: "पृथ्वी की सतह का लगभग 70% हिस्सा पानी से ढका है, जिससे केवल 30% भूमि बची है।"
+        },
+        {
+            qE: "Agricultural crops grown primarily to be sold for profit rather than for the farmer's own consumption are called:",
+            qH: "किसान के स्वयं के उपभोग के बजाय मुख्य रूप से लाभ के लिए बेची जाने वाली कृषि फसलें कहलाती हैं:",
+            options: [
+                { e: "Food crops", h: "खाद्य फसलें", correct: false },
+                { e: "Cash crops", h: "नकदी फसलें (Cash crops)", correct: true },
+                { e: "Wild crops", h: "जंगली फसलें", correct: false },
+                { e: "Cover crops", h: "कवर फसलें", correct: false }
+            ],
+            expE: "Examples of cash crops include cotton, sugarcane, tea, and coffee.",
+            expH: "नकदी फसलों के उदाहरणों में कपास, गन्ना, चाय और कॉफी शामिल हैं।"
+        },
+        {
+            qE: "Which of the following is a primary food crop in India?",
+            qH: "निम्नलिखित में से कौन सी भारत में एक प्राथमिक खाद्य फसल (Food crop) है?",
+            options: [
+                { e: "Cotton", h: "कपास", correct: false },
+                { e: "Jute", h: "जूट", correct: false },
+                { e: "Rice", h: "चावल", correct: true },
+                { e: "Rubber", h: "रबर", correct: false }
+            ],
+            expE: "Rice and wheat are the staple food crops for the majority of the Indian population.",
+            expH: "चावल और गेहूं अधिकांश भारतीय आबादी के लिए मुख्य खाद्य फसलें हैं।"
+        },
+        {
+            qE: "The continuous planting of the same crop in the same field year after year can lead to:",
+            qH: "एक ही खेत में साल-दर-साल एक ही फसल के लगातार रोपण से क्या हो सकता है?",
+            options: [
+                { e: "Soil enrichment", h: "मृदा संवर्धन", correct: false },
+                { e: "Soil depletion (loss of nutrients)", h: "मिट्टी का क्षरण (पोषक तत्वों का नुकसान)", correct: true },
+                { e: "Better soil structure", h: "बेहतर मिट्टी की संरचना", correct: false },
+                { e: "Increased water table", h: "जल स्तर में वृद्धि", correct: false }
+            ],
+            expE: "This practice, called monocropping, exhausts specific nutrients from the soil, requiring crop rotation.",
+            expH: "यह प्रथा, जिसे मोनोक्रॉपिंग कहा जाता है, मिट्टी से विशिष्ट पोषक तत्वों को समाप्त कर देती है, जिसके लिए फसल रोटेशन की आवश्यकता होती है।"
+        },
+        {
+            qE: "Resources whose total quantity is known and which are actively being used in the present are called:",
+            qH: "वे संसाधन जिनकी कुल मात्रा ज्ञात है और जिनका वर्तमान में सक्रिय रूप से उपयोग किया जा रहा है, कहलाते हैं:",
+            options: [
+                { e: "Potential resources", h: "संभावित संसाधन", correct: false },
+                { e: "Actual resources", h: "वास्तविक (Actual) संसाधन", correct: true },
+                { e: "Stock resources", h: "स्टॉक संसाधन", correct: false },
+                { e: "Reserve resources", h: "रिजर्व संसाधन", correct: false }
+            ],
+            expE: "For example, coal deposits in the Ruhr region of Germany are actual resources because they are currently being mined.",
+            expH: "उदाहरण के लिए, जर्मनी के रुहर क्षेत्र में कोयले के भंडार वास्तविक संसाधन हैं क्योंकि वर्तमान में उनका खनन किया जा रहा है।"
+        },
+        {
+            qE: "Which of the following is an example of a non-metallic mineral?",
+            qH: "निम्नलिखित में से कौन सा अधात्विक (Non-metallic) खनिज का एक उदाहरण है?",
+            options: [
+                { e: "Gold", h: "सोना", correct: false },
+                { e: "Copper", h: "तांबा", correct: false },
+                { e: "Silver", h: "चांदी", correct: false },
+                { e: "Limestone", h: "चूना पत्थर", correct: true }
+            ],
+            expE: "Limestone is a non-metallic mineral widely used in the cement industry.",
+            expH: "चूना पत्थर एक अधात्विक खनिज है जिसका सीमेंट उद्योग में व्यापक रूप से उपयोग किया जाता है।"
+        },
+        {
+            qE: "What type of natural resource is the wind?",
+            qH: "हवा किस प्रकार का प्राकृतिक संसाधन है?",
+            options: [
+                { e: "Non-renewable", h: "गैर-नवीकरणीय", correct: false },
+                { e: "Exhaustible", h: "समाप्त होने वाला", correct: false },
+                { e: "Inexhaustible (Renewable)", h: "अक्षय (नवीकरणीय)", correct: true },
+                { e: "Human-made", h: "मानव निर्मित", correct: false }
+            ],
+            expE: "Wind is an inexhaustible resource; it will never run out regardless of how much we use it for energy.",
+            expH: "हवा एक अक्षय संसाधन है; हम ऊर्जा के लिए इसका कितना भी उपयोग कर लें, यह कभी खत्म नहीं होगी।"
+        },
+        {
+            qE: "The solid, unweathered rock layer found at the very bottom of a soil profile is called:",
+            qH: "मृदा प्रोफ़ाइल (Soil profile) के सबसे निचले भाग में पाई जाने वाली ठोस, बिना अपक्षय वाली चट्टान की परत कहलाती है:",
+            options: [
+                { e: "Topsoil", h: "ऊपरी मिट्टी", correct: false },
+                { e: "Humus", h: "ह्यूमस", correct: false },
+                { e: "Bedrock (R Horizon)", h: "आधार-शैल (Bedrock)", correct: true },
+                { e: "Subsoil", h: "उप-मिट्टी", correct: false }
+            ],
+            expE: "Bedrock forms the lowest layer (R Horizon) over which soil development takes place.",
+            expH: "आधार-शैल सबसे निचली परत (R क्षितिज) बनाता है जिस पर मिट्टी का विकास होता है।"
+        },
+        {
+            qE: "Which agricultural practice is most helpful in maintaining soil fertility?",
+            qH: "कौन सी कृषि पद्धति मिट्टी की उर्वरता (fertility) बनाए रखने में सबसे अधिक सहायक है?",
+            options: [
+                { e: "Overgrazing", h: "अत्यधिक चराई", correct: false },
+                { e: "Crop rotation", h: "फसल चक्र (Crop rotation)", correct: true },
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Excessive use of pesticides", h: "कीटनाशकों का अत्यधिक उपयोग", correct: false }
+            ],
+            expE: "Crop rotation involves growing different crops sequentially to allow the soil to naturally recover its nutrients.",
+            expH: "फसल चक्र में मिट्टी को प्राकृतिक रूप से अपने पोषक तत्वों को पुनः प्राप्त करने की अनुमति देने के लिए क्रमिक रूप से विभिन्न फसलें उगाना शामिल है।"
+        },
+        {
+            qE: "Why are natural land and mineral resources important for business students (BBA/BCA) to understand?",
+            qH: "बिजनेस छात्रों (BBA/BCA) के लिए प्राकृतिक भूमि और खनिज संसाधनों को समझना क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "They form the fundamental raw materials and physical space required for any industry", h: "वे किसी भी उद्योग के लिए आवश्यक मौलिक कच्चे माल और भौतिक स्थान बनाते हैं", correct: true },
+                { e: "They are completely useless for IT companies", h: "वे आईटी (IT) कंपनियों के लिए पूरी तरह से बेकार हैं", correct: false },
+                { e: "They only increase office aesthetics", h: "वे केवल कार्यालय के सौंदर्यशास्त्र को बढ़ाते हैं", correct: false },
+                { e: "They are infinite and free of cost", h: "वे अनंत और मुफ्त हैं", correct: false }
+            ],
+            expE: "Every business, from tech hardware (requiring rare minerals) to real estate, relies directly on these resources.",
+            expH: "टेक हार्डवेयर (दुर्लभ खनिजों की आवश्यकता) से लेकर रियल एस्टेट तक हर व्यवसाय सीधे इन संसाधनों पर निर्भर करता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
