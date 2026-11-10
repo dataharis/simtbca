@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 23 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 23: Compensation Mechanisms</h2>
+            <p>Support for Project-Affected People (PAP)</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "Who are 'Project-Affected People' (PAPs)?",
+            qH: "'परियोजना-प्रभावित लोग' (PAPs) कौन हैं?",
+            options: [
+                { e: "People who work as managers in development projects", h: "विकास परियोजनाओं में प्रबंधक के रूप में काम करने वाले लोग", correct: false },
+                { e: "Individuals or communities whose land, livelihood, or shelter is taken away for a development project", h: "ऐसे व्यक्ति या समुदाय जिनकी भूमि, आजीविका या आश्रय किसी विकास परियोजना के लिए छीन लिया गया हो", correct: true },
+                { e: "Tourists visiting a new dam", h: "नए बांध को देखने आने वाले पर्यटक", correct: false },
+                { e: "Politicians who approve the project", h: "राजनेता जो परियोजना को मंजूरी देते हैं", correct: false }
+            ],
+            expE: "PAPs are those who directly suffer the negative consequences (displacement) of large-scale infrastructure projects.",
+            expH: "PAP वे लोग हैं जो बड़े पैमाने पर बुनियादी ढांचा परियोजनाओं के नकारात्मक परिणामों (विस्थापन) से सीधे पीड़ित होते हैं।"
+        },
+        {
+            qE: "What is the primary purpose of a 'Compensation Mechanism'?",
+            qH: "'मुआवजा तंत्र' (Compensation Mechanism) का प्राथमिक उद्देश्य क्या है?",
+            options: [
+                { e: "To make the government richer", h: "सरकार को अधिक अमीर बनाने के लिए", correct: false },
+                { e: "To fairly restore the economic and social status of people displaced by projects", h: "परियोजनाओं द्वारा विस्थापित लोगों की आर्थिक और सामाजिक स्थिति को उचित रूप से बहाल करना", correct: true },
+                { e: "To force people to move without giving them anything", h: "लोगों को बिना कुछ दिए जाने के लिए मजबूर करना", correct: false },
+                { e: "To reduce the number of farmers in a country", h: "देश में किसानों की संख्या कम करना", correct: false }
+            ],
+            expE: "Compensation aims to ensure that people who sacrifice their land for national development do not suffer economically.",
+            expH: "मुआवजे का उद्देश्य यह सुनिश्चित करना है कि जो लोग राष्ट्रीय विकास के लिए अपनी भूमि का बलिदान करते हैं, उन्हें आर्थिक नुकसान न हो।"
+        },
+        {
+            qE: "In India, which major law currently governs land acquisition and compensation?",
+            qH: "भारत में, वर्तमान में कौन सा प्रमुख कानून भूमि अधिग्रहण और मुआवजे को नियंत्रित करता है?",
+            options: [
+                { e: "The Air Act 1981", h: "वायु अधिनियम 1981", correct: false },
+                { e: "Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement (LARR) Act, 2013", h: "भूमि अधिग्रहण, पुनर्वास और पुनर्व्यवस्थापन में उचित मुआवजा और पारदर्शिता का अधिकार (LARR) अधिनियम, 2013", correct: true },
+                { e: "The Wildlife Protection Act", h: "वन्यजीव संरक्षण अधिनियम", correct: false },
+                { e: "The Companies Act 2013", h: "कंपनी अधिनियम 2013", correct: false }
+            ],
+            expE: "The LARR Act 2013 replaced the old colonial Land Acquisition Act of 1894 to ensure fair compensation and mandatory rehabilitation.",
+            expH: "LARR अधिनियम 2013 ने उचित मुआवजा और अनिवार्य पुनर्वास सुनिश्चित करने के लिए 1894 के पुराने औपनिवेशिक भूमि अधिग्रहण अधिनियम को बदल दिया।"
+        },
+        {
+            qE: "Under the LARR Act 2013, what is a mandatory requirement before acquiring land for a project?",
+            qH: "LARR अधिनियम 2013 के तहत, किसी परियोजना के लिए भूमि अधिग्रहण करने से पहले अनिवार्य आवश्यकता क्या है?",
+            options: [
+                { e: "Social Impact Assessment (SIA)", h: "सामाजिक प्रभाव आकलन (SIA)", correct: true },
+                { e: "Asking permission from the United Nations", h: "संयुक्त राष्ट्र से अनुमति मांगना", correct: false },
+                { e: "Building a temporary factory", h: "एक अस्थायी कारखाना बनाना", correct: false },
+                { e: "Conducting a national election", h: "राष्ट्रीय चुनाव आयोजित करना", correct: false }
+            ],
+            expE: "A Social Impact Assessment must be done to study how many families will be affected and if the project's public benefits outweigh the social costs.",
+            expH: "सामाजिक प्रभाव आकलन यह अध्ययन करने के लिए किया जाना चाहिए कि कितने परिवार प्रभावित होंगे और क्या परियोजना के सार्वजनिक लाभ सामाजिक लागतों से अधिक हैं।"
+        },
+        {
+            qE: "Which of the following is considered the best form of compensation for displaced farmers?",
+            qH: "विस्थापित किसानों के लिए निम्नलिखित में से किसे सर्वोत्तम प्रकार का मुआवजा माना जाता है?",
+            options: [
+                { e: "A small one-time cash payment", h: "एक छोटा सा एकमुश्त नकद भुगतान", correct: false },
+                { e: "Land for Land (providing cultivable land elsewhere)", h: "भूमि के बदले भूमि (कहीं और खेती योग्य भूमि उपलब्ध कराना)", correct: true },
+                { e: "A free television", h: "एक मुफ्त टेलीविजन", correct: false },
+                { e: "Moving them into a crowded city slum", h: "उन्हें भीड़भाड़ वाले शहर की झुग्गी में ले जाना", correct: false }
+            ],
+            expE: "Providing agricultural land ensures that the farmer can continue their traditional livelihood, unlike cash which is often spent quickly.",
+            expH: "कृषि भूमि उपलब्ध कराने से यह सुनिश्चित होता है कि किसान अपनी पारंपरिक आजीविका जारी रख सकें, नकद के विपरीत जो अक्सर जल्दी खर्च हो जाता है।"
+        },
+        {
+            qE: "What is 'In-kind' compensation?",
+            qH: "'इन-काइंड' (In-kind - वस्तु के रूप में) मुआवजा क्या है?",
+            options: [
+                { e: "Paying compensation exclusively in cash", h: "विशेष रूप से नकद में मुआवजा देना", correct: false },
+                { e: "Providing non-cash benefits like a built house, land, or jobs", h: "बनाया हुआ घर, जमीन या नौकरी जैसे गैर-नकद लाभ प्रदान करना", correct: true },
+                { e: "Speaking kindly to the displaced people", h: "विस्थापित लोगों से प्यार से बात करना", correct: false },
+                { e: "Promising future projects", h: "भविष्य की परियोजनाओं का वादा", correct: false }
+            ],
+            expE: "In-kind compensation replaces lost assets with physical assets (like a new house) rather than just giving money.",
+            expH: "इन-काइंड मुआवजा खोई हुई संपत्तियों को केवल पैसे देने के बजाय भौतिक संपत्तियों (जैसे नया घर) से बदल देता है।"
+        },
+        {
+            qE: "Why do rural and tribal communities often struggle when given ONLY cash compensation?",
+            qH: "जब ग्रामीण और आदिवासी समुदायों को केवल नकद मुआवजा दिया जाता है तो वे अक्सर संघर्ष क्यों करते हैं?",
+            options: [
+                { e: "Because they do not have bank accounts to hold millions of rupees", h: "क्योंकि उनके पास लाखों रुपये रखने के लिए बैंक खाते नहीं हैं", correct: false },
+                { e: "They lack financial literacy, and the cash is easily spent or exploited by others, leaving them jobless", h: "उनमें वित्तीय साक्षरता का अभाव होता है, और नकदी आसानी से खर्च हो जाती है या दूसरों द्वारा उनका शोषण किया जाता है, जिससे वे बेरोजगार हो जाते हैं", correct: true },
+                { e: "Because cash is illegal in tribal areas", h: "क्योंकि आदिवासी क्षेत्रों में नकदी अवैध है", correct: false },
+                { e: "Because they prefer to barter goods", h: "क्योंकि वे वस्तुओं का आदान-प्रदान करना पसंद करते हैं", correct: false }
+            ],
+            expE: "Without the skills to invest or find jobs in a new economy, cash compensation rarely leads to successful rehabilitation.",
+            expH: "नई अर्थव्यवस्था में निवेश करने या नौकरी खोजने के कौशल के बिना, नकद मुआवजे से शायद ही कभी सफल पुनर्वास होता है।"
+        },
+        {
+            qE: "Under modern compensation policies, can 'landless laborers' (who worked on the acquired land but didn't own it) get compensation?",
+            qH: "आधुनिक मुआवजा नीतियों के तहत, क्या 'भूमिहीन मजदूर' (जिन्होंने अधिग्रहित भूमि पर काम किया लेकिन उसके मालिक नहीं थे) मुआवजा प्राप्त कर सकते हैं?",
+            options: [
+                { e: "No, only landowners get compensation", h: "नहीं, केवल भूस्वामियों को ही मुआवजा मिलता है", correct: false },
+                { e: "Yes, because their primary source of livelihood has been destroyed", h: "हाँ, क्योंकि उनकी आजीविका का प्राथमिक स्रोत नष्ट हो गया है", correct: true },
+                { e: "No, they are asked to simply find another job", h: "नहीं, उन्हें बस दूसरी नौकरी ढूंढने के लिए कहा जाता है", correct: false },
+                { e: "Only if they were working there for 50 years", h: "केवल तभी जब वे 50 वर्षों से वहां काम कर रहे हों", correct: false }
+            ],
+            expE: "Modern laws (like LARR 2013) recognize livelihood losers (like laborers, artisans) as Project-Affected Families entitled to rehabilitation.",
+            expH: "आधुनिक कानून (जैसे LARR 2013) आजीविका खोने वालों (जैसे मजदूर, कारीगर) को परियोजना-प्रभावित परिवारों के रूप में मान्यता देते हैं जो पुनर्वास के हकदार हैं।"
+        },
+        {
+            qE: "What is 'Eminent Domain'?",
+            qH: "'एमीनेंट डोमेन' (Eminent Domain - प्रख्यात डोमेन) क्या है?",
+            options: [
+                { e: "The legal power of the state to acquire private property for public purpose, provided fair compensation is paid", h: "सार्वजनिक उद्देश्य के लिए निजी संपत्ति का अधिग्रहण करने की राज्य की कानूनी शक्ति, बशर्ते उचित मुआवजा दिया जाए", correct: true },
+                { e: "The name of a large real estate company", h: "एक बड़ी रियल एस्टेट कंपनी का नाम", correct: false },
+                { e: "The power of citizens to seize government land", h: "सरकारी भूमि पर कब्जा करने की नागरिकों की शक्ति", correct: false },
+                { e: "A type of forest reserve", h: "एक प्रकार का वन अभ्यारण्य", correct: false }
+            ],
+            expE: "Governments globally use the power of eminent domain to build essential infrastructure like highways and dams.",
+            expH: "विश्व स्तर पर सरकारें राजमार्गों और बांधों जैसे आवश्यक बुनियादी ढांचे के निर्माण के लिए प्रख्यात डोमेन की शक्ति का उपयोग करती हैं।"
+        },
+        {
+            qE: "When acquiring land for 'Private Projects' under the LARR Act 2013, the government requires the consent of what percentage of affected families?",
+            qH: "LARR अधिनियम 2013 के तहत 'निजी परियोजनाओं' (Private Projects) के लिए भूमि का अधिग्रहण करते समय, सरकार को कितने प्रतिशत प्रभावित परिवारों की सहमति की आवश्यकता होती है?",
+            options: [
+                { e: "0% (No consent needed)", h: "0% (कोई सहमति की आवश्यकता नहीं)", correct: false },
+                { e: "50%", h: "50%", correct: false },
+                { e: "80%", h: "80%", correct: true },
+                { e: "100%", h: "100%", correct: false }
+            ],
+            expE: "To protect farmers from forced acquisition for private companies, the law mandates the consent of at least 80% of affected families.",
+            expH: "निजी कंपनियों के लिए किसानों को जबरन अधिग्रहण से बचाने के लिए, कानून कम से कम 80% प्रभावित परिवारों की सहमति अनिवार्य करता है।"
+        },
+        {
+            qE: "What is a 'Grievance Redressal Mechanism' in a resettlement project?",
+            qH: "पुनर्वास परियोजना में 'शिकायत निवारण तंत्र' (Grievance Redressal Mechanism) क्या है?",
+            options: [
+                { e: "A system where PAPs can officially file complaints regarding unpaid compensation or unfair treatment", h: "एक प्रणाली जहां PAP अवैतनिक मुआवजे या अनुचित व्यवहार के संबंध में आधिकारिक तौर पर शिकायत दर्ज कर सकते हैं", correct: true },
+                { e: "A machine used to build houses faster", h: "घर तेजी से बनाने के लिए इस्तेमाल की जाने वाली मशीन", correct: false },
+                { e: "A banking system for foreign investors", h: "विदेशी निवेशकों के लिए एक बैंकिंग प्रणाली", correct: false },
+                { e: "A method to calculate corporate tax", h: "कॉर्पोरेट टैक्स की गणना करने की एक विधि", correct: false }
+            ],
+            expE: "A strong grievance redressal system ensures transparency and justice for the affected communities.",
+            expH: "एक मजबूत शिकायत निवारण प्रणाली प्रभावित समुदायों के लिए पारदर्शिता और न्याय सुनिश्चित करती है।"
+        },
+        {
+            qE: "Why is 'Skill Development' considered a crucial part of modern compensation packages?",
+            qH: "आधुनिक मुआवजा पैकेजों में 'कौशल विकास' (Skill Development) को एक महत्वपूर्ण हिस्सा क्यों माना जाता है?",
+            options: [
+                { e: "To make displaced farmers expert computer programmers instantly", h: "विस्थापित किसानों को तुरंत विशेषज्ञ कंप्यूटर प्रोग्रामर बनाने के लिए", correct: false },
+                { e: "To equip displaced people with new abilities so they can find jobs in industries or urban areas after losing their land", h: "विस्थापित लोगों को नई क्षमताओं से लैस करना ताकि वे अपनी जमीन खोने के बाद उद्योगों या शहरी क्षेत्रों में नौकरी पा सकें", correct: true },
+                { e: "To teach them how to play sports", h: "उन्हें खेल खेलना सिखाने के लिए", correct: false },
+                { e: "Skill development is not required at all", h: "कौशल विकास की बिल्कुल आवश्यकता नहीं है", correct: false }
+            ],
+            expE: "Since agricultural land is limited, providing vocational training helps the younger generation of displaced families secure alternative employment.",
+            expH: "चूंकि कृषि भूमि सीमित है, व्यावसायिक प्रशिक्षण (vocational training) प्रदान करने से विस्थापित परिवारों की युवा पीढ़ी को वैकल्पिक रोजगार सुरक्षित करने में मदद मिलती है।"
+        },
+        {
+            qE: "In the context of displacement, which groups are considered 'vulnerable' and require special compensation plans?",
+            qH: "विस्थापन के संदर्भ में, किन समूहों को 'कमजोर/संवेदनशील' (vulnerable) माना जाता है और जिन्हें विशेष मुआवजा योजनाओं की आवश्यकता होती है?",
+            options: [
+                { e: "Rich landlords and politicians", h: "अमीर जमींदार और राजनेता", correct: false },
+                { e: "Factory owners", h: "फैक्ट्री मालिक", correct: false },
+                { e: "Women, children, elderly, and indigenous tribes (Scheduled Tribes)", h: "महिलाएँ, बच्चे, बुजुर्ग और स्वदेशी जनजातियाँ (अनुसूचित जनजातियाँ)", correct: true },
+                { e: "Government officials", h: "सरकारी अधिकारी", correct: false }
+            ],
+            expE: "Vulnerable groups suffer the most during displacement because they lack economic power and legal awareness.",
+            expH: "कमजोर समूहों को विस्थापन के दौरान सबसे ज्यादा नुकसान होता है क्योंकि उनके पास आर्थिक शक्ति और कानूनी जागरूकता की कमी होती है।"
+        },
+        {
+            qE: "According to fair compensation principles, when should the compensation amount be given to the project-affected people?",
+            qH: "उचित मुआवजा सिद्धांतों के अनुसार, परियोजना प्रभावित लोगों को मुआवजे की राशि कब दी जानी चाहिए?",
+            options: [
+                { e: "Ten years after the project is completed", h: "परियोजना पूरी होने के दस साल बाद", correct: false },
+                { e: "BEFORE they are forced to vacate their lands and homes", h: "इससे पहले (BEFORE) कि उन्हें अपनी भूमि और घर खाली करने के लिए मजबूर किया जाए", correct: true },
+                { e: "Only when the company starts making a profit", h: "केवल तभी जब कंपनी मुनाफा कमाना शुरू कर दे", correct: false },
+                { e: "Never", h: "कभी नहीं", correct: false }
+            ],
+            expE: "Ethical guidelines dictate that full payment and resettlement must be completed before physical eviction takes place.",
+            expH: "नैतिक दिशा-निर्देश यह तय करते हैं कि शारीरिक रूप से बेदखल होने (eviction) से पहले पूरा भुगतान और पुनर्वास पूरा हो जाना चाहिए।"
+        },
+        {
+            qE: "What was a major flaw of the older Land Acquisition Act of 1894?",
+            qH: "1894 के पुराने भूमि अधिग्रहण अधिनियम की एक बड़ी खामी क्या थी?",
+            options: [
+                { e: "It gave too much money to the farmers", h: "इसने किसानों को बहुत अधिक पैसा दिया", correct: false },
+                { e: "It focused only on acquiring land forcefully, with no legal obligation for rehabilitation or resettling the displaced", h: "यह केवल बलपूर्वक भूमि अधिग्रहण करने पर केंद्रित था, जिसमें विस्थापितों के पुनर्वास या पुनर्स्थापन के लिए कोई कानूनी दायित्व नहीं था", correct: true },
+                { e: "It only allowed buying land in cities", h: "इसने केवल शहरों में ज़मीन खरीदने की अनुमति दी", correct: false },
+                { e: "It banned the construction of dams entirely", h: "इसने बांधों के निर्माण पर पूरी तरह से प्रतिबंध लगा दिया", correct: false }
+            ],
+            expE: "The British-era law allowed the government to take land easily but completely ignored the human cost and rehabilitation of the people.",
+            expH: "ब्रिटिश काल के कानून ने सरकार को आसानी से जमीन लेने की अनुमति दी लेकिन लोगों की मानवीय कीमत और पुनर्वास को पूरी तरह नजरअंदाज कर दिया।"
+        },
+        {
+            qE: "How does the LARR Act 2013 determine the monetary compensation for rural land?",
+            qH: "LARR अधिनियम 2013 ग्रामीण भूमि के लिए मौद्रिक मुआवजे का निर्धारण कैसे करता है?",
+            options: [
+                { e: "It pays half the market value", h: "यह बाजार मूल्य का आधा भुगतान करता है", correct: false },
+                { e: "It pays up to 4 times the registered market value of the land", h: "यह भूमि के पंजीकृत बाजार मूल्य (market value) का 4 गुना तक भुगतान करता है", correct: true },
+                { e: "It pays whatever the local leader decides", h: "स्थानीय नेता जो भी तय करता है, उसका भुगतान करता है", correct: false },
+                { e: "It offers a fixed 10,000 rupees to everyone", h: "यह हर किसी को निश्चित 10,000 रुपये प्रदान करता है", correct: false }
+            ],
+            expE: "To prevent farmers from being cheated by low official land rates, the law multiplies the market value (up to 4x in rural areas) for fair compensation.",
+            expH: "किसानों को कम आधिकारिक भूमि दरों से ठगे जाने से बचाने के लिए, कानून उचित मुआवजे के लिए बाजार मूल्य (ग्रामीण क्षेत्रों में 4 गुना तक) को गुणा करता है।"
+        },
+        {
+            qE: "What is an 'Annuity Policy' in the context of compensation?",
+            qH: "मुआवजे के संदर्भ में 'वार्षिकी नीति' (Annuity Policy) क्या है?",
+            options: [
+                { e: "Providing a guaranteed regular monthly or yearly income for a certain period to the displaced family", h: "विस्थापित परिवार को एक निश्चित अवधि के लिए गारंटीकृत नियमित मासिक या वार्षिक आय प्रदान करना", correct: true },
+                { e: "Taking annual taxes from the displaced people", h: "विस्थापित लोगों से सालाना कर (tax) लेना", correct: false },
+                { e: "A festival celebrated once a year", h: "साल में एक बार मनाया जाने वाला त्योहार", correct: false },
+                { e: "A yearly medical checkup", h: "वार्षिक चिकित्सा जांच", correct: false }
+            ],
+            expE: "Annuity policies ensure that families have a stable, recurring income rather than spending a lump sum amount all at once.",
+            expH: "वार्षिकी नीतियां यह सुनिश्चित करती हैं कि परिवारों को एकमुश्त राशि खर्च करने के बजाय एक स्थिर, आवर्ती आय (recurring income) मिले।"
+        },
+        {
+            qE: "Which of the following creates the biggest hurdle in successfully rehabilitating displaced communities?",
+            qH: "विस्थापित समुदायों के सफलतापूर्वक पुनर्वास में निम्नलिखित में से कौन सी सबसे बड़ी बाधा उत्पन्न करती है?",
+            options: [
+                { e: "Too much availability of empty land", h: "खाली ज़मीन की बहुत अधिक उपलब्धता", correct: false },
+                { e: "Corruption, delays in payment, and lack of transparency by authorities", h: "अधिकारियों द्वारा भ्रष्टाचार, भुगतान में देरी और पारदर्शिता का अभाव", correct: true },
+                { e: "Displaced people not wanting houses", h: "विस्थापित लोगों को घर नहीं चाहिए", correct: false },
+                { e: "Companies paying too much compensation", h: "कंपनियों द्वारा बहुत अधिक मुआवजा देना", correct: false }
+            ],
+            expE: "Bureaucratic delays and corruption often result in PAPs waiting decades for their promised compensation and homes.",
+            expH: "नौकरशाही में देरी और भ्रष्टाचार के परिणामस्वरूप अक्सर पीएपी (PAPs) को अपने वादे के अनुसार मुआवजे और घरों के लिए दशकों तक इंतजार करना पड़ता है।"
+        },
+        {
+            qE: "In development projects, what is meant by 'Cost-Benefit Analysis'?",
+            qH: "विकास परियोजनाओं में, 'लागत-लाभ विश्लेषण' (Cost-Benefit Analysis) से क्या तात्पर्य है?",
+            options: [
+                { e: "Calculating only the profits a company will make", h: "केवल उस मुनाफ़े की गणना करना जो कंपनी कमाएगी", correct: false },
+                { e: "Comparing the total economic and social costs (like displacement and ecological damage) against the expected public benefits of the project", h: "परियोजना के अपेक्षित सार्वजनिक लाभों के विरुद्ध कुल आर्थिक और सामाजिक लागतों (जैसे विस्थापन और पारिस्थितिक क्षति) की तुलना करना", correct: true },
+                { e: "Counting the number of bricks needed to build a factory", h: "कारखाना बनाने के लिए आवश्यक ईंटों की संख्या गिनना", correct: false },
+                { e: "Analyzing the cost of hiring foreign workers", h: "विदेशी कामगारों को नियुक्त करने की लागत का विश्लेषण करना", correct: false }
+            ],
+            expE: "A true cost-benefit analysis must include the heavy social cost of displacing human lives and destroying nature.",
+            expH: "एक सच्चे लागत-लाभ विश्लेषण में मानव जीवन को विस्थापित करने और प्रकृति को नष्ट करने की भारी सामाजिक लागत शामिल होनी चाहिए।"
+        },
+        {
+            qE: "If a BBA/BCA professional is planning a new data center that requires land acquisition, what is their ethical responsibility?",
+            qH: "यदि कोई BBA/BCA पेशेवर एक नए डेटा सेंटर की योजना बना रहा है जिसके लिए भूमि अधिग्रहण की आवश्यकता है, तो उनकी नैतिक जिम्मेदारी क्या है?",
+            options: [
+                { e: "To forcefully evict locals using police power to save project costs", h: "परियोजना की लागत बचाने के लिए पुलिस शक्ति का उपयोग करके स्थानीय लोगों को जबरन बेदखल करना", correct: false },
+                { e: "To ensure full compliance with the LARR Act, guaranteeing transparent compensation and rehabilitation for all affected families", h: "LARR अधिनियम का पूर्ण अनुपालन सुनिश्चित करना, सभी प्रभावित परिवारों के लिए पारदर्शी मुआवजे और पुनर्वास की गारंटी देना", correct: true },
+                { e: "To hide the environmental impact of the data center", h: "डेटा सेंटर के पर्यावरणीय प्रभाव को छिपाने के लिए", correct: false },
+                { e: "To pay compensation only to the village head", h: "मुआवजा केवल ग्राम प्रधान को देना", correct: false }
+            ],
+            expE: "Modern corporate governance demands strict adherence to social justice and environmental laws during land acquisition.",
+            expH: "आधुनिक कॉर्पोरेट प्रशासन भूमि अधिग्रहण के दौरान सामाजिक न्याय और पर्यावरण कानूनों के सख्त पालन की मांग करता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

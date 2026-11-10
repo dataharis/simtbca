@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 9 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 9: Energy Resources</h2>
+            <p>Renewable, Non-renewable, Alternate Sources & Bio-mass</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What are energy sources that cannot be replaced once they are used up called?",
+            qH: "उन ऊर्जा स्रोतों को क्या कहा जाता है जिन्हें एक बार उपयोग करने के बाद बदला नहीं जा सकता?",
+            options: [
+                { e: "Renewable energy", h: "नवीकरणीय ऊर्जा", correct: false },
+                { e: "Non-renewable energy", h: "गैर-नवीकरणीय ऊर्जा", correct: true },
+                { e: "Alternate energy", h: "वैकल्पिक ऊर्जा", correct: false },
+                { e: "Green energy", h: "हरित ऊर्जा", correct: false }
+            ],
+            expE: "Non-renewable resources take millions of years to form and exist in limited quantities (e.g., coal, oil).",
+            expH: "गैर-नवीकरणीय संसाधनों को बनने में लाखों वर्ष लगते हैं और वे सीमित मात्रा में मौजूद हैं (जैसे, कोयला, तेल)।"
+        },
+        {
+            qE: "Which of the following is a classic example of a renewable source of energy?",
+            qH: "निम्नलिखित में से कौन सा नवीकरणीय (renewable) ऊर्जा स्रोत का एक उत्कृष्ट उदाहरण है?",
+            options: [
+                { e: "Coal", h: "कोयला", correct: false },
+                { e: "Natural Gas", h: "प्राकृतिक गैस", correct: false },
+                { e: "Solar Energy", h: "सौर ऊर्जा", correct: true },
+                { e: "Petroleum", h: "पेट्रोलियम", correct: false }
+            ],
+            expE: "Solar energy comes from the sun and is continually replenished by nature.",
+            expH: "सौर ऊर्जा सूर्य से आती है और प्रकृति द्वारा निरंतर इसकी भरपाई की जाती है।"
+        },
+        {
+            qE: "Coal, petroleum, and natural gas are collectively known as:",
+            qH: "कोयला, पेट्रोलियम और प्राकृतिक गैस को सामूहिक रूप से किस नाम से जाना जाता है?",
+            options: [
+                { e: "Biomass", h: "बायोमास", correct: false },
+                { e: "Fossil fuels", h: "जीवाश्म ईंधन (Fossil fuels)", correct: true },
+                { e: "Nuclear fuels", h: "परमाणु ईंधन", correct: false },
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा", correct: false }
+            ],
+            expE: "They are called fossil fuels because they are formed from the fossilized remains of ancient plants and animals.",
+            expH: "इन्हें जीवाश्म ईंधन कहा जाता है क्योंकि ये प्राचीन पौधों और जानवरों के जीवाश्म अवशेषों से बनते हैं।"
+        },
+        {
+            qE: "Which fossil fuel is a dark liquid pumped from the ground and refined to make petrol and diesel?",
+            qH: "कौन सा जीवाश्म ईंधन जमीन से निकाला गया एक गहरा तरल पदार्थ है जिसे पेट्रोल और डीजल बनाने के लिए परिष्कृत (refined) किया जाता है?",
+            options: [
+                { e: "Coal", h: "कोयला", correct: false },
+                { e: "Petroleum (Crude Oil)", h: "पेट्रोलियम (कच्चा तेल)", correct: true },
+                { e: "Natural Gas", h: "प्राकृतिक गैस", correct: false },
+                { e: "Biogas", h: "बायोगैस", correct: false }
+            ],
+            expE: "Petroleum is processed in refineries to create various fuels for transportation.",
+            expH: "पेट्रोलियम को रिफाइनरियों में संसाधित करके परिवहन के लिए विभिन्न ईंधन बनाए जाते हैं।"
+        },
+        {
+            qE: "Which gas is the main component of Natural Gas?",
+            qH: "प्राकृतिक गैस का मुख्य घटक कौन सी गैस है?",
+            options: [
+                { e: "Oxygen", h: "ऑक्सीजन", correct: false },
+                { e: "Carbon Dioxide", h: "कार्बन डाइऑक्साइड", correct: false },
+                { e: "Methane", h: "मीथेन (Methane)", correct: true },
+                { e: "Nitrogen", h: "नाइट्रोजन", correct: false }
+            ],
+            expE: "Natural gas is primarily composed of methane (CH4), making it highly flammable and a good energy source.",
+            expH: "प्राकृतिक गैस मुख्य रूप से मीथेन (CH4) से बनी होती है, जो इसे अत्यधिक ज्वलनशील और एक अच्छा ऊर्जा स्रोत बनाती है।"
+        },
+        {
+            qE: "Energy obtained directly from the Earth's internal heat is called:",
+            qH: "पृथ्वी की आंतरिक गर्मी से सीधे प्राप्त होने वाली ऊर्जा को क्या कहा जाता है?",
+            options: [
+                { e: "Solar energy", h: "सौर ऊर्जा", correct: false },
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा (Geothermal energy)", correct: true },
+                { e: "Hydro energy", h: "जल ऊर्जा", correct: false },
+                { e: "Wind energy", h: "पवन ऊर्जा", correct: false }
+            ],
+            expE: "Geothermal (Geo = Earth, Thermal = Heat) energy uses hot water and steam from deep inside the earth.",
+            expH: "भूतापीय (जियो = पृथ्वी, थर्मल = हीट) ऊर्जा पृथ्वी के अंदर गहराई से गर्म पानी और भाप का उपयोग करती है।"
+        },
+        {
+            qE: "Windmills and tall wind turbines are used to generate which type of energy?",
+            qH: "पवन चक्कियों और ऊंचे पवन टरबाइनों का उपयोग किस प्रकार की ऊर्जा उत्पन्न करने के लिए किया जाता है?",
+            options: [
+                { e: "Nuclear energy", h: "परमाणु ऊर्जा", correct: false },
+                { e: "Hydroelectric energy", h: "जलविद्युत ऊर्जा", correct: false },
+                { e: "Wind energy", h: "पवन ऊर्जा (Wind energy)", correct: true },
+                { e: "Biomass energy", h: "बायोमास ऊर्जा", correct: false }
+            ],
+            expE: "The kinetic energy of the wind turns the turbine blades to generate electricity.",
+            expH: "हवा की गतिज ऊर्जा (kinetic energy) बिजली पैदा करने के लिए टरबाइन के ब्लेड को घुमाती है।"
+        },
+        {
+            qE: "Which energy source uses falling or fast-flowing water (usually from dams) to generate electricity?",
+            qH: "कौन सा ऊर्जा स्रोत बिजली उत्पन्न करने के लिए गिरते हुए या तेज बहते पानी (आमतौर पर बांधों से) का उपयोग करता है?",
+            options: [
+                { e: "Hydroelectric energy", h: "जलविद्युत ऊर्जा (Hydroelectric energy)", correct: true },
+                { e: "Tidal energy", h: "ज्वारीय ऊर्जा", correct: false },
+                { e: "Solar energy", h: "सौर ऊर्जा", correct: false },
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा", correct: false }
+            ],
+            expE: "Hydroelectric power plants harness the energy of flowing water to spin turbines and generate electricity.",
+            expH: "जलविद्युत ऊर्जा संयंत्र टरबाइन को घुमाने और बिजली उत्पन्न करने के लिए बहते पानी की ऊर्जा का उपयोग करते हैं।"
+        },
+        {
+            qE: "What is 'Biogas' primarily produced from?",
+            qH: "'बायोगैस' मुख्य रूप से किससे उत्पन्न होती है?",
+            options: [
+                { e: "Mining rocks", h: "चट्टानों के खनन से", correct: false },
+                { e: "Organic waste like cow dung and agricultural residue", h: "जैविक कचरा जैसे गोबर और कृषि अवशेष", correct: true },
+                { e: "Heating ocean water", h: "समुद्र के पानी को गर्म करने से", correct: false },
+                { e: "Burning plastic", h: "प्लास्टिक जलाने से", correct: false }
+            ],
+            expE: "Biogas is a renewable fuel produced by the breakdown of organic matter in the absence of oxygen.",
+            expH: "बायोगैस ऑक्सीजन की अनुपस्थिति में कार्बनिक पदार्थों के टूटने से उत्पन्न एक नवीकरणीय ईंधन है।"
+        },
+        {
+            qE: "Agro-residues (crop leftovers after harvest) can be effectively used as which type of energy source?",
+            qH: "कृषि अवशेषों (कटाई के बाद बची हुई फसल) को किस प्रकार के ऊर्जा स्रोत के रूप में प्रभावी ढंग से उपयोग किया जा सकता है?",
+            options: [
+                { e: "Fossil fuel", h: "जीवाश्म ईंधन", correct: false },
+                { e: "Biomass energy", h: "बायोमास ऊर्जा (Biomass energy)", correct: true },
+                { e: "Nuclear energy", h: "परमाणु ऊर्जा", correct: false },
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा", correct: false }
+            ],
+            expE: "Biomass energy utilizes agricultural waste (agro-residues) by either burning it directly or converting it into biogas.",
+            expH: "बायोमास ऊर्जा कृषि अपशिष्ट (कृषि अवशेषों) को सीधे जलाकर या बायोगैस में परिवर्तित करके उपयोग करती है।"
+        },
+        {
+            qE: "Which of the following fossil fuels generally has the highest carbon content and causes the most pollution when burned?",
+            qH: "निम्नलिखित में से किस जीवाश्म ईंधन में आम तौर पर सबसे अधिक कार्बन सामग्री होती है और जलने पर सबसे अधिक प्रदूषण होता है?",
+            options: [
+                { e: "Natural Gas", h: "प्राकृतिक गैस", correct: false },
+                { e: "Petroleum", h: "पेट्रोलियम", correct: false },
+                { e: "Coal", h: "कोयला (Coal)", correct: true },
+                { e: "Biogas", h: "बायोगैस", correct: false }
+            ],
+            expE: "Coal combustion is a leading cause of smog, acid rain, and toxic air pollution globally.",
+            expH: "कोयले का दहन विश्व स्तर पर स्मॉग, अम्लीय वर्षा और जहरीले वायु प्रदूषण का एक प्रमुख कारण है।"
+        },
+        {
+            qE: "Why is there an urgently growing need for alternate (renewable) energy sources?",
+            qH: "वैकल्पिक (नवीकरणीय) ऊर्जा स्रोतों की तत्काल बढ़ती आवश्यकता क्यों है?",
+            options: [
+                { e: "Because solar panels look modern", h: "क्योंकि सौर पैनल आधुनिक दिखते हैं", correct: false },
+                { e: "Because fossil fuels are running out and cause severe environmental pollution", h: "क्योंकि जीवाश्म ईंधन खत्म हो रहे हैं और गंभीर पर्यावरण प्रदूषण पैदा करते हैं", correct: true },
+                { e: "Because alternate energy is completely free to set up", h: "क्योंकि वैकल्पिक ऊर्जा स्थापित करने के लिए पूरी तरह से मुफ्त है", correct: false },
+                { e: "Because we have stopped using electricity", h: "क्योंकि हमने बिजली का इस्तेमाल बंद कर दिया है", correct: false }
+            ],
+            expE: "Renewable energy is necessary to combat climate change and ensure a sustainable energy future.",
+            expH: "जलवायु परिवर्तन से निपटने और एक स्थायी ऊर्जा भविष्य सुनिश्चित करने के लिए नवीकरणीय ऊर्जा आवश्यक है।"
+        },
+        {
+            qE: "Uranium is a heavy metal primarily used as a fuel in which type of power generation?",
+            qH: "यूरेनियम एक भारी धातु है जिसका उपयोग मुख्य रूप से किस प्रकार के बिजली उत्पादन में ईंधन के रूप में किया जाता है?",
+            options: [
+                { e: "Thermal power (Coal)", h: "थर्मल पावर (कोयला)", correct: false },
+                { e: "Nuclear power", h: "परमाणु ऊर्जा (Nuclear power)", correct: true },
+                { e: "Solar power", h: "सौर ऊर्जा", correct: false },
+                { e: "Tidal power", h: "ज्वारीय ऊर्जा", correct: false }
+            ],
+            expE: "Nuclear power plants use the splitting of uranium atoms (nuclear fission) to generate massive amounts of heat.",
+            expH: "परमाणु ऊर्जा संयंत्र भारी मात्रा में गर्मी पैदा करने के लिए यूरेनियम परमाणुओं (परमाणु विखंडन) के विभाजन का उपयोग करते हैं।"
+        },
+        {
+            qE: "The energy content or 'heat value' of a fuel is measured in terms of its:",
+            qH: "किसी ईंधन की ऊर्जा सामग्री या 'ताप मूल्य' (heat value) को किस रूप में मापा जाता है?",
+            options: [
+                { e: "Calorific value", h: "उष्मीय मान (Calorific value)", correct: true },
+                { e: "Water content", h: "पानी की मात्रा", correct: false },
+                { e: "Color index", h: "रंग सूचकांक", correct: false },
+                { e: "Volume weight", h: "वॉल्यूम वजन", correct: false }
+            ],
+            expE: "Calorific value is the amount of heat energy produced by the complete combustion of a specific amount of fuel.",
+            expH: "कैलोरिफिक मान (उष्मीय मान) एक विशिष्ट मात्रा में ईंधन के पूर्ण दहन से उत्पन्न ऊष्मा ऊर्जा की मात्रा है।"
+        },
+        {
+            qE: "Which of these is considered a clean and alternate energy source commonly used for public transport vehicles today?",
+            qH: "इनमें से किसे स्वच्छ और वैकल्पिक ऊर्जा स्रोत माना जाता है जिसका उपयोग आजकल आमतौर पर सार्वजनिक परिवहन वाहनों के लिए किया जाता है?",
+            options: [
+                { e: "Diesel", h: "डीजल", correct: false },
+                { e: "Kerosene", h: "केरोसिन", correct: false },
+                { e: "Compressed Natural Gas (CNG)", h: "संपीडित प्राकृतिक गैस (CNG)", correct: true },
+                { e: "Wood", h: "लकड़ी", correct: false }
+            ],
+            expE: "CNG is a much cleaner-burning fuel compared to diesel, heavily reducing city air pollution.",
+            expH: "CNG डीजल की तुलना में बहुत अधिक स्वच्छ जलने वाला ईंधन है, जो शहर के वायु प्रदूषण को काफी कम करता है।"
+        },
+        {
+            qE: "Solar panels (photovoltaic cells) work by converting:",
+            qH: "सौर पैनल (फोटोवोल्टिक सेल) किसे परिवर्तित करके काम करते हैं?",
+            options: [
+                { e: "Wind into electricity", h: "हवा को बिजली में", correct: false },
+                { e: "Heat into water", h: "गर्मी को पानी में", correct: false },
+                { e: "Sunlight directly into electricity", h: "धूप (sunlight) को सीधे बिजली में", correct: true },
+                { e: "Sound into light", h: "ध्वनि को प्रकाश में", correct: false }
+            ],
+            expE: "Photovoltaic (PV) cells absorb sunlight and generate an electrical current directly.",
+            expH: "फोटोवोल्टिक (PV) सेल सूर्य के प्रकाश को अवशोषित करते हैं और सीधे विद्युत प्रवाह उत्पन्न करते हैं।"
+        },
+        {
+            qE: "Which fossil fuel is considered the 'cleanest burning' among coal, oil, and gas?",
+            qH: "कोयला, तेल और गैस में से किस जीवाश्म ईंधन को 'सबसे स्वच्छ जलने वाला' (cleanest burning) माना जाता है?",
+            options: [
+                { e: "Coal", h: "कोयला", correct: false },
+                { e: "Petroleum", h: "पेट्रोलियम", correct: false },
+                { e: "Natural Gas", h: "प्राकृतिक गैस (Natural Gas)", correct: true },
+                { e: "Lignite", h: "लिग्नाइट", correct: false }
+            ],
+            expE: "Natural gas emits about 50% less carbon dioxide than coal when burned.",
+            expH: "प्राकृतिक गैस जलने पर कोयले की तुलना में लगभग 50% कम कार्बन डाइऑक्साइड उत्सर्जित करती है।"
+        },
+        {
+            qE: "India has a very high natural potential for which type of renewable energy due to experiencing 300+ sunny days a year?",
+            qH: "वर्ष में 300+ धूप वाले दिनों का अनुभव करने के कारण भारत में किस प्रकार की नवीकरणीय ऊर्जा की बहुत अधिक प्राकृतिक क्षमता है?",
+            options: [
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा", correct: false },
+                { e: "Tidal energy", h: "ज्वारीय ऊर्जा", correct: false },
+                { e: "Solar energy", h: "सौर ऊर्जा (Solar energy)", correct: true },
+                { e: "Nuclear energy", h: "परमाणु ऊर्जा", correct: false }
+            ],
+            expE: "India's tropical location provides abundant solar radiation throughout the year.",
+            expH: "भारत की उष्णकटिबंधीय (tropical) स्थिति पूरे वर्ष प्रचुर मात्रा में सौर विकिरण प्रदान करती है।"
+        },
+        {
+            qE: "What is a major disadvantage of relying completely on non-renewable energy sources?",
+            qH: "पूरी तरह से गैर-नवीकरणीय ऊर्जा स्रोतों पर निर्भर रहने का एक बड़ा नुकसान क्या है?",
+            options: [
+                { e: "They cause global warming and will eventually be depleted completely", h: "वे ग्लोबल वार्मिंग का कारण बनते हैं और अंततः पूरी तरह से समाप्त हो जाएंगे", correct: true },
+                { e: "They are too quiet and don't make enough noise", h: "वे बहुत शांत हैं और पर्याप्त शोर नहीं करते", correct: false },
+                { e: "They do not produce enough heat", h: "वे पर्याप्त गर्मी पैदा नहीं करते हैं", correct: false },
+                { e: "They are perfectly safe for the environment", h: "वे पर्यावरण के लिए पूरी तरह से सुरक्षित हैं", correct: false }
+            ],
+            expE: "Non-renewables are finite (will run out) and are the primary drivers of climate change.",
+            expH: "गैर-नवीकरणीय संसाधन सीमित हैं (खत्म हो जाएंगे) और जलवायु परिवर्तन के प्राथमिक चालक हैं।"
+        },
+        {
+            qE: "Which energy source is derived from the gravitational pull of the moon and sun on Earth's oceans?",
+            qH: "पृथ्वी के महासागरों पर चंद्रमा और सूर्य के गुरुत्वाकर्षण खिंचाव से कौन सा ऊर्जा स्रोत प्राप्त होता है?",
+            options: [
+                { e: "Geothermal energy", h: "भूतापीय ऊर्जा", correct: false },
+                { e: "Tidal energy", h: "ज्वारीय ऊर्जा (Tidal energy)", correct: true },
+                { e: "Solar energy", h: "सौर ऊर्जा", correct: false },
+                { e: "Wind energy", h: "पवन ऊर्जा", correct: false }
+            ],
+            expE: "Tidal energy is a form of hydropower that converts the energy obtained from tides into useful forms of power.",
+            expH: "ज्वारीय ऊर्जा जलविद्युत का एक रूप है जो ज्वार से प्राप्त ऊर्जा को बिजली के उपयोगी रूपों में परिवर्तित करती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

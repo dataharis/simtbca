@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 17 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 17: Role of Businesses in Sustainable Development</h2>
+            <p>SDGs, Responsible Consumption, and Corporate Sustainability</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the abbreviation 'SDGs' stand for in environmental science and business?",
+            qH: "पर्यावरण विज्ञान और व्यापार में 'SDGs' का पूर्ण रूप क्या है?",
+            options: [
+                { e: "Social Development Growth", h: "सामाजिक विकास वृद्धि", correct: false },
+                { e: "Sustainable Development Goals", h: "सतत विकास लक्ष्य (Sustainable Development Goals)", correct: true },
+                { e: "Society, Data, and Government", h: "समाज, डेटा और सरकार", correct: false },
+                { e: "Systematic Design Goals", h: "व्यवस्थित डिजाइन लक्ष्य", correct: false }
+            ],
+            expE: "The SDGs are a collection of global goals designed to be a blueprint for a better and more sustainable future for all.",
+            expH: "SDGs वैश्विक लक्ष्यों का एक संग्रह है जिसे सभी के लिए एक बेहतर और अधिक टिकाऊ भविष्य का खाका (blueprint) तैयार करने के लिए डिज़ाइन किया गया है।"
+        },
+        {
+            qE: "How many Sustainable Development Goals (SDGs) were adopted by the United Nations?",
+            qH: "संयुक्त राष्ट्र (UN) द्वारा कितने सतत विकास लक्ष्य (SDGs) अपनाए गए हैं?",
+            options: [
+                { e: "10", h: "10", correct: false },
+                { e: "17", h: "17", correct: true },
+                { e: "25", h: "25", correct: false },
+                { e: "50", h: "50", correct: false }
+            ],
+            expE: "In 2015, all United Nations Member States adopted 17 SDGs as a universal call to action.",
+            expH: "2015 में, संयुक्त राष्ट्र के सभी सदस्य देशों ने कार्रवाई के लिए एक सार्वभौमिक आह्वान के रूप में 17 SDGs को अपनाया।"
+        },
+        {
+            qE: "Which UN SDG specifically focuses on 'Responsible Consumption and Production'?",
+            qH: "कौन सा संयुक्त राष्ट्र SDG विशेष रूप से 'जिम्मेदार उपभोग और उत्पादन' (Responsible Consumption and Production) पर केंद्रित है?",
+            options: [
+                { e: "Goal 1", h: "लक्ष्य 1", correct: false },
+                { e: "Goal 7", h: "लक्ष्य 7", correct: false },
+                { e: "Goal 12", h: "लक्ष्य 12", correct: true },
+                { e: "Goal 17", h: "लक्ष्य 17", correct: false }
+            ],
+            expE: "SDG 12 aims to ensure sustainable consumption and production patterns by reducing waste and resource use.",
+            expH: "SDG 12 का उद्देश्य कचरे और संसाधनों के उपयोग को कम करके टिकाऊ उपभोग और उत्पादन पैटर्न सुनिश्चित करना है।"
+        },
+        {
+            qE: "What is the target year set by the United Nations to achieve all the SDGs?",
+            qH: "सभी SDGs को प्राप्त करने के लिए संयुक्त राष्ट्र द्वारा निर्धारित लक्ष्य वर्ष कौन सा है?",
+            options: [
+                { e: "2025", h: "2025", correct: false },
+                { e: "2030", h: "2030", correct: true },
+                { e: "2050", h: "2050", correct: false },
+                { e: "2100", h: "2100", correct: false }
+            ],
+            expE: "The SDGs are part of the '2030 Agenda for Sustainable Development'.",
+            expH: "SDG 'सतत विकास के लिए 2030 एजेंडा' का हिस्सा हैं।"
+        },
+        {
+            qE: "How can an IT or manufacturing business promote 'Responsible Consumption'?",
+            qH: "कोई आईटी (IT) या विनिर्माण (manufacturing) व्यवसाय 'जिम्मेदार उपभोग' को कैसे बढ़ावा दे सकता है?",
+            options: [
+                { e: "By making products that break easily so people buy more", h: "ऐसे उत्पाद बनाकर जो आसानी से टूट जाएं ताकि लोग अधिक खरीदें", correct: false },
+                { e: "By designing durable, repairable, and easily recyclable products", h: "टिकाऊ, मरम्मत योग्य और आसानी से पुनर्चक्रण योग्य (recyclable) उत्पाद डिजाइन करके", correct: true },
+                { e: "By using excessive plastic packaging", h: "अत्यधिक प्लास्टिक पैकेजिंग का उपयोग करके", correct: false },
+                { e: "By hiding the ingredients of their products", h: "अपने उत्पादों की सामग्री (ingredients) को छिपाकर", correct: false }
+            ],
+            expE: "Designing for durability and recycling helps reduce e-waste and material consumption.",
+            expH: "स्थायित्व और रीसाइक्लिंग के लिए डिजाइन करने से ई-कचरे (e-waste) और सामग्री की खपत को कम करने में मदद मिलती है।"
+        },
+        {
+            qE: "When a company falsely claims its products are environmentally friendly to attract customers, it is called:",
+            qH: "जब कोई कंपनी ग्राहकों को आकर्षित करने के लिए अपने उत्पादों को पर्यावरण के अनुकूल (eco-friendly) होने का झूठा दावा करती है, तो इसे क्या कहा जाता है?",
+            options: [
+                { e: "Green Marketing", h: "ग्रीन मार्केटिंग", correct: false },
+                { e: "Greenwashing", h: "ग्रीनवाशिंग (Greenwashing)", correct: true },
+                { e: "Eco-labeling", h: "इको-लेबलिंग", correct: false },
+                { e: "Sustainability", h: "स्थिरता", correct: false }
+            ],
+            expE: "Greenwashing is a deceptive marketing tactic that misleads consumers about the environmental benefits of a product.",
+            expH: "ग्रीनवाशिंग एक भ्रामक मार्केटिंग रणनीति है जो उत्पाद के पर्यावरणीय लाभों के बारे में उपभोक्ताओं को गुमराह करती है।"
+        },
+        {
+            qE: "Which of the following business practices directly supports Sustainable Development?",
+            qH: "निम्नलिखित में से कौन सी व्यावसायिक प्रथा प्रत्यक्ष रूप से सतत विकास (Sustainable Development) का समर्थन करती है?",
+            options: [
+                { e: "Dumping factory waste directly into rivers", h: "कारखाने का कचरा सीधे नदियों में डंप करना", correct: false },
+                { e: "Using 100% renewable energy for office operations", h: "कार्यालय संचालन के लिए 100% नवीकरणीय ऊर्जा का उपयोग करना", correct: true },
+                { e: "Forcing employees to work in unsafe conditions", h: "कर्मचारियों को असुरक्षित परिस्थितियों में काम करने के लिए मजबूर करना", correct: false },
+                { e: "Ignoring labor laws", h: "श्रम कानूनों की अनदेखी", correct: false }
+            ],
+            expE: "Using renewable energy like solar or wind power reduces the company's carbon footprint.",
+            expH: "सौर या पवन ऊर्जा जैसी नवीकरणीय ऊर्जा का उपयोग करने से कंपनी का कार्बन फुटप्रिंट कम होता है।"
+        },
+        {
+            qE: "What does CSR stand for in the corporate world?",
+            qH: "कॉर्पोरेट जगत में CSR का पूर्ण रूप क्या है?",
+            options: [
+                { e: "Corporate Social Responsibility", h: "कॉर्पोरेट सामाजिक उत्तरदायित्व (Corporate Social Responsibility)", correct: true },
+                { e: "Company Sustainability Rules", h: "कंपनी स्थिरता नियम", correct: false },
+                { e: "Customer Service Record", h: "ग्राहक सेवा रिकॉर्ड", correct: false },
+                { e: "Corporate Sales Revenue", h: "कॉर्पोरेट बिक्री राजस्व", correct: false }
+            ],
+            expE: "CSR is a self-regulating business model that helps a company be socially and environmentally accountable.",
+            expH: "CSR एक स्व-विनियमन व्यवसाय मॉडल है जो कंपनी को सामाजिक और पर्यावरणीय रूप से जवाबदेह होने में मदद करता है।"
+        },
+        {
+            qE: "A business model that aims to eliminate waste and keep materials in use for as long as possible is known as a:",
+            qH: "एक व्यवसाय मॉडल जिसका उद्देश्य अपशिष्ट (कचरे) को खत्म करना और सामग्रियों को यथासंभव लंबे समय तक उपयोग में रखना है, क्या कहलाता है?",
+            options: [
+                { e: "Linear Economy", h: "रैखिक अर्थव्यवस्था (Linear Economy)", correct: false },
+                { e: "Circular Economy", h: "परिपत्र अर्थव्यवस्था (Circular Economy)", correct: true },
+                { e: "Throwaway Economy", h: "थ्रोअवे इकोनॉमी", correct: false },
+                { e: "Digital Economy", h: "डिजिटल अर्थव्यवस्था", correct: false }
+            ],
+            expE: "Unlike the 'take-make-dispose' linear model, a circular economy focuses on sharing, leasing, reusing, and recycling.",
+            expH: "'टेक-मेक-डिस्पोज' (लो-बनाओ-फेंको) रैखिक मॉडल के विपरीत, एक परिपत्र (सर्कुलर) अर्थव्यवस्था साझा करने, पट्टे पर देने, पुन: उपयोग करने और रीसाइक्लिंग पर केंद्रित है।"
+        },
+        {
+            qE: "Why is it fundamentally important for businesses to integrate SDGs into their strategies?",
+            qH: "व्यवसायों के लिए अपनी रणनीतियों में SDGs को एकीकृत (शामिल) करना मौलिक रूप से क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because they will be arrested immediately if they don't", h: "क्योंकि अगर वे ऐसा नहीं करेंगे तो उन्हें तुरंत गिरफ्तार कर लिया जाएगा", correct: false },
+                { e: "To ensure long-term profitability while protecting the planet and improving society", h: "ग्रह की रक्षा करने और समाज में सुधार करते हुए दीर्घकालिक लाभप्रदता सुनिश्चित करने के लिए", correct: true },
+                { e: "Only to make their advertisements look good", h: "केवल अपने विज्ञापनों को अच्छा दिखाने के लिए", correct: false },
+                { e: "Because all resources are infinite anyway", h: "क्योंकि वैसे भी सभी संसाधन अनंत हैं", correct: false }
+            ],
+            expE: "Sustainability reduces risks, saves costs in the long run, and builds a strong, ethical brand reputation.",
+            expH: "स्थिरता (Sustainability) जोखिमों को कम करती है, लंबे समय में लागत बचाती है, और एक मजबूत, नैतिक ब्रांड प्रतिष्ठा बनाती है।"
+        },
+        {
+            qE: "What is 'Ecolabeling' on consumer products?",
+            qH: "उपभोक्ता उत्पादों पर 'इको-लेबलिंग' (Ecolabeling) क्या है?",
+            options: [
+                { e: "Printing the price in green color", h: "कीमत को हरे रंग में प्रिंट करना", correct: false },
+                { e: "A voluntary method of environmental performance certification showing a product is eco-friendly", h: "पर्यावरण प्रदर्शन प्रमाणन की एक स्वैच्छिक विधि जो दर्शाती है कि उत्पाद पर्यावरण के अनुकूल है", correct: true },
+                { e: "Adding a sticker of a tree on plastic bags", h: "प्लास्टिक बैग पर पेड़ का स्टिकर लगाना", correct: false },
+                { e: "Writing 'Natural' on dangerous chemicals", h: "खतरनाक रसायनों पर 'प्राकृतिक' लिखना", correct: false }
+            ],
+            expE: "Ecolabels help responsible consumers easily identify products that have a lower environmental impact.",
+            expH: "इकोलेबल जिम्मेदार उपभोक्ताओं को उन उत्पादों को आसानी से पहचानने में मदद करते हैं जिनका पर्यावरणीय प्रभाव कम होता है।"
+        },
+        {
+            qE: "Which action by a consumer is the BEST example of 'Responsible Consumption'?",
+            qH: "उपभोक्ता द्वारा की गई कौन सी कार्रवाई 'जिम्मेदार उपभोग' का सबसे अच्छा उदाहरण है?",
+            options: [
+                { e: "Buying a new smartphone every 6 months", h: "हर 6 महीने में नया स्मार्टफोन खरीदना", correct: false },
+                { e: "Using a reusable cloth bag instead of single-use plastic bags", h: "सिंगल-यूज़ प्लास्टिक बैग के बजाय दोबारा इस्तेमाल होने वाले कपड़े के बैग का उपयोग करना", correct: true },
+                { e: "Leaving all lights on at home when going out", h: "बाहर जाते समय घर की सभी लाइटें चालू छोड़ देना", correct: false },
+                { e: "Buying excessive food and throwing half of it away", h: "अत्यधिक भोजन खरीदना और उसका आधा हिस्सा फेंक देना", correct: false }
+            ],
+            expE: "Responsible consumption means making choices that minimize environmental waste and resource depletion.",
+            expH: "जिम्मेदार उपभोग का मतलब ऐसे विकल्प चुनना है जो पर्यावरणीय कचरे और संसाधन की कमी को कम करते हैं।"
+        },
+        {
+            qE: "What does a company's 'Carbon Footprint' measure?",
+            qH: "किसी कंपनी का 'कार्बन फुटप्रिंट' (Carbon Footprint) क्या मापता है?",
+            options: [
+                { e: "The physical size of its factories", h: "इसके कारखानों का भौतिक आकार", correct: false },
+                { e: "The total amount of greenhouse gases (like CO2) it emits into the atmosphere", h: "ग्रीनहाउस गैसों (जैसे CO2) की कुल मात्रा जो यह वायुमंडल में उत्सर्जित करता है", correct: true },
+                { e: "The number of employees it has", h: "कर्मचारियों की संख्या", correct: false },
+                { e: "The amount of carbon it uses to make pencils", h: "पेंसिल बनाने के लिए उपयोग किए जाने वाले कार्बन की मात्रा", correct: false }
+            ],
+            expE: "Companies try to reduce their carbon footprint to fight climate change and achieve SDG 13 (Climate Action).",
+            expH: "कंपनियां जलवायु परिवर्तन से लड़ने और SDG 13 (जलवायु कार्रवाई) को प्राप्त करने के लिए अपने कार्बन पदचिह्न को कम करने का प्रयास करती हैं।"
+        },
+        {
+            qE: "The 'Triple Bottom Line' is an accounting framework for businesses that focuses on three elements: Profit, Planet, and ________.",
+            qH: "व्यापार के लिए 'ट्रिपल बॉटम लाइन' एक ढांचा है जो तीन तत्वों पर केंद्रित है: लाभ (Profit), ग्रह (Planet), और ________।",
+            options: [
+                { e: "Politics", h: "राजनीति (Politics)", correct: false },
+                { e: "Power", h: "शक्ति (Power)", correct: false },
+                { e: "People", h: "लोग (People - समाज)", correct: true },
+                { e: "Publicity", h: "प्रचार (Publicity)", correct: false }
+            ],
+            expE: "It evaluates a company's performance in a broader perspective: Financial (Profit), Environmental (Planet), and Social (People).",
+            expH: "यह व्यापक परिप्रेक्ष्य में एक कंपनी के प्रदर्शन का मूल्यांकन करता है: वित्तीय (लाभ), पर्यावरणीय (ग्रह), और सामाजिक (लोग)।"
+        },
+        {
+            qE: "If a software company (like an app developer) switches its servers to a green data center powered by wind energy, it is directly contributing to:",
+            qH: "यदि कोई सॉफ्टवेयर कंपनी (जैसे एक ऐप डेवलपर) अपने सर्वर को पवन ऊर्जा से चलने वाले ग्रीन डेटा सेंटर में स्विच करती है, तो यह सीधे तौर पर किसमें योगदान दे रही है?",
+            options: [
+                { e: "SDG 14: Life Below Water", h: "SDG 14: पानी के नीचे का जीवन", correct: false },
+                { e: "SDG 7: Affordable and Clean Energy & SDG 13: Climate Action", h: "SDG 7: वहनीय और स्वच्छ ऊर्जा और SDG 13: जलवायु कार्रवाई", correct: true },
+                { e: "SDG 2: Zero Hunger", h: "SDG 2: शून्य भुखमरी", correct: false },
+                { e: "SDG 4: Quality Education", h: "SDG 4: गुणवत्तापूर्ण शिक्षा", correct: false }
+            ],
+            expE: "Using renewable energy reduces reliance on fossil fuels, directly addressing clean energy and climate goals.",
+            expH: "नवीकरणीय ऊर्जा का उपयोग जीवाश्म ईंधन पर निर्भरता कम करता है, जो सीधे स्वच्छ ऊर्जा और जलवायु लक्ष्यों को संबोधित करता है।"
+        },
+        {
+            qE: "Which of the following is considered 'E-waste' (Electronic Waste)?",
+            qH: "निम्नलिखित में से किसे 'ई-कचरा' (E-waste) माना जाता है?",
+            options: [
+                { e: "Leftover food from a cafeteria", h: "कैफेटेरिया से बचा हुआ खाना", correct: false },
+                { e: "Old newspapers and cardboard boxes", h: "पुराने अखबार और गत्ते के डिब्बे", correct: false },
+                { e: "Broken laptops, old smartphones, and discarded wires", h: "टूटे हुए लैपटॉप, पुराने स्मार्टफोन और फेंके गए तार", correct: true },
+                { e: "Plastic bottles", h: "प्लास्टिक की बोतलें", correct: false }
+            ],
+            expE: "E-waste contains hazardous chemicals like lead and mercury, making its safe recycling crucial for IT businesses.",
+            expH: "ई-कचरे में सीसा और पारा जैसे खतरनाक रसायन होते हैं, जिससे आईटी व्यवसायों के लिए इसका सुरक्षित पुनर्चक्रण महत्वपूर्ण हो जाता है।"
+        },
+        {
+            qE: "Which SDG aims to 'Take urgent action to combat climate change and its impacts'?",
+            qH: "किस SDG का उद्देश्य 'जलवायु परिवर्तन और इसके प्रभावों से निपटने के लिए तत्काल कार्रवाई करना' है?",
+            options: [
+                { e: "Goal 1", h: "लक्ष्य 1", correct: false },
+                { e: "Goal 5", h: "लक्ष्य 5", correct: false },
+                { e: "Goal 13", h: "लक्ष्य 13 (Climate Action)", correct: true },
+                { e: "Goal 16", h: "लक्ष्य 16", correct: false }
+            ],
+            expE: "SDG 13 (Climate Action) is central to ensuring the survival of ecosystems and economies worldwide.",
+            expH: "SDG 13 (जलवायु कार्रवाई) दुनिया भर में पारिस्थितिक तंत्र और अर्थव्यवस्थाओं के अस्तित्व को सुनिश्चित करने के लिए केंद्रीय है।"
+        },
+        {
+            qE: "What happens when businesses completely ignore environmental sustainability?",
+            qH: "क्या होता है जब व्यवसाय पर्यावरण स्थिरता (environmental sustainability) को पूरी तरह नजरअंदाज कर देते हैं?",
+            options: [
+                { e: "They make infinite money without any problems", h: "वे बिना किसी समस्या के अनंत पैसा कमाते हैं", correct: false },
+                { e: "They face legal fines, resource shortages, and loss of customer trust", h: "उन्हें कानूनी जुर्माने, संसाधनों की कमी और ग्राहकों के विश्वास की हानि का सामना करना पड़ता है", correct: true },
+                { e: "Their stock prices automatically triple", h: "उनके शेयर की कीमतें अपने आप तीन गुना हो जाती हैं", correct: false },
+                { e: "The government rewards them", h: "सरकार उन्हें ईनाम देती है", correct: false }
+            ],
+            expE: "Modern consumers, investors, and laws penalize companies that harm the environment (e.g., heavy fines for pollution).",
+            expH: "आधुनिक उपभोक्ता, निवेशक और कानून उन कंपनियों को दंडित करते हैं जो पर्यावरण को नुकसान पहुंचाती हैं (जैसे, प्रदूषण के लिए भारी जुर्माना)।"
+        },
+        {
+            qE: "Using digital invoices (e-bills) and emails instead of printing documents on paper in an office is an example of:",
+            qH: "कार्यालय में कागज पर दस्तावेज़ों को छापने के बजाय डिजिटल चालान (ई-बिल) और ईमेल का उपयोग करना किसका एक उदाहरण है?",
+            options: [
+                { e: "Resource conservation and waste reduction", h: "संसाधन संरक्षण और अपशिष्ट में कमी", correct: true },
+                { e: "Greenwashing", h: "ग्रीनवाशिंग", correct: false },
+                { e: "Air pollution", h: "वायु प्रदूषण", correct: false },
+                { e: "Deforestation", h: "वनों की कटाई", correct: false }
+            ],
+            expE: "Going paperless saves trees (forests), water, and energy used in paper manufacturing.",
+            expH: "कागज रहित होने से कागज निर्माण में उपयोग होने वाले पेड़ों (जंगलों), पानी और ऊर्जा की बचत होती है।"
+        },
+        {
+            qE: "A business adopting the SDG framework is showing commitment to:",
+            qH: "SDG ढांचे को अपनाने वाला व्यवसाय किसके प्रति प्रतिबद्धता दिखा रहा है?",
+            options: [
+                { e: "Only increasing shareholder wealth", h: "केवल शेयरधारक की संपत्ति बढ़ाना", correct: false },
+                { e: "Exploiting workers for cheap labor", h: "सस्ते श्रम के लिए श्रमिकों का शोषण करना", correct: false },
+                { e: "Global peace, prosperity, and environmental protection", h: "वैश्विक शांति, समृद्धि और पर्यावरण संरक्षण", correct: true },
+                { e: "Evading national taxes", h: "राष्ट्रीय करों से बचना", correct: false }
+            ],
+            expE: "The SDGs are a universal call to end poverty, protect the planet, and ensure that all people enjoy peace and prosperity.",
+            expH: "SDG गरीबी को समाप्त करने, ग्रह की रक्षा करने और यह सुनिश्चित करने के लिए एक सार्वभौमिक आह्वान है कि सभी लोग शांति और समृद्धि का आनंद लें।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

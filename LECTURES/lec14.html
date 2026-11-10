@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 14 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 14: Conservation Strategies</h2>
+            <p>In Situ, Ex Situ Conservation & Nature Reserves</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does 'Conservation' mean in environmental science?",
+            qH: "पर्यावरण विज्ञान में 'संरक्षण' (Conservation) का क्या अर्थ है?",
+            options: [
+                { e: "Destroying natural habitats for buildings", h: "इमारतों के लिए प्राकृतिक आवासों को नष्ट करना", correct: false },
+                { e: "Protecting, preserving, and managing natural resources and wildlife", h: "प्राकृतिक संसाधनों और वन्यजीवों की रक्षा, संरक्षण और प्रबंधन", correct: true },
+                { e: "Keeping animals strictly as pets", h: "जानवरों को सख्ती से पालतू जानवर के रूप में रखना", correct: false },
+                { e: "Using up all resources quickly", h: "सभी संसाधनों का तेजी से उपयोग करना", correct: false }
+            ],
+            expE: "Conservation aims to protect biodiversity so that nature can continue to survive and thrive.",
+            expH: "संरक्षण का उद्देश्य जैव विविधता की रक्षा करना है ताकि प्रकृति जीवित रहे और फल-फूल सके।"
+        },
+        {
+            qE: "What are the two main types of biodiversity conservation strategies?",
+            qH: "जैव विविधता संरक्षण रणनीतियों के दो मुख्य प्रकार क्या हैं?",
+            options: [
+                { e: "In-situ and Ex-situ", h: "स्व-स्थाने (In-situ) और बाह्य-स्थाने (Ex-situ)", correct: true },
+                { e: "Indoor and Outdoor", h: "इनडोर और आउटडोर", correct: false },
+                { e: "Primary and Secondary", h: "प्राथमिक और द्वितीयक", correct: false },
+                { e: "Active and Passive", h: "सक्रिय और निष्क्रिय", correct: false }
+            ],
+            expE: "Conservation is broadly divided into protecting species in their natural home (In-situ) or outside it (Ex-situ).",
+            expH: "संरक्षण को व्यापक रूप से प्रजातियों को उनके प्राकृतिक घर (In-situ) में या उसके बाहर (Ex-situ) बचाने में विभाजित किया गया है।"
+        },
+        {
+            qE: "What does 'In-situ' conservation mean?",
+            qH: "'इन-सीटू' (In-situ / स्व-स्थाने) संरक्षण का क्या अर्थ है?",
+            options: [
+                { e: "Conserving species inside laboratories only", h: "प्रजातियों का केवल प्रयोगशालाओं के अंदर संरक्षण", correct: false },
+                { e: "Conserving species in their natural habitats (on-site)", h: "प्रजातियों का उनके प्राकृतिक आवासों (उसी स्थान पर) में संरक्षण", correct: true },
+                { e: "Moving all animals to a zoo", h: "सभी जानवरों को चिड़ियाघर में ले जाना", correct: false },
+                { e: "Freezing animal DNA", h: "जानवरों के डीएनए (DNA) को फ्रीज करना", correct: false }
+            ],
+            expE: "In-situ means 'on-site'. The entire ecosystem is protected to save the species living within it.",
+            expH: "इन-सीटू (In-situ) का अर्थ है 'उसी स्थान पर'। इसमें रहने वाली प्रजातियों को बचाने के लिए संपूर्ण पारिस्थितिकी तंत्र की रक्षा की जाती है।"
+        },
+        {
+            qE: "Which of the following is an example of In-situ conservation?",
+            qH: "निम्नलिखित में से कौन सा इन-सीटू (In-situ) संरक्षण का एक उदाहरण है?",
+            options: [
+                { e: "Botanical Garden", h: "वनस्पति उद्यान (Botanical Garden)", correct: false },
+                { e: "Seed Bank", h: "बीज बैंक (Seed Bank)", correct: false },
+                { e: "National Park", h: "राष्ट्रीय उद्यान (National Park)", correct: true },
+                { e: "Zoo (Zoological Park)", h: "चिड़ियाघर", correct: false }
+            ],
+            expE: "A National Park is a large natural area protected by the government where wild animals live freely in their natural environment.",
+            expH: "राष्ट्रीय उद्यान सरकार द्वारा संरक्षित एक बड़ा प्राकृतिक क्षेत्र है जहाँ जंगली जानवर अपने प्राकृतिक वातावरण में स्वतंत्र रूप से रहते हैं।"
+        },
+        {
+            qE: "What does 'Ex-situ' conservation mean?",
+            qH: "'एक्स-सीटू' (Ex-situ / बाह्य-स्थाने) संरक्षण का क्या अर्थ है?",
+            options: [
+                { e: "Conserving species OUTSIDE their natural habitats (off-site)", h: "प्रजातियों का उनके प्राकृतिक आवासों के बाहर (अन्य स्थान पर) संरक्षण", correct: true },
+                { e: "Protecting a whole forest", h: "पूरे जंगल की रक्षा करना", correct: false },
+                { e: "Leaving nature to take care of itself without human help", h: "मानवीय सहायता के बिना प्रकृति को अपनी देखभाल करने के लिए छोड़ देना", correct: false },
+                { e: "Only conserving non-living things", h: "केवल निर्जीव चीजों का संरक्षण", correct: false }
+            ],
+            expE: "Ex-situ means 'off-site'. Endangered plants or animals are taken out of the wild and cared for in a special facility.",
+            expH: "एक्स-सीटू (Ex-situ) का अर्थ है 'अन्य स्थान पर'। लुप्तप्राय पौधों या जानवरों को जंगल से बाहर निकाला जाता है और एक विशेष सुविधा में उनकी देखभाल की जाती है।"
+        },
+        {
+            qE: "Which of the following is an example of Ex-situ conservation?",
+            qH: "निम्नलिखित में से कौन सा एक्स-सीटू (Ex-situ) संरक्षण का एक उदाहरण है?",
+            options: [
+                { e: "Wildlife Sanctuary", h: "वन्यजीव अभयारण्य (Wildlife Sanctuary)", correct: false },
+                { e: "Biosphere Reserve", h: "बायोस्फीयर रिजर्व", correct: false },
+                { e: "Sacred Groves", h: "पवित्र उपवन (Sacred Groves)", correct: false },
+                { e: "Zoological Park (Zoo)", h: "चिड़ियाघर (Zoological Park)", correct: true }
+            ],
+            expE: "Zoos house animals away from their natural habitats for protection, breeding, and public education.",
+            expH: "चिड़ियाघर जानवरों को उनकी सुरक्षा, प्रजनन और जन शिक्षा के लिए उनके प्राकृतिक आवासों से दूर रखते हैं।"
+        },
+        {
+            qE: "A 'Botanical Garden' is established primarily for the conservation of:",
+            qH: "एक 'वनस्पति उद्यान' (Botanical Garden) मुख्य रूप से किसके संरक्षण के लिए स्थापित किया जाता है?",
+            options: [
+                { e: "Wild animals", h: "जंगली जानवर", correct: false },
+                { e: "Fish and marine life", h: "मछली और समुद्री जीवन", correct: false },
+                { e: "Various living plant species", h: "विभिन्न जीवित पौधों की प्रजातियां", correct: true },
+                { e: "Fossils", h: "जीवाश्म", correct: false }
+            ],
+            expE: "Botanical gardens are Ex-situ conservation sites where a wide variety of plants are cultivated for scientific study and display.",
+            expH: "वनस्पति उद्यान (Ex-situ) संरक्षण स्थल हैं जहाँ वैज्ञानिक अध्ययन और प्रदर्शन के लिए पौधों की एक विस्तृत विविधता की खेती की जाती है।"
+        },
+        {
+            qE: "Where are the seeds of various plant species safely stored at very low temperatures for future use?",
+            qH: "भविष्य में उपयोग के लिए विभिन्न पौधों की प्रजातियों के बीजों को बहुत कम तापमान पर कहाँ सुरक्षित रखा जाता है?",
+            options: [
+                { e: "Seed Banks", h: "बीज बैंक (Seed Banks)", correct: true },
+                { e: "National Parks", h: "राष्ट्रीय उद्यान", correct: false },
+                { e: "Aquariums", h: "एक्वेरियम", correct: false },
+                { e: "Sanctuaries", h: "अभयारण्य", correct: false }
+            ],
+            expE: "Seed banks are a critical Ex-situ method to preserve plant genetic diversity in case a species goes extinct in the wild.",
+            expH: "यदि कोई प्रजाति जंगल में विलुप्त हो जाती है, तो पौधों की आनुवंशिक विविधता को संरक्षित करने के लिए बीज बैंक एक महत्वपूर्ण एक्स-सीटू विधि है।"
+        },
+        {
+            qE: "What is a 'Wildlife Sanctuary'?",
+            qH: "एक 'वन्यजीव अभयारण्य' (Wildlife Sanctuary) क्या है?",
+            options: [
+                { e: "A building where animal skins are kept", h: "एक इमारत जहाँ जानवरों की खाल रखी जाती है", correct: false },
+                { e: "A protected natural area where hunting and poaching of animals are strictly prohibited", h: "एक संरक्षित प्राकृतिक क्षेत्र जहाँ जानवरों के शिकार और अवैध शिकार पर सख्त प्रतिबंध है", correct: true },
+                { e: "A lab where animals are cloned", h: "एक प्रयोगशाला जहां जानवरों का क्लोन बनाया जाता है", correct: false },
+                { e: "An artificial park in a mall", h: "मॉल में एक कृत्रिम पार्क", correct: false }
+            ],
+            expE: "It is an In-situ conservation area specifically designed to provide a safe natural habitat for wildlife.",
+            expH: "यह एक इन-सीटू (In-situ) संरक्षण क्षेत्र है जिसे विशेष रूप से वन्यजीवों के लिए एक सुरक्षित प्राकृतिक आवास प्रदान करने के लिए डिज़ाइन किया गया है।"
+        },
+        {
+            qE: "Which conservation method is considered the BEST way to protect an entire ecosystem and all its species at once?",
+            qH: "किस संरक्षण पद्धति को पूरे पारिस्थितिकी तंत्र और उसकी सभी प्रजातियों को एक साथ बचाने का सबसे अच्छा तरीका माना जाता है?",
+            options: [
+                { e: "Keeping animals in cages", h: "जानवरों को पिंजरे में रखना", correct: false },
+                { e: "In-situ Conservation (like National Parks)", h: "इन-सीटू (In-situ) संरक्षण (जैसे राष्ट्रीय उद्यान)", correct: true },
+                { e: "Ex-situ Conservation (like Zoos)", h: "एक्स-सीटू (Ex-situ) संरक्षण (जैसे चिड़ियाघर)", correct: false },
+                { e: "Freezing all animal DNA", h: "सभी जानवरों के डीएनए को फ्रीज करना", correct: false }
+            ],
+            expE: "In-situ conservation is the most effective because it protects the animals, plants, soil, and the natural relationships between them.",
+            expH: "इन-सीटू संरक्षण सबसे प्रभावी है क्योंकि यह जानवरों, पौधों, मिट्टी और उनके बीच के प्राकृतिक संबंधों की रक्षा करता है।"
+        },
+        {
+            qE: "Cryopreservation is a technique used in Ex-situ conservation. What does it involve?",
+            qH: "क्रायोप्रिजर्वेशन (Cryopreservation) एक्स-सीटू संरक्षण में प्रयुक्त एक तकनीक है। इसमें क्या शामिल है?",
+            options: [
+                { e: "Heating seeds in an oven", h: "बीजों को ओवन में गर्म करना", correct: false },
+                { e: "Freezing cells, tissues, or seeds at extremely low temperatures (using liquid nitrogen)", h: "अत्यधिक कम तापमान (तरल नाइट्रोजन का उपयोग करके) पर कोशिकाओं, ऊतकों या बीजों को फ्रीज करना", correct: true },
+                { e: "Painting animals to hide them", h: "जानवरों को छिपाने के लिए उन पर रंग करना", correct: false },
+                { e: "Building large concrete walls around a forest", h: "जंगल के चारों ओर बड़ी कंक्रीट की दीवारें बनाना", correct: false }
+            ],
+            expE: "Cryopreservation (-196°C) safely preserves genetic material for decades or centuries without it decaying.",
+            expH: "क्रायोप्रिजर्वेशन (-196°C) आनुवंशिक सामग्री को बिना नष्ट हुए दशकों या सदियों तक सुरक्षित रखता है।"
+        },
+        {
+            qE: "A 'Biosphere Reserve' is divided into different zones. What is the innermost, highly protected zone called where no human activity is allowed?",
+            qH: "एक 'बायोस्फीयर रिजर्व' को अलग-अलग क्षेत्रों (zones) में बांटा गया है। सबसे भीतरी, अत्यधिक संरक्षित क्षेत्र को क्या कहा जाता है जहां किसी भी मानवीय गतिविधि की अनुमति नहीं है?",
+            options: [
+                { e: "Buffer Zone", h: "बफर ज़ोन", correct: false },
+                { e: "Transition Zone", h: "ट्रांज़िशन ज़ोन", correct: false },
+                { e: "Core Zone", h: "कोर ज़ोन (Core Zone)", correct: true },
+                { e: "Public Zone", h: "पब्लिक ज़ोन", correct: false }
+            ],
+            expE: "The Core Zone is strictly protected to maintain natural ecosystems undisturbed by humans.",
+            expH: "प्राकृतिक पारिस्थितिक तंत्र को मनुष्यों द्वारा निर्बाध बनाए रखने के लिए कोर ज़ोन (Core Zone) को सख्ती से संरक्षित किया जाता है।"
+        },
+        {
+            qE: "Captive breeding programs (e.g., breeding pandas or tigers before releasing them) are a part of which conservation strategy?",
+            qH: "कैप्टिव ब्रीडिंग प्रोग्राम (जैसे, पांडा या बाघों को छोड़ने से पहले उनका प्रजनन कराना) किस संरक्षण रणनीति का हिस्सा हैं?",
+            options: [
+                { e: "In-situ conservation", h: "इन-सीटू (In-situ) संरक्षण", correct: false },
+                { e: "Ex-situ conservation", h: "एक्स-सीटू (Ex-situ) संरक्षण", correct: true },
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Urbanization", h: "शहरीकरण", correct: false }
+            ],
+            expE: "Because the animals are bred in controlled, artificial environments (like zoos or special centers) outside their natural habitat, it is Ex-situ.",
+            expH: "चूंकि जानवरों को उनके प्राकृतिक आवास के बाहर नियंत्रित, कृत्रिम वातावरण (जैसे चिड़ियाघर या विशेष केंद्रों) में पाला जाता है, इसलिए यह एक्स-सीटू है।"
+        },
+        {
+            qE: "Which conservation method is generally more expensive and requires constant human care?",
+            qH: "कौन सी संरक्षण पद्धति आमतौर पर अधिक महंगी है और जिसके लिए निरंतर मानवीय देखभाल की आवश्यकता होती है?",
+            options: [
+                { e: "In-situ Conservation", h: "इन-सीटू (In-situ) संरक्षण", correct: false },
+                { e: "Ex-situ Conservation", h: "एक्स-सीटू (Ex-situ) संरक्षण", correct: true },
+                { e: "Creating Sacred Groves", h: "पवित्र उपवन (Sacred Groves) बनाना", correct: false },
+                { e: "Leaving a forest alone", h: "जंगल को अकेला छोड़ देना", correct: false }
+            ],
+            expE: "Ex-situ facilities (zoos, seed banks, labs) require heavy funding for feeding, medical care, and maintenance.",
+            expH: "एक्स-सीटू सुविधाओं (चिड़ियाघर, बीज बैंक, लैब) को भोजन, चिकित्सा देखभाल और रखरखाव के लिए भारी धन की आवश्यकता होती है।"
+        },
+        {
+            qE: "Project Tiger, launched by the Indian government in 1973 to protect tigers in their natural habitats, is an example of:",
+            qH: "बाघों को उनके प्राकृतिक आवासों में बचाने के लिए भारत सरकार द्वारा 1973 में शुरू किया गया 'प्रोजेक्ट टाइगर' (Project Tiger) किसका एक उदाहरण है?",
+            options: [
+                { e: "Ex-situ conservation", h: "एक्स-सीटू संरक्षण", correct: false },
+                { e: "In-situ conservation", h: "इन-सीटू (In-situ) संरक्षण", correct: true },
+                { e: "Botanical gardening", h: "वनस्पति बागवानी", correct: false },
+                { e: "Cryopreservation", h: "क्रायोप्रिजर्वेशन", correct: false }
+            ],
+            expE: "Project Tiger established many Tiger Reserves (National Parks) where tigers are protected in the wild.",
+            expH: "प्रोजेक्ट टाइगर ने कई टाइगर रिजर्व (राष्ट्रीय उद्यान) स्थापित किए जहां बाघों को जंगल में संरक्षित किया जाता है।"
+        },
+        {
+            qE: "What are 'Sacred Groves' in India?",
+            qH: "भारत में 'पवित्र उपवन' (Sacred Groves) क्या हैं?",
+            options: [
+                { e: "Forests protected by local communities due to religious and cultural beliefs", h: "धार्मिक और सांस्कृतिक मान्यताओं के कारण स्थानीय समुदायों द्वारा संरक्षित वन", correct: true },
+                { e: "Forests used only for cutting timber", h: "केवल लकड़ी काटने के लिए उपयोग किए जाने वाले वन", correct: false },
+                { e: "Laboratories where plants are grown", h: "प्रयोगशालाएं जहां पौधे उगाए जाते हैं", correct: false },
+                { e: "Areas where hunting is encouraged", h: "वे क्षेत्र जहाँ शिकार को प्रोत्साहित किया जाता है", correct: false }
+            ],
+            expE: "Sacred groves are an ancient form of In-situ conservation where cutting trees or hunting is strictly forbidden by the local community.",
+            expH: "पवित्र उपवन इन-सीटू संरक्षण का एक प्राचीन रूप है जहाँ स्थानीय समुदाय द्वारा पेड़ काटने या शिकार करने की सख्त मनाही होती है।"
+        },
+        {
+            qE: "What is a 'Nature Reserve'?",
+            qH: "एक 'नेचर रिजर्व' (Nature Reserve) क्या है?",
+            options: [
+                { e: "An area of land specifically managed to conserve wildlife, plant life, and physical features", h: "वन्यजीव, पौधों के जीवन और भौतिक विशेषताओं के संरक्षण के लिए विशेष रूप से प्रबंधित भूमि का एक क्षेत्र", correct: true },
+                { e: "A theme park for entertainment", h: "मनोरंजन के लिए एक थीम पार्क", correct: false },
+                { e: "An industrial mining zone", h: "एक औद्योगिक खनन क्षेत्र", correct: false },
+                { e: "A large city zoo", h: "एक बड़ा शहर का चिड़ियाघर", correct: false }
+            ],
+            expE: "Nature reserves (like wildlife sanctuaries) are designated In-situ areas that protect flora, fauna, and geological features.",
+            expH: "प्रकृति भंडार (जैसे वन्यजीव अभयारण्य) नामित इन-सीटू क्षेत्र हैं जो वनस्पतियों, जीवों और भूवैज्ञानिक विशेषताओं की रक्षा करते हैं।"
+        },
+        {
+            qE: "When an animal is severely injured in the wild and brought to a veterinary hospital for treatment, this is a form of:",
+            qH: "जब जंगल में कोई जानवर गंभीर रूप से घायल हो जाता है और उसे इलाज के लिए पशु चिकित्सालय लाया जाता है, तो यह किसका एक रूप है?",
+            options: [
+                { e: "In-situ management", h: "इन-सीटू प्रबंधन", correct: false },
+                { e: "Ex-situ care", h: "एक्स-सीटू (Ex-situ) देखभाल", correct: true },
+                { e: "Natural selection", h: "प्राकृतिक चयन", correct: false },
+                { e: "Poaching", h: "अवैध शिकार", correct: false }
+            ],
+            expE: "Taking the animal out of its natural habitat to a facility for care is an Ex-situ approach.",
+            expH: "जानवर को उसके प्राकृतिक आवास से बाहर निकाल कर देखभाल के लिए किसी सुविधा केंद्र में ले जाना एक्स-सीटू दृष्टिकोण है।"
+        },
+        {
+            qE: "Which conservation strategy allows species to continue their natural evolutionary process (adapting to climate, finding mates naturally)?",
+            qH: "कौन सी संरक्षण रणनीति प्रजातियों को अपनी प्राकृतिक विकास प्रक्रिया जारी रखने (जलवायु के अनुकूल होने, स्वाभाविक रूप से साथी खोजने) की अनुमति देती है?",
+            options: [
+                { e: "Keeping them in a Zoo", h: "उन्हें चिड़ियाघर में रखना", correct: false },
+                { e: "Storing their DNA in a lab", h: "उनके डीएनए को एक लैब में स्टोर करना", correct: false },
+                { e: "In-situ Conservation", h: "इन-सीटू (In-situ) संरक्षण", correct: true },
+                { e: "Keeping them in an aquarium", h: "उन्हें एक्वेरियम में रखना", correct: false }
+            ],
+            expE: "In their natural habitat (In-situ), animals naturally evolve, hunt, and adapt to environmental changes.",
+            expH: "अपने प्राकृतिक आवास (इन-सीटू) में, जानवर स्वाभाविक रूप से विकसित होते हैं, शिकार करते हैं और पर्यावरणीय परिवर्तनों के अनुकूल होते हैं।"
+        },
+        {
+            qE: "Ultimately, what is the main goal of BOTH In-situ and Ex-situ conservation?",
+            qH: "अंततः, इन-सीटू और एक्स-सीटू दोनों संरक्षण का मुख्य लक्ष्य क्या है?",
+            options: [
+                { e: "To prevent species from going extinct and to maintain Earth's biodiversity", h: "प्रजातियों को विलुप्त होने से रोकना और पृथ्वी की जैव विविधता को बनाए रखना", correct: true },
+                { e: "To make money by selling animal tickets", h: "जानवरों के टिकट बेचकर पैसा कमाना", correct: false },
+                { e: "To catch all wild animals and keep them as pets", h: "सभी जंगली जानवरों को पकड़ना और उन्हें पालतू बनाना", correct: false },
+                { e: "To clear forests for building more zoos", h: "अधिक चिड़ियाघर बनाने के लिए जंगलों को साफ करना", correct: false }
+            ],
+            expE: "While their methods are different, both aim to protect and save species from disappearing forever.",
+            expH: "भले ही उनके तरीके अलग-अलग हों, लेकिन दोनों का उद्देश्य प्रजातियों को हमेशा के लिए गायब होने से बचाना और उनकी रक्षा करना है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

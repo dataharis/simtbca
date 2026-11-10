@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 30 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 29: IT & Environmental Health</h2>
+            <p>Role of IT in Environmental Management and Public Health</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the term 'Green IT' or 'Green Computing' refer to?",
+            qH: "'ग्रीन आईटी' (Green IT) या 'ग्रीन कंप्यूटिंग' शब्द का क्या तात्पर्य है?",
+            options: [
+                { e: "Painting computers green", h: "कंप्यूटरों को हरे रंग में रंगना", correct: false },
+                { e: "The environmentally responsible and eco-friendly use of computers and their resources", h: "कंप्यूटर और उनके संसाधनों का पर्यावरण के प्रति जिम्मेदार और पर्यावरण-अनुकूल उपयोग", correct: true },
+                { e: "Using plants inside server rooms", h: "सर्वर रूम के अंदर पौधों का उपयोग करना", correct: false },
+                { e: "A software program about nature", h: "प्रकृति के बारे में एक सॉफ्टवेयर प्रोग्राम", correct: false }
+            ],
+            expE: "Green computing involves designing, manufacturing, using, and disposing of computers with minimal impact on the environment.",
+            expH: "ग्रीन कंप्यूटिंग में पर्यावरण पर कम से कम प्रभाव के साथ कंप्यूटर को डिजाइन करना, बनाना, उपयोग करना और निपटाना शामिल है।"
+        },
+        {
+            qE: "Which of the following is a primary goal of Green IT?",
+            qH: "निम्नलिखित में से कौन सा ग्रीन आईटी (Green IT) का प्राथमिक लक्ष्य है?",
+            options: [
+                { e: "To increase the energy consumption of data centers", h: "डेटा केंद्रों की ऊर्जा खपत बढ़ाना", correct: false },
+                { e: "To print more physical documents", h: "अधिक भौतिक (कागज वाले) दस्तावेज़ प्रिंट करना", correct: false },
+                { e: "To reduce the carbon footprint and hazardous e-waste generated by the IT industry", h: "आईटी उद्योग द्वारा उत्पन्न कार्बन पदचिह्न (carbon footprint) और खतरनाक ई-कचरे को कम करना", correct: true },
+                { e: "To make computers run slower", h: "कंप्यूटर को धीमा चलाना", correct: false }
+            ],
+            expE: "Green IT aims for energy efficiency, reduced use of toxic materials (like lead in soldering), and better recycling.",
+            expH: "ग्रीन आईटी का लक्ष्य ऊर्जा दक्षता, विषाक्त पदार्थों (जैसे सोल्डरिंग में सीसा) का कम उपयोग और बेहतर रीसाइक्लिंग है।"
+        },
+        {
+            qE: "What does GIS stand for in environmental management?",
+            qH: "पर्यावरण प्रबंधन में GIS का पूर्ण रूप क्या है?",
+            options: [
+                { e: "Global Information System", h: "ग्लोबल इंफॉर्मेशन सिस्टम", correct: false },
+                { e: "Geographic Information System", h: "जियोग्राफिक इंफॉर्मेशन सिस्टम (Geographic Information System)", correct: true },
+                { e: "Green IT Software", h: "ग्रीन आईटी सॉफ्टवेयर", correct: false },
+                { e: "General Investigation Sector", h: "जनरल इन्वेस्टिगेशन सेक्टर", correct: false }
+            ],
+            expE: "GIS is a computer system for capturing, storing, checking, and displaying data related to positions on Earth's surface.",
+            expH: "GIS पृथ्वी की सतह पर स्थितियों से संबंधित डेटा को पकड़ने, संग्रहीत करने, जांचने और प्रदर्शित करने के लिए एक कंप्यूटर प्रणाली है।"
+        },
+        {
+            qE: "How is GIS commonly used in environmental conservation?",
+            qH: "पर्यावरण संरक्षण में GIS का आमतौर पर कैसे उपयोग किया जाता है?",
+            options: [
+                { e: "To design computer games", h: "कंप्यूटर गेम डिजाइन करने के लिए", correct: false },
+                { e: "To map forest cover, track wildlife migration, and analyze pollution patterns spatially", h: "वन आवरण को मैप करने, वन्यजीव प्रवासन को ट्रैक करने और प्रदूषण पैटर्न का स्थानिक विश्लेषण करने के लिए", correct: true },
+                { e: "To calculate business taxes", h: "व्यापार कर (taxes) की गणना करने के लिए", correct: false },
+                { e: "To write accounting software", h: "अकाउंटिंग सॉफ्टवेयर लिखने के लिए", correct: false }
+            ],
+            expE: "By layering different types of data (maps, temperatures, forest density), GIS helps scientists make informed conservation decisions.",
+            expH: "विभिन्न प्रकार के डेटा (मानचित्र, तापमान, वन घनत्व) को एक के ऊपर एक रखकर, GIS वैज्ञानिकों को सूचित संरक्षण निर्णय लेने में मदद करता है।"
+        },
+        {
+            qE: "Which technology uses satellites or aircraft to collect environmental data (like detecting forest fires or ocean temperatures) from a distance?",
+            qH: "कौन सी तकनीक दूर से पर्यावरणीय डेटा (जैसे जंगल की आग या समुद्र के तापमान का पता लगाना) एकत्र करने के लिए उपग्रहों या विमानों का उपयोग करती है?",
+            options: [
+                { e: "Remote Sensing", h: "रिमोट सेंसिंग (Remote Sensing)", correct: true },
+                { e: "Virtual Reality (VR)", h: "आभासी वास्तविकता (VR)", correct: false },
+                { e: "Blockchain", h: "ब्लॉकचेन", correct: false },
+                { e: "Social Media", h: "सोशल मीडिया", correct: false }
+            ],
+            expE: "Remote sensing allows us to monitor large or dangerous areas of the Earth without physically being there.",
+            expH: "रिमोट सेंसिंग हमें भौतिक रूप से वहां गए बिना पृथ्वी के बड़े या खतरनाक क्षेत्रों की निगरानी करने की अनुमति देता है।"
+        },
+        {
+            qE: "How does IT help in Disaster Management (like floods or cyclones)?",
+            qH: "आईटी (IT) आपदा प्रबंधन (जैसे बाढ़ या चक्रवात) में कैसे मदद करता है?",
+            options: [
+                { e: "By stopping the cyclone physically", h: "चक्रवात को भौतिक रूप से रोककर", correct: false },
+                { e: "Through Early Warning Systems, weather forecasting models, and rapid communication networks for evacuation", h: "प्रारंभिक चेतावनी प्रणाली, मौसम पूर्वानुमान मॉडल, और निकासी के लिए तीव्र संचार नेटवर्क के माध्यम से", correct: true },
+                { e: "By providing umbrellas to everyone", h: "सभी को छाता उपलब्ध कराकर", correct: false },
+                { e: "IT cannot help in physical disasters", h: "भौतिक आपदाओं में आईटी (IT) मदद नहीं कर सकता", correct: false }
+            ],
+            expE: "Technologies like GPS, satellite imaging, and mobile alerts save millions of lives by providing timely warnings.",
+            expH: "जीपीएस, सैटेलाइट इमेजिंग और मोबाइल अलर्ट जैसी प्रौद्योगिकियां समय पर चेतावनी देकर लाखों लोगों की जान बचाती हैं।"
+        },
+        {
+            qE: "What is an ENVIS (Environmental Information System) centre in India?",
+            qH: "भारत में ENVIS (पर्यावरण सूचना प्रणाली) केंद्र क्या है?",
+            options: [
+                { e: "A center that builds solar panels", h: "एक केंद्र जो सौर पैनल बनाता है", correct: false },
+                { e: "A network established by the government to collect, collate, and disseminate environmental data to researchers and the public", h: "शोधकर्ताओं और जनता को पर्यावरणीय डेटा एकत्र करने, उसका मिलान करने और प्रसार करने के लिए सरकार द्वारा स्थापित एक नेटवर्क", correct: true },
+                { e: "A factory that recycles plastic", h: "एक फैक्ट्री जो प्लास्टिक को रिसाइकल करती है", correct: false },
+                { e: "A tourist park", h: "एक पर्यटक पार्क", correct: false }
+            ],
+            expE: "ENVIS is a decentralized system that provides comprehensive environmental information for decision-making.",
+            expH: "ENVIS एक विकेन्द्रीकृत प्रणाली है जो निर्णय लेने के लिए व्यापक पर्यावरणीय जानकारी प्रदान करती है।"
+        },
+        {
+            qE: "How can implementing 'Cloud Computing' benefit the environment?",
+            qH: "'क्लाउड कंप्यूटिंग' लागू करने से पर्यावरण को कैसे लाभ हो सकता है?",
+            options: [
+                { e: "It creates physical clouds that bring rain", h: "यह भौतिक बादल बनाता है जो बारिश लाते हैं", correct: false },
+                { e: "By reducing the need for individual companies to maintain their own energy-hungry servers, consolidating them into efficient, shared data centers", h: "अलग-अलग कंपनियों द्वारा अपने स्वयं के ऊर्जा-भूखे सर्वर बनाए रखने की आवश्यकता को कम करके, उन्हें कुशल, साझा डेटा केंद्रों में समेकित करके", correct: true },
+                { e: "By automatically planting trees", h: "स्वतः पेड़ लगाकर", correct: false },
+                { e: "It doesn't benefit the environment at all", h: "इससे पर्यावरण को कोई लाभ नहीं होता", correct: false }
+            ],
+            expE: "Large cloud providers (like Google or AWS) are much more energy-efficient and often use renewable energy compared to small, private server rooms.",
+            expH: "बड़े क्लाउड प्रदाता (जैसे Google या AWS) बहुत अधिक ऊर्जा-कुशल होते हैं और छोटे, निजी सर्वर रूम की तुलना में अक्सर नवीकरणीय ऊर्जा का उपयोग करते हैं।"
+        },
+        {
+            qE: "Which IT practice directly reduces paper waste and transportation emissions in a corporate office?",
+            qH: "कौन सा आईटी अभ्यास कॉर्पोरेट कार्यालय में कागज की बर्बादी और परिवहन उत्सर्जन (transportation emissions) को सीधे कम करता है?",
+            options: [
+                { e: "Installing more printers", h: "अधिक प्रिंटर स्थापित करना", correct: false },
+                { e: "Digitalization (e-bills, emails) and Telecommuting (Work from Home / Video Conferencing)", h: "डिजिटलीकरण (ई-बिल, ईमेल) और दूरसंचार (वर्क फ्रॉम होम / वीडियो कॉन्फ्रेंसिंग)", correct: true },
+                { e: "Buying faster cars for employees", h: "कर्मचारियों के लिए तेज़ कारें ख़रीदना", correct: false },
+                { e: "Using physical mail (post) exclusively", h: "विशेष रूप से भौतिक मेल (पोस्ट) का उपयोग करना", correct: false }
+            ],
+            expE: "Working digitally eliminates the need to cut trees for paper and reduces carbon emissions from daily office commutes.",
+            expH: "डिजिटल रूप से काम करने से कागज के लिए पेड़ काटने की आवश्यकता समाप्त हो जाती है और दैनिक कार्यालय आने-जाने से होने वाले कार्बन उत्सर्जन में कमी आती है।"
+        },
+        {
+            qE: "In terms of environmental health, what does 'Telemedicine' offer?",
+            qH: "पर्यावरणीय स्वास्थ्य के संदर्भ में, 'टेलीमेडिसिन' (Telemedicine) क्या प्रदान करता है?",
+            options: [
+                { e: "Watching medical shows on TV", h: "टीवी पर मेडिकल शो देखना", correct: false },
+                { e: "Delivering healthcare services remotely via IT, improving access in rural areas and reducing travel-related pollution", h: "आईटी के माध्यम से दूर से स्वास्थ्य सेवाएं प्रदान करना, ग्रामीण क्षेत्रों में पहुंच में सुधार करना और यात्रा से संबंधित प्रदूषण को कम करना", correct: true },
+                { e: "Buying medicine online only", h: "केवल ऑनलाइन दवा खरीदना", correct: false },
+                { e: "Using a telephone to call a taxi to the hospital", h: "अस्पताल जाने के लिए टैक्सी बुलाने हेतु टेलीफोन का उपयोग करना", correct: false }
+            ],
+            expE: "Telemedicine connects remote patients with specialists quickly, saving lives and reducing the carbon footprint of traveling.",
+            expH: "टेलीमेडिसिन दूरस्थ रोगियों को विशेषज्ञों से तेजी से जोड़ता है, जिससे जीवन की रक्षा होती है और यात्रा के कार्बन फुटप्रिंट को कम किया जाता है।"
+        },
+        {
+            qE: "A major negative environmental impact of the IT industry itself is:",
+            qH: "स्वयं आईटी (IT) उद्योग का एक प्रमुख नकारात्मक पर्यावरणीय प्रभाव क्या है?",
+            options: [
+                { e: "It produces too much noise", h: "यह बहुत ज्यादा शोर पैदा करता है", correct: false },
+                { e: "The massive generation of toxic E-waste when devices become obsolete quickly", h: "उपकरणों के जल्दी पुराने (obsolete) हो जाने पर भारी मात्रा में विषैले ई-कचरे का उत्पादन", correct: true },
+                { e: "It creates acid rain directly", h: "यह सीधे अम्लीय वर्षा (acid rain) बनाता है", correct: false },
+                { e: "It cuts down forests for computer screens", h: "यह कंप्यूटर स्क्रीन के लिए जंगलों को काटता है", correct: false }
+            ],
+            expE: "Planned obsolescence in tech leads to mountains of discarded electronics containing lead, mercury, and cadmium.",
+            expH: "तकनीक में नियोजित अप्रचलन (Planned obsolescence) से फेंके गए इलेक्ट्रॉनिक्स का पहाड़ बन जाता है जिसमें सीसा, पारा और कैडमियम होता है।"
+        },
+        {
+            qE: "How are IT tools used in 'Public Health' management during a pandemic (like COVID-19)?",
+            qH: "महामारी (जैसे COVID-19) के दौरान 'सार्वजनिक स्वास्थ्य' (Public Health) प्रबंधन में IT उपकरणों का उपयोग कैसे किया जाता है?",
+            options: [
+                { e: "To cure the virus directly via software updates", h: "सॉफ्टवेयर अपडेट के जरिए सीधे वायरस को ठीक करना", correct: false },
+                { e: "For epidemiological surveillance, contact tracing apps, and modeling disease spread", h: "महामारी विज्ञान निगरानी, संपर्क ट्रेसिंग ऐप्स (contact tracing), और बीमारी के प्रसार की मॉडलिंग के लिए", correct: true },
+                { e: "To hide patient data", h: "रोगी डेटा को छिपाने के लिए", correct: false },
+                { e: "To physically deliver vaccines via email", h: "ईमेल के माध्यम से वैक्सीन की भौतिक डिलीवरी", correct: false }
+            ],
+            expE: "Data analytics and apps (like Aarogya Setu) help governments track outbreaks, allocate hospital beds, and predict hotspots.",
+            expH: "डेटा एनालिटिक्स और ऐप (जैसे आरोग्य सेतु) सरकारों को प्रकोप को ट्रैक करने, अस्पताल के बिस्तर आवंटित करने और हॉटस्पॉट की भविष्यवाणी करने में मदद करते हैं।"
+        },
+        {
+            qE: "What is an 'AQI App' used for on a smartphone?",
+            qH: "स्मार्टफोन पर 'AQI App' का उपयोग किस लिए किया जाता है?",
+            options: [
+                { e: "To check bank balances", h: "बैंक बैलेंस चेक करने के लिए", correct: false },
+                { e: "To check the Air Quality Index (pollution levels) in real-time in a specific location", h: "किसी विशिष्ट स्थान पर वास्तविक समय (real-time) में वायु गुणवत्ता सूचकांक (प्रदूषण स्तर) की जांच करने के लिए", correct: true },
+                { e: "To book flights", h: "फ्लाइट बुक करने के लिए", correct: false },
+                { e: "To measure body temperature", h: "शरीर का तापमान मापने के लिए", correct: false }
+            ],
+            expE: "IT enables IoT sensors to collect pollution data continuously and broadcast it to the public, raising health awareness.",
+            expH: "आईटी (IT) IoT सेंसरों को लगातार प्रदूषण डेटा एकत्र करने और जन स्वास्थ्य जागरूकता बढ़ाते हुए इसे जनता तक प्रसारित करने में सक्षम बनाता है।"
+        },
+        {
+            qE: "Which IT concept involves placing sensors in natural environments (like rivers or forests) to send live data to computers for monitoring?",
+            qH: "किस आईटी अवधारणा (concept) में निगरानी के लिए कंप्यूटरों पर लाइव डेटा भेजने के लिए प्राकृतिक वातावरण (जैसे नदियों या जंगलों) में सेंसर लगाना शामिल है?",
+            options: [
+                { e: "Artificial Intelligence (AI)", h: "आर्टिफिशियल इंटेलिजेंस (AI)", correct: false },
+                { e: "Internet of Things (IoT)", h: "इंटरनेट ऑफ थिंग्स (IoT)", correct: true },
+                { e: "Blockchain", h: "ब्लॉकचेन", correct: false },
+                { e: "Virtual Reality (VR)", h: "आभासी वास्तविकता (VR)", correct: false }
+            ],
+            expE: "IoT devices can monitor water quality, detect illegal logging (sounds of chainsaws), or measure soil moisture remotely 24/7.",
+            expH: "IoT डिवाइस पानी की गुणवत्ता की निगरानी कर सकते हैं, अवैध कटाई (चेनसॉ की आवाज़) का पता लगा सकते हैं, या 24/7 दूर से मिट्टी की नमी को माप सकते हैं।"
+        },
+        {
+            qE: "Which of the following is a simple 'Green Computing' practice a BCA student can implement daily?",
+            qH: "निम्नलिखित में से कौन सा एक सरल 'ग्रीन कंप्यूटिंग' अभ्यास है जिसे बीसीए (BCA) छात्र प्रतिदिन लागू कर सकता है?",
+            options: [
+                { e: "Leaving the computer running all night to save boot time", h: "बूट टाइम बचाने के लिए पूरी रात कंप्यूटर चालू छोड़ना", correct: false },
+                { e: "Using sleep/hibernate modes and lowering screen brightness to save energy", h: "ऊर्जा बचाने के लिए स्लीप/हाइबरनेट मोड का उपयोग करना और स्क्रीन की चमक (brightness) कम करना", correct: true },
+                { e: "Printing every line of code to read it", h: "इसे पढ़ने के लिए कोड की हर लाइन को प्रिंट करना", correct: false },
+                { e: "Buying a new laptop every 6 months", h: "हर 6 महीने में नया लैपटॉप खरीदना", correct: false }
+            ],
+            expE: "Small software settings (like power management) significantly reduce the electricity consumption of IT devices over time.",
+            expH: "छोटी सॉफ्टवेयर सेटिंग्स (जैसे पावर प्रबंधन) समय के साथ आईटी उपकरणों की बिजली खपत को काफी कम कर देती हैं।"
+        },
+        {
+            qE: "How do 'Smart Grids' use IT to help the environment?",
+            qH: "'स्मार्ट ग्रिड' पर्यावरण की मदद के लिए आईटी का उपयोग कैसे करते हैं?",
+            options: [
+                { e: "By turning off electricity permanently", h: "स्थायी रूप से बिजली बंद करके", correct: false },
+                { e: "By using digital communication to detect and react to local changes in electricity usage, reducing energy waste", h: "बिजली के उपयोग में स्थानीय परिवर्तनों का पता लगाने और प्रतिक्रिया करने के लिए डिजिटल संचार का उपयोग करके, ऊर्जा की बर्बादी को कम करके", correct: true },
+                { e: "By making electricity more expensive", h: "बिजली महँगी करके", correct: false },
+                { e: "By burning more coal efficiently", h: "अधिक कोयले को कुशलतापूर्वक जलाकर", correct: false }
+            ],
+            expE: "Smart grids optimize power delivery, integrate renewable energy sources (like solar panels on homes) smoothly, and prevent power losses.",
+            expH: "स्मार्ट ग्रिड बिजली वितरण को अनुकूलित करते हैं, नवीकरणीय ऊर्जा स्रोतों (जैसे घरों पर सौर पैनल) को सुचारू रूप से एकीकृत करते हैं, और बिजली की हानि को रोकते हैं।"
+        },
+        {
+            qE: "In public health, what is the significance of maintaining 'Electronic Health Records' (EHRs)?",
+            qH: "सार्वजनिक स्वास्थ्य में, 'इलेक्ट्रॉनिक स्वास्थ्य रिकॉर्ड' (EHRs) बनाए रखने का क्या महत्व है?",
+            options: [
+                { e: "It uses more paper in hospitals", h: "यह अस्पतालों में अधिक कागज का उपयोग करता है", correct: false },
+                { e: "It allows fast, secure sharing of patient data among doctors, preventing medical errors and tracking disease trends", h: "यह डॉक्टरों के बीच रोगी डेटा के तेज़, सुरक्षित साझाकरण की अनुमति देता है, चिकित्सा त्रुटियों को रोकता है और रोग प्रवृत्तियों (trends) पर नज़र रखता है", correct: true },
+                { e: "It replaces doctors with computers", h: "यह डॉक्टरों की जगह कंप्यूटर ले लेता है", correct: false },
+                { e: "It guarantees that nobody will fall sick", h: "यह गारंटी देता है कि कोई भी बीमार नहीं पड़ेगा", correct: false }
+            ],
+            expE: "EHRs are crucial for data analytics in public health to spot epidemics early and manage population health efficiently.",
+            expH: "महामारी को जल्दी पहचानने और जनसंख्या स्वास्थ्य को कुशलतापूर्वक प्रबंधित करने के लिए सार्वजनिक स्वास्थ्य में डेटा एनालिटिक्स के लिए EHR महत्वपूर्ण हैं।"
+        },
+        {
+            qE: "How can Artificial Intelligence (AI) be used in environmental management?",
+            qH: "पर्यावरण प्रबंधन में आर्टिफिशियल इंटेलिजेंस (AI) का उपयोग कैसे किया जा सकता है?",
+            options: [
+                { e: "To build physical walls around forests", h: "जंगलों के चारों ओर भौतिक दीवारें बनाने के लिए", correct: false },
+                { e: "To predict climate change patterns and optimize energy consumption in large buildings automatically", h: "जलवायु परिवर्तन के पैटर्न की भविष्यवाणी करने और बड़ी इमारतों में ऊर्जा खपत को स्वचालित रूप से अनुकूलित करने के लिए", correct: true },
+                { e: "To generate more plastic", h: "अधिक प्लास्टिक उत्पन्न करने के लिए", correct: false },
+                { e: "To write poems about nature only", h: "केवल प्रकृति के बारे में कविताएँ लिखने के लिए", correct: false }
+            ],
+            expE: "AI can analyze massive amounts of environmental data to predict weather, optimize farming (precision agriculture), and save energy.",
+            expH: "एआई (AI) मौसम की भविष्यवाणी करने, खेती को अनुकूलित करने (सटीक कृषि), और ऊर्जा बचाने के लिए बड़े पैमाने पर पर्यावरणीय डेटा का विश्लेषण कर सकता है।"
+        },
+        {
+            qE: "Which of the following describes 'Precision Agriculture' (Smart Farming)?",
+            qH: "निम्नलिखित में से कौन 'सटीक कृषि' (Precision Agriculture / स्मार्ट खेती) का वर्णन करता है?",
+            options: [
+                { e: "Farming using only traditional wooden tools", h: "केवल पारंपरिक लकड़ी के औजारों का उपयोग करके खेती करना", correct: false },
+                { e: "Using IT, GPS, and IoT sensors to apply the exact amount of water and fertilizer needed, reducing chemical runoff pollution", h: "आईटी, जीपीएस, और आईओटी सेंसर का उपयोग करके पानी और उर्वरक की सटीक मात्रा डालना, जिससे रासायनिक बहाव प्रदूषण कम होता है", correct: true },
+                { e: "Cutting down all trees to plant corn", h: "मक्का लगाने के लिए सारे पेड़ काटना", correct: false },
+                { e: "Farming inside an IT office", h: "आईटी ऑफिस के अंदर खेती", correct: false }
+            ],
+            expE: "Precision agriculture uses data to maximize crop yields while minimizing environmental damage and resource waste.",
+            expH: "सटीक कृषि पर्यावरणीय क्षति और संसाधन की बर्बादी को कम करते हुए फसल की पैदावार को अधिकतम करने के लिए डेटा का उपयोग करती है।"
+        },
+        {
+            qE: "Why is it essential for future IT professionals (like BCA students) to learn Environmental Science?",
+            qH: "भविष्य के आईटी पेशेवरों (जैसे बीसीए छात्रों) के लिए पर्यावरण विज्ञान सीखना क्यों आवश्यक है?",
+            options: [
+                { e: "Because they have to pass an exam", h: "क्योंकि उन्हें परीक्षा पास करनी है", correct: false },
+                { e: "To develop software and hardware solutions that are sustainable, energy-efficient, and help solve global ecological crises", h: "ऐसे सॉफ़्टवेयर और हार्डवेयर समाधान विकसित करने के लिए जो टिकाऊ, ऊर्जा-कुशल हों और वैश्विक पारिस्थितिक संकटों को हल करने में मदद करें", correct: true },
+                { e: "Because computers are made of wood", h: "क्योंकि कंप्यूटर लकड़ी के बने होते हैं", correct: false },
+                { e: "To learn how to avoid using computers altogether", h: "कंप्यूटर का उपयोग पूरी तरह से कैसे बचें, यह जानने के लिए", correct: false }
+            ],
+            expE: "Technology is both a cause of pollution (e-waste) and the greatest tool to fight it. IT professionals are key to building a sustainable future.",
+            expH: "प्रौद्योगिकी प्रदूषण (ई-कचरा) का कारण भी है और इससे लड़ने का सबसे बड़ा उपकरण भी। आईटी पेशेवर एक स्थायी भविष्य के निर्माण की कुंजी हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

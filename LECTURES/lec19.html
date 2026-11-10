@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 19 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 19: The Water Act, 1974</h2>
+            <p>Prevention and Control of Pollution Act</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "In which year was the Water (Prevention and Control of Pollution) Act passed in India?",
+            qH: "भारत में जल (प्रदूषण निवारण तथा नियंत्रण) अधिनियम किस वर्ष पारित किया गया था?",
+            options: [
+                { e: "1986", h: "1986", correct: false },
+                { e: "1974", h: "1974", correct: true },
+                { e: "1981", h: "1981", correct: false },
+                { e: "2000", h: "2000", correct: false }
+            ],
+            expE: "The Water Act was passed in 1974 to prevent and control water pollution in India.",
+            expH: "जल प्रदूषण को रोकने और नियंत्रित करने के लिए 1974 में जल अधिनियम पारित किया गया था।"
+        },
+        {
+            qE: "What is the primary objective of the Water Act of 1974?",
+            qH: "1974 के जल अधिनियम का प्राथमिक उद्देश्य क्या है?",
+            options: [
+                { e: "To build more dams across rivers", h: "नदियों पर अधिक बांध बनाना", correct: false },
+                { e: "To completely ban the use of water in industries", h: "उद्योगों में पानी के उपयोग पर पूरी तरह से प्रतिबंध लगाना", correct: false },
+                { e: "To prevent and control water pollution and maintain or restore the wholesomeness of water", h: "जल प्रदूषण को रोकना और नियंत्रित करना और पानी की शुद्धता को बनाए रखना या बहाल करना", correct: true },
+                { e: "To tax citizens for drinking water", h: "पीने के पानी के लिए नागरिकों पर कर (tax) लगाना", correct: false }
+            ],
+            expE: "The Act aims to ensure that water in rivers, streams, and wells remains clean and safe for use.",
+            expH: "अधिनियम का उद्देश्य यह सुनिश्चित करना है कि नदियों, नालों और कुओं का पानी स्वच्छ और उपयोग के लिए सुरक्षित रहे।"
+        },
+        {
+            qE: "Which important regulatory bodies were established for the first time under the Water Act, 1974?",
+            qH: "जल अधिनियम, 1974 के तहत पहली बार किन महत्वपूर्ण नियामक निकायों (regulatory bodies) की स्थापना की गई थी?",
+            options: [
+                { e: "Supreme Court and High Courts", h: "सुप्रीम कोर्ट और हाई कोर्ट", correct: false },
+                { e: "Central and State Pollution Control Boards (CPCB & SPCB)", h: "केंद्रीय और राज्य प्रदूषण नियंत्रण बोर्ड (CPCB और SPCB)", correct: true },
+                { e: "Forest Departments", h: "वन विभाग", correct: false },
+                { e: "Municipal Corporations", h: "नगर निगम", correct: false }
+            ],
+            expE: "The Act led to the creation of the CPCB at the center and SPCBs in the states to enforce environmental laws.",
+            expH: "अधिनियम ने पर्यावरण कानूनों को लागू करने के लिए केंद्र में CPCB और राज्यों में SPCB के निर्माण का नेतृत्व किया।"
+        },
+        {
+            qE: "What does the abbreviation 'CPCB' stand for?",
+            qH: "संक्षिप्त नाम 'CPCB' का पूर्ण रूप क्या है?",
+            options: [
+                { e: "Central Pollution Control Board", h: "केंद्रीय प्रदूषण नियंत्रण बोर्ड (Central Pollution Control Board)", correct: true },
+                { e: "City Pollution Check Bureau", h: "सिटी पॉल्यूशन चेक ब्यूरो", correct: false },
+                { e: "Central Public Cleaning Board", h: "सेंट्रल पब्लिक क्लीनिंग बोर्ड", correct: false },
+                { e: "Committee for Pollution Control in Business", h: "कमेटी फॉर पॉल्यूशन कंट्रोल इन बिज़नेस", correct: false }
+            ],
+            expE: "The CPCB is the national apex body that monitors and advises the government on pollution control strategies.",
+            expH: "CPCB राष्ट्रीय शीर्ष निकाय है जो प्रदूषण नियंत्रण रणनीतियों पर सरकार की निगरानी करता है और उसे सलाह देता है।"
+        },
+        {
+            qE: "According to the Act, what does 'Trade Effluent' mean?",
+            qH: "अधिनियम के अनुसार, 'व्यापारिक अपशिष्ट' (Trade Effluent) का क्या अर्थ है?",
+            options: [
+                { e: "Water used for washing clothes at home", h: "घर पर कपड़े धोने के लिए इस्तेमाल किया जाने वाला पानी", correct: false },
+                { e: "Liquid waste discharged from any industry, factory, or commercial business", h: "किसी भी उद्योग, कारखाने या व्यावसायिक प्रतिष्ठान से निकलने वाला तरल अपशिष्ट (कचरा)", correct: true },
+                { e: "Pure rainwater", h: "शुद्ध वर्षा जल", correct: false },
+                { e: "Water flowing naturally in a river", h: "नदी में प्राकृतिक रूप से बहने वाला पानी", correct: false }
+            ],
+            expE: "Trade effluent refers to toxic or non-toxic liquid waste generated exclusively from industrial or commercial activities.",
+            expH: "व्यापारिक अपशिष्ट विशेष रूप से औद्योगिक या व्यावसायिक गतिविधियों से उत्पन्न विषैले या गैर-विषैले तरल कचरे को संदर्भित करता है।"
+        },
+        {
+            qE: "What is 'Sewage Effluent' under the Water Act?",
+            qH: "जल अधिनियम के तहत 'सीवेज अपशिष्ट' (Sewage Effluent) क्या है?",
+            options: [
+                { e: "Solid garbage from factories", h: "कारखानों का ठोस कचरा", correct: false },
+                { e: "Liquid waste discharged from toilets, domestic sewers, and municipal drainage", h: "शौचालयों, घरेलू सीवरों और नगरपालिका जल निकासी से निकलने वाला तरल अपशिष्ट", correct: true },
+                { e: "Smoke from vehicles", h: "वाहनों का धुआं", correct: false },
+                { e: "Drinking water", h: "पीने का पानी", correct: false }
+            ],
+            expE: "Sewage effluent specifically refers to domestic liquid waste, distinct from industrial trade effluent.",
+            expH: "सीवेज अपशिष्ट विशेष रूप से औद्योगिक अपशिष्ट से अलग, घरेलू तरल कचरे को संदर्भित करता है।"
+        },
+        {
+            qE: "Does the Water Act of 1974 cover the pollution of underground water (wells)?",
+            qH: "क्या 1974 का जल अधिनियम भूमिगत जल (कुओं) के प्रदूषण को कवर करता है?",
+            options: [
+                { e: "No, it only covers rivers and oceans", h: "नहीं, यह केवल नदियों और महासागरों को कवर करता है", correct: false },
+                { e: "Yes, it covers streams, rivers, sea or tidal waters, and underground water/wells", h: "हाँ, यह नदियों, नालों, समुद्र या ज्वारीय जल, और भूमिगत जल/कुओं को कवर करता है", correct: true },
+                { e: "No, groundwater is not considered water", h: "नहीं, भूजल को पानी नहीं माना जाता है", correct: false },
+                { e: "Only if the well is privately owned", h: "केवल तभी जब कुआं निजी स्वामित्व में हो", correct: false }
+            ],
+            expE: "The Act explicitly includes natural streams, rivers, and underground aquifers (wells) under its protection.",
+            expH: "अधिनियम स्पष्ट रूप से अपने संरक्षण के तहत प्राकृतिक नालों, नदियों और भूमिगत जलभृतों (कुओं) को शामिल करता है।"
+        },
+        {
+            qE: "Before setting up an industry that discharges wastewater into a stream, what MUST the company obtain?",
+            qH: "नदी या नाले में गंदा पानी छोड़ने वाला उद्योग स्थापित करने से पहले, कंपनी को क्या प्राप्त करना अनिवार्य है?",
+            options: [
+                { e: "Consent to Establish and Operate from the State Pollution Control Board (SPCB)", h: "राज्य प्रदूषण नियंत्रण बोर्ड (SPCB) से स्थापना और संचालन की सहमति", correct: true },
+                { e: "Permission from the local police station", h: "स्थानीय पुलिस स्टेशन से अनुमति", correct: false },
+                { e: "A bank loan", h: "बैंक ऋण", correct: false },
+                { e: "Nothing, anyone can dump water anywhere", h: "कुछ नहीं, कोई भी कहीं भी पानी डंप कर सकता है", correct: false }
+            ],
+            expE: "Under Section 25, no industry can discharge effluent without the prior consent (license) of the SPCB.",
+            expH: "धारा 25 के तहत, SPCB की पूर्व सहमति (लाइसेंस) के बिना कोई भी उद्योग अपशिष्ट (गंदा पानी) नहीं छोड़ सकता है।"
+        },
+        {
+            qE: "What power do the officers of the Pollution Control Board have regarding industrial premises?",
+            qH: "प्रदूषण नियंत्रण बोर्ड के अधिकारियों के पास औद्योगिक परिसरों के संबंध में क्या शक्ति है?",
+            options: [
+                { e: "They can take over the business and run it for profit", h: "वे व्यवसाय को अपने हाथ में ले सकते हैं और मुनाफे के लिए इसे चला सकते हैं", correct: false },
+                { e: "They have the power of entry, inspection, and to take samples of the effluent at any time", h: "उन्हें प्रवेश करने, निरीक्षण करने और किसी भी समय अपशिष्ट (effluent) के नमूने लेने का अधिकार है", correct: true },
+                { e: "They can arrest the workers without cause", h: "वे बिना कारण श्रमिकों को गिरफ्तार कर सकते हैं", correct: false },
+                { e: "They only observe from outside the factory", h: "वे कारखाने के बाहर से ही निरीक्षण करते हैं", correct: false }
+            ],
+            expE: "The Act empowers board officials to enter any factory to inspect ETPs (Effluent Treatment Plants) and take water samples for lab testing.",
+            expH: "अधिनियम बोर्ड के अधिकारियों को ETP (एफ्लुएंट ट्रीटमेंट प्लांट) का निरीक्षण करने और प्रयोगशाला परीक्षण के लिए पानी के नमूने लेने के लिए किसी भी कारखाने में प्रवेश करने का अधिकार देता है।"
+        },
+        {
+            qE: "What can the State Pollution Control Board (SPCB) do if a factory continuously violates water pollution norms?",
+            qH: "यदि कोई कारखाना लगातार जल प्रदूषण मानदंडों का उल्लंघन करता है तो राज्य प्रदूषण नियंत्रण बोर्ड (SPCB) क्या कर सकता है?",
+            options: [
+                { e: "Give them more money to buy filters", h: "फिल्टर खरीदने के लिए उन्हें और पैसे देना", correct: false },
+                { e: "Order the closure of the factory and direct the disconnection of electricity and water supply", h: "कारखाने को बंद करने का आदेश देना और बिजली और पानी की आपूर्ति काटने का निर्देश देना", correct: true },
+                { e: "Do nothing, as businesses are immune", h: "कुछ न करें, क्योंकि व्यवसाय प्रतिरक्षित (immune) हैं", correct: false },
+                { e: "Ask the workers to clean the river by hand", h: "मजदूरों से नदी को हाथ से साफ करने को कहना", correct: false }
+            ],
+            expE: "Under Section 33A, the Board has strict powers to issue directions for closure, prohibition, and cutting off electricity/water to stop pollution instantly.",
+            expH: "धारा 33A के तहत, बोर्ड के पास प्रदूषण को तुरंत रोकने के लिए कारखाने को बंद करने, निषेध करने और बिजली/पानी काटने के निर्देश जारी करने की सख्त शक्तियां हैं।"
+        },
+        {
+            qE: "If a company is found guilty of dumping toxic waste without consent under the Water Act, who can be punished?",
+            qH: "यदि कोई कंपनी जल अधिनियम के तहत सहमति के बिना जहरीला कचरा डंप करने की दोषी पाई जाती है, तो किसे दंडित किया जा सकता है?",
+            options: [
+                { e: "Only the lowest-level workers", h: "केवल निचले स्तर के कर्मचारी", correct: false },
+                { e: "The company itself, and every person (like the Manager/Director) who was in charge of the business at that time", h: "कंपनी स्वयं, और प्रत्येक व्यक्ति (जैसे प्रबंधक/निदेशक) जो उस समय व्यवसाय का प्रभारी था", correct: true },
+                { e: "The government officials", h: "सरकारी अधिकारी", correct: false },
+                { e: "No one can be punished", h: "किसी को दंडित नहीं किया जा सकता", correct: false }
+            ],
+            expE: "Corporate liability applies here. The directors or managers responsible for the operations will face imprisonment and heavy fines.",
+            expH: "यहां कॉर्पोरेट दायित्व लागू होता है। संचालन के लिए जिम्मेदार निदेशकों या प्रबंधकों को कारावास और भारी जुर्माने का सामना करना पड़ेगा।"
+        },
+        {
+            qE: "Does the Water Act of 1974 deal with 'Noise Pollution'?",
+            qH: "क्या 1974 का जल अधिनियम 'ध्वनि प्रदूषण' से संबंधित है?",
+            options: [
+                { e: "Yes, water and noise are connected", h: "हाँ, पानी और शोर जुड़े हुए हैं", correct: false },
+                { e: "No, noise pollution is covered under the Air Act of 1981", h: "नहीं, ध्वनि प्रदूषण 1981 के वायु अधिनियम के अंतर्गत आता है", correct: true },
+                { e: "Yes, if the noise is made near a river", h: "हाँ, यदि शोर नदी के पास किया जाता है", correct: false },
+                { e: "No, noise pollution is not illegal in India", h: "नहीं, भारत में ध्वनि प्रदूषण अवैध नहीं है", correct: false }
+            ],
+            expE: "The Water Act focuses purely on liquid waste and water bodies. Noise is categorized under air pollution in Indian law.",
+            expH: "जल अधिनियम पूरी तरह से तरल कचरे और जल निकायों पर केंद्रित है। भारतीय कानून में शोर को वायु प्रदूषण के अंतर्गत रखा गया है।"
+        },
+        {
+            qE: "To avoid penalties under the Water Act, what must an IT park or manufacturing plant install?",
+            qH: "जल अधिनियम के तहत जुर्माने से बचने के लिए, एक आईटी पार्क या विनिर्माण संयंत्र (factory) को क्या स्थापित करना चाहिए?",
+            options: [
+                { e: "Loudspeakers", h: "लाउडस्पीकर", correct: false },
+                { e: "Effluent Treatment Plant (ETP) or Sewage Treatment Plant (STP)", h: "एफ्लुएंट ट्रीटमेंट प्लांट (ETP) या सीवेज ट्रीटमेंट प्लांट (STP)", correct: true },
+                { e: "Taller chimneys", h: "लंबी चिमनियाँ", correct: false },
+                { e: "A larger parking lot", h: "एक बड़ी पार्किंग", correct: false }
+            ],
+            expE: "ETPs and STPs treat the polluted wastewater, removing toxins before it is safely discharged into the environment.",
+            expH: "ETP और STP प्रदूषित अपशिष्ट जल का उपचार करते हैं, और इसे पर्यावरण में सुरक्षित रूप से छोड़े जाने से पहले विषाक्त पदार्थों को हटा देते हैं।"
+        },
+        {
+            qE: "Which authority acts as the supreme coordinating body advising the Central Government on water pollution issues?",
+            qH: "कौन सा प्राधिकरण जल प्रदूषण के मुद्दों पर केंद्र सरकार को सलाह देने वाले सर्वोच्च समन्वय निकाय के रूप में कार्य करता है?",
+            options: [
+                { e: "The State Police", h: "राज्य पुलिस", correct: false },
+                { e: "The Central Pollution Control Board (CPCB)", h: "केंद्रीय प्रदूषण नियंत्रण बोर्ड (CPCB)", correct: true },
+                { e: "The Local Municipality", h: "स्थानीय नगर पालिका", correct: false },
+                { e: "The Supreme Court", h: "सुप्रीम कोर्ट", correct: false }
+            ],
+            expE: "The CPCB coordinates the activities of State Boards and provides technical guidance to the Ministry of Environment.",
+            expH: "CPCB राज्य बोर्डों की गतिविधियों का समन्वय करता है और पर्यावरण मंत्रालय को तकनीकी मार्गदर्शन प्रदान करता है।"
+        },
+        {
+            qE: "Can two or more states in India form a 'Joint Board' under this Act?",
+            qH: "क्या भारत में दो या दो से अधिक राज्य इस अधिनियम के तहत एक 'संयुक्त बोर्ड' (Joint Board) बना सकते हैं?",
+            options: [
+                { e: "Yes, the Act allows the constitution of Joint Boards for multiple states or Union Territories", h: "हां, अधिनियम कई राज्यों या केंद्र शासित प्रदेशों के लिए संयुक्त बोर्ड के गठन की अनुमति देता है", correct: true },
+                { e: "No, every state must work completely independently", h: "नहीं, प्रत्येक राज्य को पूरी तरह से स्वतंत्र रूप से काम करना चाहिए", correct: false },
+                { e: "Yes, but only for states starting with the same letter", h: "हां, लेकिन केवल एक ही अक्षर से शुरू होने वाले राज्यों के लिए", correct: false },
+                { e: "No, only the Prime Minister can create boards", h: "नहीं, केवल प्रधान मंत्री ही बोर्ड बना सकते हैं", correct: false }
+            ],
+            expE: "Section 13 allows for Joint Boards, making it easier to manage rivers that flow across state borders.",
+            expH: "धारा 13 संयुक्त बोर्डों की अनुमति देती है, जिससे राज्य की सीमाओं के पार बहने वाली नदियों का प्रबंधन करना आसान हो जाता है।"
+        },
+        {
+            qE: "The penalty for discharging poisonous, noxious, or polluting matter into a stream can include:",
+            qH: "किसी नदी या नाले में जहरीले, हानिकारक या प्रदूषणकारी पदार्थ छोड़ने के दंड (penalty) में क्या शामिल हो सकता है?",
+            options: [
+                { e: "A verbal warning only", h: "केवल मौखिक चेतावनी", correct: false },
+                { e: "Imprisonment ranging from 1.5 to 6 years along with a fine", h: "जुर्माने के साथ 1.5 से 6 साल तक की कैद", correct: true },
+                { e: "A small fee of ₹100", h: "₹100 का छोटा सा शुल्क", correct: false },
+                { e: "Planting one tree", h: "एक पेड़ लगाना", correct: false }
+            ],
+            expE: "The Act has strict penal provisions (Section 43/44) to deter businesses from ignoring environmental laws.",
+            expH: "अधिनियम में व्यवसायों को पर्यावरण कानूनों की अनदेखी करने से रोकने के लिए सख्त दंडात्मक प्रावधान (धारा 43/44) हैं।"
+        },
+        {
+            qE: "What is the primary function of a State Pollution Control Board (SPCB)?",
+            qH: "राज्य प्रदूषण नियंत्रण बोर्ड (SPCB) का प्राथमिक कार्य क्या है?",
+            options: [
+                { e: "To issue driving licenses", h: "ड्राइविंग लाइसेंस जारी करना", correct: false },
+                { e: "To inspect trade effluents, grant operational consents, and enforce the Water Act locally", h: "व्यापारिक अपशिष्टों (effluents) का निरीक्षण करना, परिचालन सहमति (consent) देना और स्थानीय स्तर पर जल अधिनियम लागू करना", correct: true },
+                { e: "To build new factories for businessmen", h: "व्यवसायियों के लिए नई फैक्ट्रियां बनाना", correct: false },
+                { e: "To print national currency", h: "राष्ट्रीय मुद्रा छापना", correct: false }
+            ],
+            expE: "The SPCB is the direct regulatory authority that businesses interact with for environmental compliance.",
+            expH: "SPCB वह प्रत्यक्ष नियामक प्राधिकरण है जिसके साथ व्यवसाय पर्यावरण अनुपालन के लिए बातचीत करते हैं।"
+        },
+        {
+            qE: "Can a common citizen file a complaint to the court if an industry is heavily polluting the local water body?",
+            qH: "यदि कोई उद्योग स्थानीय जल निकाय को भारी प्रदूषित कर रहा है, तो क्या कोई आम नागरिक अदालत में शिकायत दर्ज कर सकता है?",
+            options: [
+                { e: "No, only the Pollution Board can file cases", h: "नहीं, केवल प्रदूषण बोर्ड ही मामले दर्ज कर सकता है", correct: false },
+                { e: "Yes, by giving a 60-day legal notice to the Board stating their intention to make a complaint", h: "हां, शिकायत करने के अपने इरादे को बताते हुए बोर्ड को 60 दिन का कानूनी नोटिस देकर", correct: true },
+                { e: "Yes, but they must pay a ₹1 lakh fee first", h: "हां, लेकिन उन्हें पहले ₹1 लाख शुल्क देना होगा", correct: false },
+                { e: "No, citizens have no rights under this Act", h: "नहीं, इस अधिनियम के तहत नागरिकों को कोई अधिकार नहीं है", correct: false }
+            ],
+            expE: "The Act was amended to allow citizens to actively participate in environmental justice by notifying the Board of violations.",
+            expH: "अधिनियम में संशोधन किया गया ताकि नागरिकों को उल्लंघनों के बारे में बोर्ड को सूचित करके पर्यावरण न्याय में सक्रिय रूप से भाग लेने की अनुमति मिल सके।"
+        },
+        {
+            qE: "If an industry changes its manufacturing process causing higher wastewater discharge, what must it do under the Water Act?",
+            qH: "यदि कोई उद्योग अपनी निर्माण प्रक्रिया में बदलाव करता है जिससे अधिक अपशिष्ट जल (wastewater) निकलता है, तो जल अधिनियम के तहत उसे क्या करना चाहिए?",
+            options: [
+                { e: "Keep it a secret to avoid taxes", h: "कर (tax) से बचने के लिए इसे गुप्त रखें", correct: false },
+                { e: "Apply for a fresh or modified 'Consent to Operate' from the SPCB", h: "SPCB से नए या संशोधित 'संचालन के लिए सहमति' (Consent to Operate) के लिए आवेदन करें", correct: true },
+                { e: "Wait for the Board to find out naturally", h: "बोर्ड को स्वाभाविक रूप से पता चलने की प्रतीक्षा करें", correct: false },
+                { e: "Only inform the local police", h: "केवल स्थानीय पुलिस को सूचित करें", correct: false }
+            ],
+            expE: "Any expansion or change in process that alters pollution levels requires a new review and permission from the Board.",
+            expH: "प्रक्रिया में कोई भी विस्तार या परिवर्तन जो प्रदूषण के स्तर को बदलता है, उसके लिए बोर्ड से नई समीक्षा और अनुमति की आवश्यकता होती है।"
+        },
+        {
+            qE: "Which of these is NOT a function of the Central Pollution Control Board (CPCB)?",
+            qH: "इनमें से कौन सा केंद्रीय प्रदूषण नियंत्रण बोर्ड (CPCB) का कार्य नहीं है?",
+            options: [
+                { e: "Publishing statistical data on water pollution", h: "जल प्रदूषण पर सांख्यिकीय डेटा प्रकाशित करना", correct: false },
+                { e: "Laying down standards for water quality nationwide", h: "राष्ट्रव्यापी जल गुणवत्ता के लिए मानक निर्धारित करना", correct: false },
+                { e: "Building and operating all factories in the country", h: "देश में सभी कारखानों का निर्माण और संचालन करना", correct: true },
+                { e: "Coordinating the activities of State Boards", h: "राज्य बोर्डों की गतिविधियों का समन्वय करना", correct: false }
+            ],
+            expE: "The CPCB is a regulatory and advisory body; it does not build or run commercial factories.",
+            expH: "CPCB एक नियामक और सलाहकार निकाय है; यह व्यावसायिक कारखाने नहीं बनाता या चलाता नहीं है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

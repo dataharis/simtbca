@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 20 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 20: The Air Act, 1981</h2>
+            <p>Prevention and Control of Pollution Act (Including 1987 Amendment)</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "In which year was the Air (Prevention and Control of Pollution) Act enacted in India?",
+            qH: "भारत में वायु (प्रदूषण निवारण और नियंत्रण) अधिनियम किस वर्ष लागू किया गया था?",
+            options: [
+                { e: "1974", h: "1974", correct: false },
+                { e: "1981", h: "1981", correct: true },
+                { e: "1986", h: "1986", correct: false },
+                { e: "1990", h: "1990", correct: false }
+            ],
+            expE: "The Air Act was passed in 1981 specifically to combat the growing problem of air pollution in India.",
+            expH: "भारत में वायु प्रदूषण की बढ़ती समस्या से निपटने के लिए विशेष रूप से 1981 में वायु अधिनियम पारित किया गया था।"
+        },
+        {
+            qE: "What is the primary objective of the Air Act, 1981?",
+            qH: "वायु अधिनियम, 1981 का प्राथमिक उद्देश्य क्या है?",
+            options: [
+                { e: "To build more airplanes", h: "अधिक हवाई जहाज बनाना", correct: false },
+                { e: "To prevent, control, and abate air pollution", h: "वायु प्रदूषण को रोकना, नियंत्रित करना और कम करना", correct: true },
+                { e: "To stop people from breathing deeply", h: "लोगों को गहरी सांस लेने से रोकना", correct: false },
+                { e: "To sell fresh air in cylinders", h: "सिलेंडरों में ताजी हवा बेचना", correct: false }
+            ],
+            expE: "The main goal is to protect the quality of ambient (outdoor) air and prevent health hazards caused by polluted air.",
+            expH: "मुख्य लक्ष्य परिवेशी (बाहरी) हवा की गुणवत्ता की रक्षा करना और प्रदूषित हवा के कारण होने वाले स्वास्थ्य खतरों को रोकना है।"
+        },
+        {
+            qE: "In a landmark amendment to the Air Act in 1987, which specific pollutant was officially included under the definition of 'Air Pollutant'?",
+            qH: "1987 में वायु अधिनियम में एक ऐतिहासिक संशोधन में, किस विशिष्ट प्रदूषक को आधिकारिक तौर पर 'वायु प्रदूषक' की परिभाषा के तहत शामिल किया गया था?",
+            options: [
+                { e: "Plastic waste", h: "प्लास्टिक कचरा", correct: false },
+                { e: "Noise pollution", h: "ध्वनि प्रदूषण", correct: true },
+                { e: "River water", h: "नदी का पानी", correct: false },
+                { e: "Radioactive waste", h: "रेडियोधर्मी कचरा", correct: false }
+            ],
+            expE: "The 1987 amendment explicitly added 'noise' as an air pollutant because loud, continuous noise is a severe environmental hazard.",
+            expH: "1987 के संशोधन ने स्पष्ट रूप से 'शोर' को वायु प्रदूषक के रूप में जोड़ा क्योंकि तेज, निरंतर शोर एक गंभीर पर्यावरणीय खतरा है।"
+        },
+        {
+            qE: "According to the Air Act, what defines an 'Air Pollutant'?",
+            qH: "वायु अधिनियम के अनुसार, 'वायु प्रदूषक' (Air Pollutant) को क्या परिभाषित करता है?",
+            options: [
+                { e: "Any solid, liquid, or gaseous substance present in the atmosphere that may be harmful to living beings or property", h: "वायुमंडल में मौजूद कोई भी ठोस, तरल या गैसीय पदार्थ जो जीवित प्राणियों या संपत्ति के लिए हानिकारक हो सकता है", correct: true },
+                { e: "Only smoke coming from factories", h: "केवल कारखानों से निकलने वाला धुआं", correct: false },
+                { e: "Only gases that smell bad", h: "केवल वे गैसें जिनसे दुर्गंध आती है", correct: false },
+                { e: "Natural clouds in the sky", h: "आसमान में प्राकृतिक बादल", correct: false }
+            ],
+            expE: "The legal definition covers all forms of matter (including dust and noise) that reach harmful concentrations in the air.",
+            expH: "कानूनी परिभाषा में पदार्थ के सभी रूप (धूल और शोर सहित) शामिल हैं जो हवा में हानिकारक सांद्रता (concentration) तक पहुंचते हैं।"
+        },
+        {
+            qE: "Which authorities are responsible for implementing the Air Act, 1981 at the central and state levels?",
+            qH: "केंद्र और राज्य स्तर पर वायु अधिनियम, 1981 को लागू करने के लिए कौन से प्राधिकरण (authorities) जिम्मेदार हैं?",
+            options: [
+                { e: "The Police Departments", h: "पुलिस विभाग", correct: false },
+                { e: "The Central Pollution Control Board (CPCB) and State Pollution Control Boards (SPCB)", h: "केंद्रीय प्रदूषण नियंत्रण बोर्ड (CPCB) और राज्य प्रदूषण नियंत्रण बोर्ड (SPCB)", correct: true },
+                { e: "The Health Ministry", h: "स्वास्थ्य मंत्रालय", correct: false },
+                { e: "The Forest Rangers", h: "वन रेंजर", correct: false }
+            ],
+            expE: "The same boards (CPCB and SPCB) created under the Water Act (1974) were given the power to enforce the Air Act.",
+            expH: "जल अधिनियम (1974) के तहत बनाए गए उन्हीं बोर्डों (CPCB और SPCB) को वायु अधिनियम लागू करने की शक्ति दी गई थी।"
+        },
+        {
+            qE: "Under Section 19 of the Act, what special power does the State Government have (in consultation with the SPCB)?",
+            qH: "अधिनियम की धारा 19 के तहत, राज्य सरकार के पास (SPCB के परामर्श से) क्या विशेष शक्ति है?",
+            options: [
+                { e: "To ban the use of oxygen", h: "ऑक्सीजन के उपयोग पर प्रतिबंध लगाना", correct: false },
+                { e: "To declare any specific region as an 'Air Pollution Control Area'", h: "किसी भी विशिष्ट क्षेत्र को 'वायु प्रदूषण नियंत्रण क्षेत्र' घोषित करना", correct: true },
+                { e: "To force citizens to plant 100 trees daily", h: "नागरिकों को प्रतिदिन 100 पेड़ लगाने के लिए मजबूर करना", correct: false },
+                { e: "To permanently close all roads", h: "सभी सड़कों को स्थायी रूप से बंद करना", correct: false }
+            ],
+            expE: "In an 'Air Pollution Control Area', the government can enforce stricter rules, like banning the burning of certain highly polluting fuels.",
+            expH: "'वायु प्रदूषण नियंत्रण क्षेत्र' में, सरकार सख्त नियम लागू कर सकती है, जैसे कि कुछ अत्यधिक प्रदूषणकारी ईंधनों को जलाने पर प्रतिबंध लगाना।"
+        },
+        {
+            qE: "Before opening a new industrial plant in an Air Pollution Control Area, what is a mandatory requirement?",
+            qH: "वायु प्रदूषण नियंत्रण क्षेत्र में नया औद्योगिक संयंत्र खोलने से पहले, अनिवार्य आवश्यकता क्या है?",
+            options: [
+                { e: "Obtaining prior consent (license) from the State Pollution Control Board", h: "राज्य प्रदूषण नियंत्रण बोर्ड से पूर्व सहमति (लाइसेंस) प्राप्त करना", correct: true },
+                { e: "Painting the factory green", h: "कारखाने को हरे रंग में रंगना", correct: false },
+                { e: "Asking permission from local villagers only", h: "केवल स्थानीय ग्रामीणों से अनुमति मांगना", correct: false },
+                { e: "Buying a large piece of land", h: "जमीन का एक बड़ा टुकड़ा खरीदना", correct: false }
+            ],
+            expE: "Under Section 21, no person can establish or operate an industrial plant without the previous consent of the SPCB.",
+            expH: "धारा 21 के तहत, कोई भी व्यक्ति SPCB की पूर्व सहमति के बिना औद्योगिक संयंत्र स्थापित या संचालित नहीं कर सकता है।"
+        },
+        {
+            qE: "Can the State Pollution Control Board (SPCB) restrict the use of certain fuels in a declared area?",
+            qH: "क्या राज्य प्रदूषण नियंत्रण बोर्ड (SPCB) घोषित क्षेत्र में कुछ ईंधनों के उपयोग को प्रतिबंधित कर सकता है?",
+            options: [
+                { e: "No, industries can use any fuel they want", h: "नहीं, उद्योग जो चाहें ईंधन इस्तेमाल कर सकते हैं", correct: false },
+                { e: "Yes, they can prohibit the use of highly polluting fuels or the burning of certain waste materials", h: "हां, वे अत्यधिक प्रदूषण फैलाने वाले ईंधन के उपयोग या कुछ अपशिष्ट पदार्थों को जलाने पर रोक लगा सकते हैं", correct: true },
+                { e: "Only if the fuel is very expensive", h: "केवल तभी जब ईंधन बहुत महंगा हो", correct: false },
+                { e: "Only for one day a year", h: "साल में सिर्फ एक दिन के लिए", correct: false }
+            ],
+            expE: "The SPCB can issue directives to ban fuels (like cheap, high-sulfur coal) to maintain air quality standards.",
+            expH: "SPCB वायु गुणवत्ता मानकों को बनाए रखने के लिए ईंधन (जैसे सस्ता, उच्च सल्फर वाला कोयला) पर प्रतिबंध लगाने के निर्देश जारी कर सकता है।"
+        },
+        {
+            qE: "What happens if a factory owner refuses to let a Pollution Control Board officer inspect the premises?",
+            qH: "यदि कोई कारखाने का मालिक प्रदूषण नियंत्रण बोर्ड के अधिकारी को परिसर का निरीक्षण करने से मना कर दे तो क्या होता है?",
+            options: [
+                { e: "The officer must leave immediately", h: "अधिकारी को तुरंत वहां से चले जाना चाहिए", correct: false },
+                { e: "It is considered a legal offense, and the owner can face penalties or imprisonment", h: "इसे कानूनी अपराध माना जाता है, और मालिक को दंड या कारावास का सामना करना पड़ सकता है", correct: true },
+                { e: "The factory gets a tax discount", h: "कारखाने को टैक्स में छूट मिलती है", correct: false },
+                { e: "The officer will just write a bad review", h: "अधिकारी बस एक खराब रिव्यू (review) लिख देगा", correct: false }
+            ],
+            expE: "Section 24 grants officers the power of entry and inspection. Obstructing them is a punishable crime.",
+            expH: "धारा 24 अधिकारियों को प्रवेश और निरीक्षण की शक्ति प्रदान करती है। उन्हें रोकना एक दंडनीय अपराध है।"
+        },
+        {
+            qE: "Does the Air Act apply to vehicular emissions (pollution from cars and trucks)?",
+            qH: "क्या वायु अधिनियम वाहनों के उत्सर्जन (कारों और ट्रकों से होने वाले प्रदूषण) पर लागू होता है?",
+            options: [
+                { e: "No, it only applies to factories", h: "नहीं, यह केवल कारखानों पर लागू होता है", correct: false },
+                { e: "Yes, the State Government can set emission standards for automobiles to control air pollution", h: "हां, राज्य सरकार वायु प्रदूषण को नियंत्रित करने के लिए ऑटोमोबाइल के लिए उत्सर्जन मानक निर्धारित कर सकती है", correct: true },
+                { e: "Only for electric vehicles", h: "केवल इलेक्ट्रिक वाहनों के लिए", correct: false },
+                { e: "No, vehicles do not cause pollution", h: "नहीं, वाहन प्रदूषण नहीं फैलाते हैं", correct: false }
+            ],
+            expE: "Section 20 of the Act allows the State Government to issue instructions to the authority registering vehicles to ensure emission standards are met (e.g., PUC certificates).",
+            expH: "अधिनियम की धारा 20 राज्य सरकार को वाहनों को पंजीकृत करने वाले प्राधिकरण को उत्सर्जन मानकों को पूरा करने (जैसे PUC प्रमाणपत्र) सुनिश्चित करने के निर्देश जारी करने की अनुमति देती है।"
+        },
+        {
+            qE: "What is an 'Electrostatic Precipitator' (ESP) or a 'Scrubber' in the context of the Air Act?",
+            qH: "वायु अधिनियम के संदर्भ में 'इलेक्ट्रोस्टैटिक प्रेसिपिटेटर' (ESP) या 'स्क्रबर' क्या है?",
+            options: [
+                { e: "Equipment industries must install in chimneys to filter and control harmful air emissions", h: "उपकरण जो उद्योगों को हानिकारक वायु उत्सर्जन को फ़िल्टर और नियंत्रित करने के लिए चिमनियों में स्थापित करना चाहिए", correct: true },
+                { e: "A machine used to wash floors in factories", h: "कारखानों में फर्श धोने के लिए इस्तेमाल की जाने वाली मशीन", correct: false },
+                { e: "A device to increase smoke production", h: "धुआं उत्पादन बढ़ाने वाला उपकरण", correct: false },
+                { e: "A type of modern fuel", h: "एक प्रकार का आधुनिक ईंधन", correct: false }
+            ],
+            expE: "The SPCB makes it mandatory for factories to install air pollution control equipment like ESPs before granting consent to operate.",
+            expH: "SPCB संचालन की सहमति देने से पहले कारखानों के लिए ESP जैसे वायु प्रदूषण नियंत्रण उपकरण स्थापित करना अनिवार्य बनाता है।"
+        },
+        {
+            qE: "What stringent action can the SPCB take if an industry continually violates air emission standards?",
+            qH: "यदि कोई उद्योग लगातार वायु उत्सर्जन मानकों का उल्लंघन करता है तो SPCB क्या सख्त कार्रवाई कर सकता है?",
+            options: [
+                { e: "Give them a warning letter only", h: "उन्हें केवल चेतावनी पत्र दें", correct: false },
+                { e: "Issue orders to close the industry and cut off its electricity and water supply", h: "उद्योग को बंद करने और उसकी बिजली व पानी की आपूर्ति काटने के आदेश जारी करना", correct: true },
+                { e: "Help the industry pay its bills", h: "उद्योग को उसके बिलों का भुगतान करने में मदद करना", correct: false },
+                { e: "Lower the emission standards for them", h: "उनके लिए उत्सर्जन मानकों को कम कर देना", correct: false }
+            ],
+            expE: "Under Section 31A (similar to Section 33A of the Water Act), the Board has the power to issue directions for the closure of the polluting plant.",
+            expH: "धारा 31A (जल अधिनियम की धारा 33A के समान) के तहत, बोर्ड के पास प्रदूषणकारी संयंत्र को बंद करने के निर्देश जारी करने की शक्ति है।"
+        },
+        {
+            qE: "The Air Act was enacted by India primarily to fulfill the decisions made at which international event?",
+            qH: "वायु अधिनियम भारत द्वारा मुख्य रूप से किस अंतर्राष्ट्रीय कार्यक्रम में लिए गए निर्णयों को पूरा करने के लिए अधिनियमित (enact) किया गया था?",
+            options: [
+                { e: "The World Cup 1980", h: "विश्व कप 1980", correct: false },
+                { e: "The UN Conference on the Human Environment held in Stockholm in 1972", h: "1972 में स्टॉकहोम में आयोजित मानव पर्यावरण पर संयुक्त राष्ट्र सम्मेलन", correct: true },
+                { e: "The Kyoto Protocol 1997", h: "क्योटो प्रोटोकॉल 1997", correct: false },
+                { e: "The Paris Agreement 2015", h: "पेरिस समझौता 2015", correct: false }
+            ],
+            expE: "The preamble of the Air Act states that it is designed to implement the decisions taken at the 1972 Stockholm Conference regarding the preservation of natural resources.",
+            expH: "वायु अधिनियम की प्रस्तावना में कहा गया है कि इसे प्राकृतिक संसाधनों के संरक्षण के संबंध में 1972 के स्टॉकहोम सम्मेलन में लिए गए निर्णयों को लागू करने के लिए डिज़ाइन किया गया है।"
+        },
+        {
+            qE: "What is 'Ambient Air Quality'?",
+            qH: "'एम्बिएंट एयर क्वालिटी' (Ambient Air Quality) क्या है?",
+            options: [
+                { e: "The air quality inside a closed room", h: "बंद कमरे के अंदर की हवा की गुणवत्ता", correct: false },
+                { e: "The overall state or quality of the outdoor air in our surrounding environment", h: "हमारे आस-पास के वातावरण में बाहरी हवा (outdoor air) की समग्र स्थिति या गुणवत्ता", correct: true },
+                { e: "The quality of air in an airplane", h: "हवाई जहाज में हवा की गुणवत्ता", correct: false },
+                { e: "The air pumped into car tires", h: "कार के टायरों में भरी जाने वाली हवा", correct: false }
+            ],
+            expE: "The CPCB lays down standards for 'ambient air quality' (like NAAQS) to ensure the air we breathe is safe.",
+            expH: "CPCB यह सुनिश्चित करने के लिए 'परिवेशी वायु गुणवत्ता' (जैसे NAAQS) के मानक निर्धारित करता है कि हम जो हवा में सांस लेते हैं वह सुरक्षित है।"
+        },
+        {
+            qE: "Under the Air Act, who has the power to take samples of air or emissions from any chimney, flue, or duct in a factory?",
+            qH: "वायु अधिनियम के तहत, कारखाने में किसी भी चिमनी, ग्रिप या डक्ट (duct) से हवा या उत्सर्जन के नमूने लेने का अधिकार किसके पास है?",
+            options: [
+                { e: "Any passing citizen", h: "वहां से गुजरने वाला कोई भी नागरिक", correct: false },
+                { e: "Any person authorized by the State Pollution Control Board", h: "राज्य प्रदूषण नियंत्रण बोर्ड द्वारा अधिकृत कोई भी व्यक्ति", correct: true },
+                { e: "Only the factory owner", h: "केवल कारखाने का मालिक", correct: false },
+                { e: "The local traffic police", h: "स्थानीय यातायात पुलिस", correct: false }
+            ],
+            expE: "Section 26 gives SPCB officials the right to collect samples for analysis in environmental laboratories to check compliance.",
+            expH: "धारा 26 SPCB अधिकारियों को अनुपालन (compliance) की जांच करने के लिए पर्यावरण प्रयोगशालाओं में विश्लेषण हेतु नमूने एकत्र करने का अधिकार देती है।"
+        },
+        {
+            qE: "If an industry changes its production process or increases its production capacity, what is required under the Air Act?",
+            qH: "यदि कोई उद्योग अपनी उत्पादन प्रक्रिया बदलता है या अपनी उत्पादन क्षमता बढ़ाता है, तो वायु अधिनियम के तहत क्या आवश्यक है?",
+            options: [
+                { e: "Nothing, the old license is valid forever", h: "कुछ नहीं, पुराना लाइसेंस हमेशा के लिए वैध है", correct: false },
+                { e: "They must apply for a fresh or modified consent (permission) from the SPCB", h: "उन्हें SPCB से नई या संशोधित सहमति (अनुमति) के लिए आवेदन करना होगा", correct: true },
+                { e: "They just need to inform the local newspaper", h: "उन्हें बस स्थानीय समाचार पत्र को सूचित करने की आवश्यकता है", correct: false },
+                { e: "They must plant 10 trees", h: "उन्हें 10 पेड़ लगाने होंगे", correct: false }
+            ],
+            expE: "Any change that alters the rate or type of emissions invalidates the old consent. A new environmental review is legally required.",
+            expH: "कोई भी परिवर्तन जो उत्सर्जन की दर या प्रकार को बदलता है, पुरानी सहमति को अमान्य कर देता है। एक नई पर्यावरण समीक्षा कानूनी रूप से आवश्यक है।"
+        },
+        {
+            qE: "Who can file a complaint in a court regarding an offense under the Air Act?",
+            qH: "वायु अधिनियम के तहत किसी अपराध के संबंध में न्यायालय में शिकायत कौन दर्ज कर सकता है?",
+            options: [
+                { e: "Only the Pollution Control Board", h: "केवल प्रदूषण नियंत्रण बोर्ड", correct: false },
+                { e: "The Pollution Control Board OR any person who has given 60 days' notice to the Board", h: "प्रदूषण नियंत्रण बोर्ड या कोई भी व्यक्ति जिसने बोर्ड को 60 दिन का नोटिस दिया है", correct: true },
+                { e: "Only the Chief Minister", h: "केवल मुख्यमंत्री", correct: false },
+                { e: "Nobody can file a complaint", h: "कोई भी शिकायत दर्ज नहीं कर सकता", correct: false }
+            ],
+            expE: "Like the Water Act, the Air Act allows citizens to act as watchdogs by giving formal notice to the Board before filing a case.",
+            expH: "जल अधिनियम की तरह, वायु अधिनियम नागरिकों को मामला दर्ज करने से पहले बोर्ड को औपचारिक नोटिस देकर प्रहरी (watchdogs) के रूप में कार्य करने की अनुमति देता है।"
+        },
+        {
+            qE: "Which of the following diseases is a direct health consequence of the air pollution that the Act tries to prevent?",
+            qH: "निम्नलिखित में से कौन सी बीमारी उस वायु प्रदूषण का प्रत्यक्ष स्वास्थ्य परिणाम है जिसे यह अधिनियम रोकने का प्रयास करता है?",
+            options: [
+                { e: "Malaria", h: "मलेरिया", correct: false },
+                { e: "Cholera", h: "हैजा (Cholera)", correct: false },
+                { e: "Asthma and other severe respiratory diseases", h: "अस्थमा और अन्य गंभीर श्वसन रोग", correct: true },
+                { e: "Dengue", h: "डेंगू", correct: false }
+            ],
+            expE: "Air pollutants like PM2.5, SO2, and NOx directly damage the lungs and cardiovascular system.",
+            expH: "PM2.5, SO2, और NOx जैसे वायु प्रदूषक सीधे फेफड़ों और हृदय प्रणाली को नुकसान पहुंचाते हैं।"
+        },
+        {
+            qE: "Why should BBA/BCA students be aware of the Air Act?",
+            qH: "BBA/BCA के छात्रों को वायु अधिनियम (Air Act) के बारे में क्यों पता होना चाहिए?",
+            options: [
+                { e: "To understand that business operations, manufacturing, and data centers must adopt green technologies to stay legally compliant and avoid closure", h: "यह समझने के लिए कि व्यावसायिक संचालन, विनिर्माण और डेटा केंद्रों को कानूनी रूप से अनुपालन करने और बंद होने से बचने के लिए हरित प्रौद्योगिकियों (green technologies) को अपनाना चाहिए", correct: true },
+                { e: "Because it teaches them how to fly planes", h: "क्योंकि यह उन्हें हवाई जहाज उड़ाना सिखाता है", correct: false },
+                { e: "So they can build their own coal factories", h: "ताकि वे अपनी खुद की कोयला फैक्ट्रियां बना सकें", correct: false },
+                { e: "It is not useful for business or IT students at all", h: "यह बिजनेस या आईटी छात्रों के लिए बिल्कुल भी उपयोगी नहीं है", correct: false }
+            ],
+            expE: "Future managers and IT professionals must ensure their companies do not violate pollution norms, which could lead to severe penalties.",
+            expH: "भविष्य के प्रबंधकों और आईटी पेशेवरों को यह सुनिश्चित करना चाहिए कि उनकी कंपनियां प्रदूषण मानदंडों का उल्लंघन न करें, जिससे भारी जुर्माना हो सकता है।"
+        },
+        {
+            qE: "What is the penalty for operating a polluting industry without the consent of the Board under the Air Act?",
+            qH: "वायु अधिनियम के तहत बोर्ड की सहमति के बिना प्रदूषणकारी उद्योग चलाने पर क्या जुर्माना है?",
+            options: [
+                { e: "A verbal warning", h: "एक मौखिक चेतावनी", correct: false },
+                { e: "Imprisonment which may extend to 6 years and a fine", h: "कारावास जो 6 वर्ष तक बढ़ सकता है और जुर्माना", correct: true },
+                { e: "A small fine of ₹500", h: "₹500 का छोटा जुर्माना", correct: false },
+                { e: "No penalty", h: "कोई जुर्माना नहीं", correct: false }
+            ],
+            expE: "The Act has stringent penal provisions (Section 37) to strongly discourage illegal industrial emissions.",
+            expH: "अधिनियम में अवैध औद्योगिक उत्सर्जन को दृढ़ता से हतोत्साहित करने के लिए कड़े दंडात्मक प्रावधान (धारा 37) हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

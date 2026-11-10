@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 16 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 16: Society & Environment</h2>
+            <p>Interactions, Environmental Ethics, and Sustainability</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is 'Environmental Ethics'?",
+            qH: "'पर्यावरण नैतिकता' (Environmental Ethics) क्या है?",
+            options: [
+                { e: "A subject about making money from forests", h: "जंगलों से पैसा कमाने के बारे में एक विषय", correct: false },
+                { e: "The philosophical study of the moral relationship between human beings and the natural environment", h: "मनुष्यों और प्राकृतिक पर्यावरण के बीच नैतिक संबंध का दार्शनिक अध्ययन", correct: true },
+                { e: "A guide on how to build factories", h: "कारखाने कैसे बनाएं इस पर एक गाइड", correct: false },
+                { e: "The study of solar system planets", h: "सौर मंडल के ग्रहों का अध्ययन", correct: false }
+            ],
+            expE: "Environmental ethics helps us understand our moral duties and responsibilities toward nature.",
+            expH: "पर्यावरण नैतिकता हमें प्रकृति के प्रति हमारे नैतिक कर्तव्यों और जिम्मेदारियों को समझने में मदद करती है।"
+        },
+        {
+            qE: "Which environmental worldview believes that 'human beings are the most important entity in the universe'?",
+            qH: "किस पर्यावरणीय विश्वदृष्टिकोण का मानना ​​है कि 'मनुष्य ब्रह्मांड में सबसे महत्वपूर्ण इकाई है'?",
+            options: [
+                { e: "Ecocentrism", h: "इकोसेंट्रिज़्म (Ecocentrism)", correct: false },
+                { e: "Anthropocentrism", h: "मानवकेन्द्रवाद (Anthropocentrism)", correct: true },
+                { e: "Biocentrism", h: "बायोसेंट्रिज़्म (Biocentrism)", correct: false },
+                { e: "Zoocentrism", h: "ज़ूसेंट्रिज़्म", correct: false }
+            ],
+            expE: "Anthropocentrism puts humans at the center, often viewing nature only as a resource for human use.",
+            expH: "मानवकेन्द्रवाद (Anthropocentrism) मनुष्यों को केंद्र में रखता है, और अक्सर प्रकृति को केवल मानव उपयोग के लिए एक संसाधन के रूप में देखता है।"
+        },
+        {
+            qE: "Which worldview gives intrinsic (built-in) value to ALL living things, regardless of their usefulness to humans?",
+            qH: "कौन सा विश्वदृष्टिकोण मनुष्यों के लिए उनकी उपयोगिता की परवाह किए बिना, सभी जीवित चीजों को अंतर्निहित (intrinsic) मूल्य देता है?",
+            options: [
+                { e: "Anthropocentrism", h: "मानवकेन्द्रवाद", correct: false },
+                { e: "Technocentrism", h: "टेक्नोसेंट्रिज़्म", correct: false },
+                { e: "Biocentrism", h: "बायोसेंट्रिज़्म (Biocentrism)", correct: true },
+                { e: "Industrialism", h: "औद्योगीकरण", correct: false }
+            ],
+            expE: "Biocentrism argues that every living organism (plant, animal, microbe) has a right to exist.",
+            expH: "बायोसेंट्रिज़्म (Biocentrism) का तर्क है कि हर जीवित जीव (पौधे, जानवर, सूक्ष्मजीव) को अस्तित्व का अधिकार है।"
+        },
+        {
+            qE: "Which approach places the highest value on the entire ecosystem (including rivers, soil, and living things) as a whole?",
+            qH: "कौन सा दृष्टिकोण पूरे पारिस्थितिकी तंत्र (नदियों, मिट्टी और जीवित चीजों सहित) को समग्र रूप से सर्वोच्च महत्व देता है?",
+            options: [
+                { e: "Ecocentrism", h: "इकोसेंट्रिज़्म (Ecocentrism)", correct: true },
+                { e: "Anthropocentrism", h: "मानवकेन्द्रवाद", correct: false },
+                { e: "Egocentrism", h: "अहंकारवाद (Egocentrism)", correct: false },
+                { e: "Consumerism", h: "उपभोक्तावाद (Consumerism)", correct: false }
+            ],
+            expE: "Ecocentrism believes that the health of the entire ecological system is more important than individual parts.",
+            expH: "इकोसेंट्रिज़्म (Ecocentrism) का मानना ​​है कि संपूर्ण पारिस्थितिकी तंत्र का स्वास्थ्य व्यक्तिगत भागों की तुलना में अधिक महत्वपूर्ण है।"
+        },
+        {
+            qE: "The interaction between society and the environment is a 'two-way process'. What does this mean?",
+            qH: "समाज और पर्यावरण के बीच की बातचीत एक 'दोतरफा प्रक्रिया' (two-way process) है। इसका क्या अर्थ है?",
+            options: [
+                { e: "Only the environment affects humans", h: "केवल पर्यावरण ही मनुष्यों को प्रभावित करता है", correct: false },
+                { e: "Only humans affect the environment", h: "केवल मनुष्य ही पर्यावरण को प्रभावित करते हैं", correct: false },
+                { e: "Humans modify the environment, and the changed environment in turn affects human life", h: "मनुष्य पर्यावरण को संशोधित करते हैं, और बदला हुआ पर्यावरण बदले में मानव जीवन को प्रभावित करता है", correct: true },
+                { e: "Humans and the environment do not interact at all", h: "मनुष्य और पर्यावरण बिल्कुल भी संपर्क नहीं करते हैं", correct: false }
+            ],
+            expE: "We change nature (e.g., building cities, causing pollution), and nature reacts (e.g., floods, climate change) affecting our survival.",
+            expH: "हम प्रकृति को बदलते हैं (जैसे, शहरों का निर्माण, प्रदूषण), और प्रकृति प्रतिक्रिया करती है (जैसे, बाढ़, जलवायु परिवर्तन) जो हमारे अस्तित्व को प्रभावित करती है।"
+        },
+        {
+            qE: "What is a 'Throwaway Society'?",
+            qH: "'थ्रोअवे सोसाइटी' (Throwaway Society) क्या है?",
+            options: [
+                { e: "A society that recycles everything", h: "एक ऐसा समाज जो हर चीज का पुनर्चक्रण (recycle) करता है", correct: false },
+                { e: "A society strongly influenced by consumerism, characterized by excessive consumption and single-use products", h: "उपभोक्तावाद से अत्यधिक प्रभावित समाज, जिसकी विशेषता अत्यधिक खपत और एकल-उपयोग (single-use) उत्पाद हैं", correct: true },
+                { e: "A society that lives completely in forests", h: "एक समाज जो पूरी तरह से जंगलों में रहता है", correct: false },
+                { e: "A society with no factories", h: "बिना कारखानों वाला समाज", correct: false }
+            ],
+            expE: "Throwaway societies create massive amounts of solid waste, causing severe environmental degradation.",
+            expH: "थ्रोअवे समाज भारी मात्रा में ठोस कचरा पैदा करते हैं, जिससे पर्यावरण का गंभीर क्षरण होता है।"
+        },
+        {
+            qE: "Which environmental philosophy emphasizes completely minimizing human interference in nature?",
+            qH: "कौन सा पर्यावरण दर्शन प्रकृति में मानवीय हस्तक्षेप को पूरी तरह से कम करने पर जोर देता है?",
+            options: [
+                { e: "Shallow Ecology", h: "शैलो इकोलॉजी (Shallow Ecology)", correct: false },
+                { e: "Deep Ecology", h: "डीप इकोलॉजी (Deep Ecology)", correct: true },
+                { e: "Urbanization", h: "शहरीकरण", correct: false },
+                { e: "Capitalism", h: "पूंजीवाद", correct: false }
+            ],
+            expE: "Deep ecology argues for a radical change in human behavior to preserve nature for its own sake, not just for human use.",
+            expH: "डीप इकोलॉजी मानव व्यवहार में आमूल-चूल परिवर्तन का तर्क देती है ताकि प्रकृति को केवल मानव उपयोग के लिए ही नहीं, बल्कि प्रकृति के लिए ही संरक्षित किया जा सके।"
+        },
+        {
+            qE: "Why is 'Consumerism' a social issue in environmental science?",
+            qH: "पर्यावरण विज्ञान में 'उपभोक्तावाद' (Consumerism) एक सामाजिक मुद्दा क्यों है?",
+            options: [
+                { e: "It leads to the over-extraction of natural resources and high waste generation", h: "इससे प्राकृतिक संसाधनों का अत्यधिक दोहन और उच्च अपशिष्ट (कचरा) उत्पादन होता है", correct: true },
+                { e: "It makes products cheaper", h: "यह उत्पादों को सस्ता बनाता है", correct: false },
+                { e: "It teaches people how to plant trees", h: "यह लोगों को पेड़ लगाना सिखाता है", correct: false },
+                { e: "It has no connection to the environment", h: "इसका पर्यावरण से कोई संबंध नहीं है", correct: false }
+            ],
+            expE: "Buying more things than we need puts immense pressure on Earth's limited resources and creates more pollution.",
+            expH: "अपनी जरूरत से ज्यादा चीजें खरीदने से पृथ्वी के सीमित संसाधनों पर भारी दबाव पड़ता है और अधिक प्रदूषण होता है।"
+        },
+        {
+            qE: "The concept of 'Earth as a Spaceship' teaches us that:",
+            qH: "'पृथ्वी एक अंतरिक्ष यान के रूप में' (Earth as a Spaceship) की अवधारणा हमें क्या सिखाती है?",
+            options: [
+                { e: "Earth is flat and moving fast", h: "पृथ्वी चपटी है और तेजी से घूम रही है", correct: false },
+                { e: "Earth can easily get new resources from other planets", h: "पृथ्वी आसानी से अन्य ग्रहों से नए संसाधन प्राप्त कर सकती है", correct: false },
+                { e: "Earth is a closed system with limited resources and limited space for waste", h: "पृथ्वी एक बंद प्रणाली है जिसमें सीमित संसाधन हैं और कचरे के लिए सीमित स्थान है", correct: true },
+                { e: "Aliens will eventually save us", h: "एलियंस (Aliens) अंततः हमें बचा लेंगे", correct: false }
+            ],
+            expE: "Like a spaceship, Earth has a fixed amount of supplies (air, water, land). If we ruin them, there is nowhere else to go.",
+            expH: "एक अंतरिक्ष यान की तरह, पृथ्वी पर आपूर्ति (हवा, पानी, भूमि) की एक निश्चित मात्रा है। यदि हम उन्हें बर्बाद कर देते हैं, तो जाने के लिए कोई और जगह नहीं है।"
+        },
+        {
+            qE: "Which of the following is a key question asked in Environmental Ethics?",
+            qH: "पर्यावरण नैतिकता (Environmental Ethics) में पूछा जाने वाला एक प्रमुख प्रश्न कौन सा है?",
+            options: [
+                { e: "How can we make maximum profit by cutting down a forest?", h: "हम जंगल काटकर अधिकतम लाभ कैसे कमा सकते हैं?", correct: false },
+                { e: "Do animals and nature have a right to exist even if they are not useful to humans?", h: "क्या जानवरों और प्रकृति को अस्तित्व का अधिकार है, भले ही वे मनुष्यों के लिए उपयोगी न हों?", correct: true },
+                { e: "Which car model is the fastest?", h: "कौन सा कार मॉडल सबसे तेज़ है?", correct: false },
+                { e: "How can we permanently destroy mountains?", h: "हम पहाड़ों को स्थायी रूप से कैसे नष्ट कर सकते हैं?", correct: false }
+            ],
+            expE: "Environmental ethics questions human superiority and advocates for the moral rights of non-human entities.",
+            expH: "पर्यावरण नैतिकता मानव श्रेष्ठता पर सवाल उठाती है और गैर-मानवीय संस्थाओं के नैतिक अधिकारों की वकालत करती है।"
+        },
+        {
+            qE: "What role do traditional practices and indigenous knowledge play in environmental ethics?",
+            qH: "पर्यावरण नैतिकता में पारंपरिक प्रथाएं और स्वदेशी ज्ञान क्या भूमिका निभाते हैं?",
+            options: [
+                { e: "They encourage the destruction of forests", h: "वे जंगलों के विनाश को प्रोत्साहित करते हैं", correct: false },
+                { e: "They offer valuable, time-tested methods for living in harmony with nature sustainably", h: "वे प्रकृति के साथ सद्भाव और स्थायी रूप से जीने के लिए मूल्यवान, समय-परीक्षणित तरीके प्रदान करते हैं", correct: true },
+                { e: "They teach people to hunt endangered animals", h: "वे लोगों को लुप्तप्राय जानवरों का शिकार करना सिखाते हैं", correct: false },
+                { e: "They are completely useless for modern society", h: "वे आधुनिक समाज के लिए पूरी तरह से बेकार हैं", correct: false }
+            ],
+            expE: "Tribal and indigenous communities have protected biodiversity for centuries through cultural rules (like sacred groves).",
+            expH: "आदिवासी और स्वदेशी समुदायों ने सदियों से सांस्कृतिक नियमों (जैसे पवित्र उपवन) के माध्यम से जैव विविधता की रक्षा की है।"
+        },
+        {
+            qE: "Unequal access to clean drinking water and fresh air among different social classes is an issue of:",
+            qH: "विभिन्न सामाजिक वर्गों के बीच स्वच्छ पेयजल और ताजी हवा तक असमान पहुंच किसका मुद्दा है?",
+            options: [
+                { e: "Technological advancement", h: "तकनीकी प्रगति", correct: false },
+                { e: "Environmental Justice (Social Equity)", h: "पर्यावरण न्याय (सामाजिक समानता)", correct: true },
+                { e: "Consumerism", h: "उपभोक्तावाद", correct: false },
+                { e: "Biodiversity loss", h: "जैव विविधता का नुकसान", correct: false }
+            ],
+            expE: "Environmental justice ensures that no group (especially the poor) bears an unfair share of environmental pollution.",
+            expH: "पर्यावरण न्याय यह सुनिश्चित करता है कि कोई भी समूह (विशेषकर गरीब) पर्यावरण प्रदूषण का अनुचित हिस्सा वहन न करे।"
+        },
+        {
+            qE: "If a factory dumps toxic waste into a local river affecting the villagers downstream, this primarily shows a lack of:",
+            qH: "यदि कोई कारखाना स्थानीय नदी में जहरीला कचरा डंप करता है जिससे नदी के बहाव वाले गांवों पर असर पड़ता है, तो यह मुख्य रूप से किसकी कमी को दर्शाता है?",
+            options: [
+                { e: "Engineering skills", h: "इंजीनियरिंग कौशल", correct: false },
+                { e: "Environmental ethics and corporate responsibility", h: "पर्यावरण नैतिकता और कॉर्पोरेट जिम्मेदारी", correct: true },
+                { e: "Water supply", h: "पानी की आपूर्ति", correct: false },
+                { e: "Government subsidies", h: "सरकारी सब्सिडी", correct: false }
+            ],
+            expE: "Dumping waste without caring for the health of local communities and nature is highly unethical.",
+            expH: "स्थानीय समुदायों और प्रकृति के स्वास्थ्य की परवाह किए बिना कचरा डंप करना अत्यधिक अनैतिक है।"
+        },
+        {
+            qE: "The ethical principle of 'Do No Harm' (Ahimsa) in environmentalism means:",
+            qH: "पर्यावरणवाद में 'कोई नुकसान न पहुँचाएँ' (अहिंसा / Do No Harm) के नैतिक सिद्धांत का क्या अर्थ है?",
+            options: [
+                { e: "Minimizing harm to all living beings and ecosystems", h: "सभी जीवित प्राणियों और पारिस्थितिक तंत्रों को कम से कम नुकसान पहुंचाना", correct: true },
+                { e: "Never touching a plant", h: "किसी पौधे को कभी न छूना", correct: false },
+                { e: "Only eating meat", h: "केवल मांस खाना", correct: false },
+                { e: "Refusing to use electricity entirely", h: "बिजली का उपयोग करने से पूरी तरह इंकार करना", correct: false }
+            ],
+            expE: "It is a core ethical guideline to avoid unnecessary destruction of life or habitats.",
+            expH: "जीवन या आवास के अनावश्यक विनाश से बचने के लिए यह एक मुख्य नैतिक दिशानिर्देश है।"
+        },
+        {
+            qE: "How does rapid population growth affect society-environment interactions?",
+            qH: "तेजी से जनसंख्या वृद्धि समाज-पर्यावरण की बातचीत को कैसे प्रभावित करती है?",
+            options: [
+                { e: "It automatically increases the size of the Earth", h: "यह स्वचालित रूप से पृथ्वी का आकार बढ़ाता है", correct: false },
+                { e: "It reduces pollution", h: "यह प्रदूषण को कम करता है", correct: false },
+                { e: "It increases the demand for food, water, and space, leading to more environmental degradation", h: "यह भोजन, पानी और स्थान की मांग को बढ़ाता है, जिससे पर्यावरण का अधिक क्षरण होता है", correct: true },
+                { e: "It has no impact at all", h: "इसका बिल्कुल कोई प्रभाव नहीं पड़ता", correct: false }
+            ],
+            expE: "More people require more resources, which intensifies the pressure on forests, water bodies, and wildlife.",
+            expH: "अधिक लोगों को अधिक संसाधनों की आवश्यकता होती है, जो जंगलों, जल निकायों और वन्यजीवों पर दबाव को तीव्र करता है।"
+        },
+        {
+            qE: "Which of the following is the most ethical practice for a modern IT/Business professional?",
+            qH: "एक आधुनिक आईटी/बिजनेस (IT/Business) पेशेवर के लिए निम्नलिखित में से कौन सी सबसे नैतिक प्रथा है?",
+            options: [
+                { e: "Designing products that break easily so people buy more (Planned Obsolescence)", h: "ऐसे उत्पाद डिज़ाइन करना जो आसानी से टूट जाएँ ताकि लोग अधिक खरीदें (Planned Obsolescence)", correct: false },
+                { e: "Designing energy-efficient systems and promoting e-waste recycling", h: "ऊर्जा-कुशल (energy-efficient) प्रणाली डिजाइन करना और ई-कचरे के पुनर्चक्रण को बढ़ावा देना", correct: true },
+                { e: "Using maximum paper for office work", h: "कार्यालय के काम के लिए अधिकतम कागज का उपयोग करना", correct: false },
+                { e: "Ignoring environmental laws to save company money", h: "कंपनी का पैसा बचाने के लिए पर्यावरण कानूनों की अनदेखी करना", correct: false }
+            ],
+            expE: "Corporate Environmental Responsibility requires professionals to minimize their ecological footprint.",
+            expH: "कॉर्पोरेट पर्यावरण उत्तरदायित्व के लिए पेशेवरों को अपने पारिस्थितिक पदचिह्न (ecological footprint) को कम करने की आवश्यकता होती है।"
+        },
+        {
+            qE: "The 'Shallow Ecology' worldview is mainly concerned with:",
+            qH: "'शैलो इकोलॉजी' (Shallow Ecology) विश्वदृष्टिकोण मुख्य रूप से किससे संबंधित है?",
+            options: [
+                { e: "Protecting nature primarily to benefit human health and the economy", h: "मुख्य रूप से मानव स्वास्थ्य और अर्थव्यवस्था को लाभ पहुंचाने के लिए प्रकृति की रक्षा करना", correct: true },
+                { e: "Protecting nature for its own intrinsic value", h: "प्रकृति की रक्षा उसके अपने अंतर्निहित मूल्य के लिए करना", correct: false },
+                { e: "Exploring the deep oceans", h: "गहरे महासागरों की खोज", correct: false },
+                { e: "Destroying all shallow lakes", h: "सभी उथली झीलों को नष्ट करना", correct: false }
+            ],
+            expE: "Shallow ecology is anthropocentric. It wants to stop pollution mostly because pollution harms humans.",
+            expH: "शैलो इकोलॉजी मानव-केंद्रित है। यह प्रदूषण को रोकना चाहता है क्योंकि प्रदूषण से इंसानों को नुकसान होता है।"
+        },
+        {
+            qE: "What is 'Corporate Social Responsibility' (CSR) in the context of the environment?",
+            qH: "पर्यावरण के संदर्भ में 'कॉर्पोरेट सामाजिक उत्तरदायित्व' (CSR) क्या है?",
+            options: [
+                { e: "A company's ethical duty to operate in ways that protect the environment and benefit society", h: "पर्यावरण की रक्षा और समाज को लाभ पहुंचाने वाले तरीकों से काम करना एक कंपनी का नैतिक कर्तव्य है", correct: true },
+                { e: "A company's right to use as much water as it wants", h: "जितना चाहें उतना पानी उपयोग करने का किसी कंपनी का अधिकार", correct: false },
+                { e: "A tax paid by consumers", h: "उपभोक्ताओं द्वारा भुगतान किया जाने वाला कर (Tax)", correct: false },
+                { e: "A software used in business", h: "व्यवसाय में प्रयुक्त एक सॉफ्टवेयर", correct: false }
+            ],
+            expE: "CSR policies push businesses to plant trees, reduce emissions, and support local communities.",
+            expH: "CSR नीतियां व्यवसायों को पेड़ लगाने, उत्सर्जन कम करने और स्थानीय समुदायों का समर्थन करने के लिए प्रेरित करती हैं।"
+        },
+        {
+            qE: "Which simple philosophy can help counter 'Consumerism'?",
+            qH: "कौन सा सरल दर्शन 'उपभोक्तावाद' (Consumerism) का मुकाबला करने में मदद कर सकता है?",
+            options: [
+                { e: "Buy 1 Get 1 Free", h: "बाय 1 गेट 1 फ्री", correct: false },
+                { e: "Fast Fashion", h: "फास्ट फैशन", correct: false },
+                { e: "Minimalism (buying only what is truly needed)", h: "मिनिमलिज़्म (Minimalism - केवल वही खरीदना जो वास्तव में आवश्यक है)", correct: true },
+                { e: "Use and Throw", h: "इस्तेमाल करो और फेंको", correct: false }
+            ],
+            expE: "Minimalism reduces the demand for new products, thereby reducing resource extraction and waste.",
+            expH: "मिनिमलिज़्म (न्यूनतमवाद) नए उत्पादों की मांग को कम करता है, जिससे संसाधन निष्कर्षण और अपशिष्ट कम होता है।"
+        },
+        {
+            qE: "An ethical approach that recognizes the rights of animals to be free from human cruelty is called:",
+            qH: "एक नैतिक दृष्टिकोण जो पशुओं को मानवीय क्रूरता से मुक्त रहने के अधिकारों को मान्यता देता है, क्या कहलाता है?",
+            options: [
+                { e: "Animal Rights / Animal Ethics", h: "पशु अधिकार / पशु नैतिकता", correct: true },
+                { e: "Human Rights", h: "मानवाधिकार", correct: false },
+                { e: "Industrial Ethics", h: "औद्योगिक नैतिकता", correct: false },
+                { e: "Machine Ethics", h: "मशीन नैतिकता", correct: false }
+            ],
+            expE: "Animal ethics is a branch of environmental ethics that advocates for the humane treatment of wildlife and farm animals.",
+            expH: "पशु नैतिकता पर्यावरण नैतिकता की एक शाखा है जो वन्यजीवों और खेत के जानवरों के मानवीय उपचार की वकालत करती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

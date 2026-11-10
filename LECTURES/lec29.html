@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 29 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 29: Disaster Management</h2>
+            <p>Phases, Causes, and Vulnerability</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is a 'Disaster'?",
+            qH: "'आपदा' (Disaster) क्या है?",
+            options: [
+                { e: "A minor traffic jam", h: "एक मामूली ट्रैफिक जाम", correct: false },
+                { e: "A sudden, catastrophic event that causes immense damage, loss of life, and disrupts the normal functioning of a community", h: "एक अचानक, विनाशकारी घटना जो भारी क्षति, जीवन की हानि का कारण बनती है और एक समुदाय के सामान्य कामकाज को बाधित करती है", correct: true },
+                { e: "A heavy rainfall on a Sunday", h: "रविवार को भारी बारिश", correct: false },
+                { e: "A power cut for 5 minutes", h: "5 मिनट के लिए बिजली कटौती", correct: false }
+            ],
+            expE: "A disaster is beyond the capacity of the affected community to cope with using its own resources.",
+            expH: "एक आपदा प्रभावित समुदाय की अपने संसाधनों का उपयोग करके सामना करने की क्षमता से परे होती है।"
+        },
+        {
+            qE: "Earthquakes, Tsunamis, and Cyclones are examples of:",
+            qH: "भूकंप, सुनामी और चक्रवात किसके उदाहरण हैं?",
+            options: [
+                { e: "Man-made Disasters", h: "मानव निर्मित आपदाएँ", correct: false },
+                { e: "Natural Disasters", h: "प्राकृतिक आपदाएँ (Natural Disasters)", correct: true },
+                { e: "Biological Disasters", h: "जैविक आपदाएँ", correct: false },
+                { e: "Chemical Disasters", h: "रासायनिक आपदाएँ", correct: false }
+            ],
+            expE: "These are extreme natural events that occur due to the earth's natural processes.",
+            expH: "ये अत्यधिक प्राकृतिक घटनाएँ हैं जो पृथ्वी की प्राकृतिक प्रक्रियाओं के कारण होती हैं।"
+        },
+        {
+            qE: "Which of the following is considered a 'Man-made Disaster'?",
+            qH: "निम्नलिखित में से किसे 'मानव निर्मित आपदा' (Man-made Disaster) माना जाता है?",
+            options: [
+                { e: "Volcanic Eruption", h: "ज्वालामुखी विस्फोट", correct: false },
+                { e: "Nuclear radiation leak", h: "परमाणु विकिरण रिसाव (Nuclear radiation leak)", correct: true },
+                { e: "Tornado", h: "बवंडर", correct: false },
+                { e: "Drought", h: "सूखा", correct: false }
+            ],
+            expE: "Industrial accidents, terrorism, and nuclear leaks are catastrophic events caused by human action or error.",
+            expH: "औद्योगिक दुर्घटनाएं, आतंकवाद और परमाणु रिसाव मानवीय कार्रवाई या त्रुटि के कारण होने वाली विनाशकारी घटनाएं हैं।"
+        },
+        {
+            qE: "The continuous cycle of planning, preparing, responding, and recovering from disasters is known as:",
+            qH: "आपदाओं की योजना बनाने, तैयारी करने, प्रतिक्रिया देने और उबरने के निरंतर चक्र को किस रूप में जाना जाता है?",
+            options: [
+                { e: "Disaster Management Cycle", h: "आपदा प्रबंधन चक्र (Disaster Management Cycle)", correct: true },
+                { e: "Weather Forecasting", h: "मौसम पूर्वानुमान", correct: false },
+                { e: "Environmental Assessment", h: "पर्यावरणीय मूल्यांकन", correct: false },
+                { e: "Urban Planning", h: "शहरी नियोजन", correct: false }
+            ],
+            expE: "It is an ongoing process by which governments and communities plan for and reduce the impact of disasters.",
+            expH: "यह एक सतत प्रक्रिया है जिसके द्वारा सरकारें और समुदाय आपदाओं के प्रभाव की योजना बनाते हैं और उन्हें कम करते हैं।"
+        },
+        {
+            qE: "Which phase of Disaster Management involves taking actions BEFORE a disaster strikes to reduce its impact (e.g., building earthquake-resistant houses)?",
+            qH: "आपदा प्रबंधन के किस चरण में आपदा के प्रभाव को कम करने के लिए उसके आने से पहले कार्रवाई करना शामिल है (जैसे, भूकंप-रोधी घर बनाना)?",
+            options: [
+                { e: "Response", h: "प्रतिक्रिया (Response)", correct: false },
+                { e: "Recovery", h: "पुनर्प्राप्ति (Recovery)", correct: false },
+                { e: "Mitigation", h: "न्यूनीकरण/शमन (Mitigation)", correct: true },
+                { e: "Rehabilitation", h: "पुनर्वास", correct: false }
+            ],
+            expE: "Mitigation focuses on long-term measures to prevent hazards from developing into disasters altogether or to reduce the effects of disasters.",
+            expH: "न्यूनीकरण (Mitigation) खतरों को पूरी तरह से आपदाओं में विकसित होने से रोकने या आपदाओं के प्रभावों को कम करने के लिए दीर्घकालिक उपायों पर केंद्रित है।"
+        },
+        {
+            qE: "Conducting mock drills, stocking up emergency food supplies, and having an evacuation plan falls under which phase?",
+            qH: "मॉक ड्रिल आयोजित करना, आपातकालीन भोजन की आपूर्ति का भंडारण करना और निकासी (evacuation) योजना बनाना किस चरण के अंतर्गत आता है?",
+            options: [
+                { e: "Preparedness", h: "तैयारी (Preparedness)", correct: true },
+                { e: "Recovery", h: "पुनर्प्राप्ति", correct: false },
+                { e: "Reconstruction", h: "पुनर्निर्माण", correct: false },
+                { e: "Mitigation", h: "न्यूनीकरण", correct: false }
+            ],
+            expE: "Preparedness ensures that communities and authorities are ready to act quickly and efficiently when a disaster hits.",
+            expH: "तैयारी (Preparedness) यह सुनिश्चित करती है कि समुदाय और अधिकारी आपदा आने पर त्वरित और कुशलता से कार्य करने के लिए तैयार रहें।"
+        },
+        {
+            qE: "Search and rescue operations, providing first aid, and distributing food immediately AFTER a disaster happens is part of:",
+            qH: "आपदा आने के तुरंत बाद (AFTER) खोज और बचाव अभियान, प्राथमिक चिकित्सा प्रदान करना और भोजन वितरित करना किसका हिस्सा है?",
+            options: [
+                { e: "Mitigation", h: "न्यूनीकरण", correct: false },
+                { e: "Response", h: "प्रतिक्रिया (Response)", correct: true },
+                { e: "Preparedness", h: "तैयारी", correct: false },
+                { e: "Prevention", h: "निवारण", correct: false }
+            ],
+            expE: "The 'Response' phase focuses on immediate, life-saving actions taken right after the disaster occurs.",
+            expH: "'प्रतिक्रिया' (Response) चरण आपदा के तुरंत बाद की जाने वाली तत्काल, जीवन रक्षक कार्रवाइयों पर केंद्रित है।"
+        },
+        {
+            qE: "Rebuilding destroyed infrastructure, restoring power, and helping people return to normal life takes place during the ________ phase.",
+            qH: "नष्ट हुए बुनियादी ढांचे का पुनर्निर्माण, बिजली बहाल करना और लोगों को सामान्य जीवन में लौटने में मदद करना ________ चरण के दौरान होता है।",
+            options: [
+                { e: "Response", h: "प्रतिक्रिया", correct: false },
+                { e: "Mitigation", h: "न्यूनीकरण", correct: false },
+                { e: "Recovery", h: "पुनर्प्राप्ति/बहाली (Recovery)", correct: true },
+                { e: "Preparedness", h: "तैयारी", correct: false }
+            ],
+            expE: "Recovery (and rehabilitation) is a long-term process to restore the affected area to its previous or better state.",
+            expH: "पुनर्प्राप्ति (और पुनर्वास) प्रभावित क्षेत्र को उसकी पिछली या बेहतर स्थिति में बहाल करने की एक दीर्घकालिक प्रक्रिया है।"
+        },
+        {
+            qE: "What does 'Vulnerability' mean in the context of disasters?",
+            qH: "आपदाओं के संदर्भ में 'भेद्यता' (Vulnerability) का क्या अर्थ है?",
+            options: [
+                { e: "The strength of a building", h: "एक इमारत की ताकत", correct: false },
+                { e: "The characteristics of a community or system that make it susceptible to the damaging effects of a hazard", h: "किसी समुदाय या प्रणाली की वे विशेषताएं जो उसे किसी खतरे के हानिकारक प्रभावों के प्रति संवेदनशील (susceptible) बनाती हैं", correct: true },
+                { e: "The speed of a tsunami", h: "सुनामी की गति", correct: false },
+                { e: "The amount of rainfall", h: "वर्षा की मात्रा", correct: false }
+            ],
+            expE: "Vulnerability depends on factors like poverty, poor housing, and lack of warning systems. E.g., a slum is more vulnerable to earthquakes than a well-built society.",
+            expH: "भेद्यता गरीबी, खराब आवास और चेतावनी प्रणालियों की कमी जैसे कारकों पर निर्भर करती है। उदाहरण के लिए, अच्छी तरह से निर्मित समाज की तुलना में मलिन बस्ती (slum) भूकंप के प्रति अधिक संवेदनशील होती है।"
+        },
+        {
+            qE: "A natural event (like a heavy rainstorm) only becomes a 'Disaster' when it:",
+            qH: "एक प्राकृतिक घटना (जैसे भारी बारिश) 'आपदा' तभी बनती है जब यह:",
+            options: [
+                { e: "Happens at night", h: "रात में होती है", correct: false },
+                { e: "Strikes a vulnerable human population causing significant damage and loss", h: "एक संवेदनशील मानव आबादी पर हमला करती है जिससे महत्वपूर्ण क्षति और नुकसान होता है", correct: true },
+                { e: "Is shown on television", h: "टेलीविजन पर दिखाई जाती है", correct: false },
+                { e: "Happens in the ocean with no ships around", h: "समुद्र में होती है जहां आसपास कोई जहाज न हो", correct: false }
+            ],
+            expE: "An earthquake in an empty desert is just a hazard. It becomes a disaster when it hits a city and destroys lives.",
+            expH: "खाली रेगिस्तान में भूकंप सिर्फ एक खतरा है। यह तब आपदा बन जाता है जब यह किसी शहर से टकराता है और जीवन को नष्ट कर देता है।"
+        },
+        {
+            qE: "In India, which nodal agency is apex at the national level for Disaster Management?",
+            qH: "भारत में, आपदा प्रबंधन के लिए राष्ट्रीय स्तर पर कौन सी नोडल एजेंसी शीर्ष पर है?",
+            options: [
+                { e: "National Disaster Management Authority (NDMA)", h: "राष्ट्रीय आपदा प्रबंधन प्राधिकरण (NDMA)", correct: true },
+                { e: "Indian Army", h: "भारतीय सेना", correct: false },
+                { e: "Ministry of Finance", h: "वित्त मंत्रालय", correct: false },
+                { e: "Central Pollution Control Board", h: "केंद्रीय प्रदूषण नियंत्रण बोर्ड", correct: false }
+            ],
+            expE: "The NDMA, headed by the Prime Minister of India, is the apex body for disaster management in the country.",
+            expH: "भारत के प्रधान मंत्री की अध्यक्षता में NDMA देश में आपदा प्रबंधन के लिए शीर्ष निकाय है।"
+        },
+        {
+            qE: "Which specialized force in India is specifically trained and equipped to respond to natural and man-made disasters?",
+            qH: "भारत में किस विशेष बल को विशेष रूप से प्राकृतिक और मानव निर्मित आपदाओं का जवाब देने के लिए प्रशिक्षित और सुसज्जित किया गया है?",
+            options: [
+                { e: "Border Security Force (BSF)", h: "सीमा सुरक्षा बल (BSF)", correct: false },
+                { e: "National Disaster Response Force (NDRF)", h: "राष्ट्रीय आपदा प्रतिक्रिया बल (NDRF)", correct: true },
+                { e: "Central Reserve Police Force (CRPF)", h: "केंद्रीय रिजर्व पुलिस बल (CRPF)", correct: false },
+                { e: "Indian Navy", h: "भारतीय नौसेना", correct: false }
+            ],
+            expE: "The NDRF is a specialized force constituted for the purpose of specialist response to a threatening disaster situation or disaster.",
+            expH: "NDRF एक विशेष बल है जिसका गठन किसी खतरनाक आपदा स्थिति या आपदा के लिए विशेषज्ञ प्रतिक्रिया के उद्देश्य से किया गया है।"
+        },
+        {
+            qE: "What is an 'Early Warning System'?",
+            qH: "'प्रारंभिक चेतावनी प्रणाली' (Early Warning System) क्या है?",
+            options: [
+                { e: "An alarm clock that wakes you up early", h: "एक अलार्म घड़ी जो आपको जल्दी जगाती है", correct: false },
+                { e: "A technological system used to detect incoming hazards (like Tsunamis or Cyclones) and alert the public in advance", h: "एक तकनीकी प्रणाली जिसका उपयोग आने वाले खतरों (जैसे सुनामी या चक्रवात) का पता लगाने और जनता को पहले से सचेत करने के लिए किया जाता है", correct: true },
+                { e: "A system to detect fire in a single building", h: "एक ही इमारत में आग का पता लगाने की व्यवस्था", correct: false },
+                { e: "A traffic light system", h: "एक ट्रैफिक लाइट प्रणाली", correct: false }
+            ],
+            expE: "Early warning systems give people critical time to evacuate, significantly reducing the loss of life.",
+            expH: "प्रारंभिक चेतावनी प्रणालियां लोगों को निकालने (evacuate) के लिए महत्वपूर्ण समय देती हैं, जिससे जीवन की हानि काफी कम हो जाती है।"
+        },
+        {
+            qE: "Which of the following human activities increases the VULNERABILITY of an area to floods?",
+            qH: "निम्नलिखित में से कौन सी मानवीय गतिविधि किसी क्षेत्र के बाढ़ के प्रति भेद्यता (Vulnerability) को बढ़ाती है?",
+            options: [
+                { e: "Deforestation and blocking natural drainage with concrete construction", h: "वनों की कटाई और कंक्रीट निर्माण के साथ प्राकृतिक जल निकासी को अवरुद्ध करना", correct: true },
+                { e: "Planting lots of trees", h: "खूब पेड़ लगाना", correct: false },
+                { e: "Building early warning systems", h: "प्रारंभिक चेतावनी प्रणाली का निर्माण", correct: false },
+                { e: "Using solar panels", h: "सौर पैनलों का उपयोग करना", correct: false }
+            ],
+            expE: "Trees absorb water, and natural drains carry it away. Removing them means the water has nowhere to go but into streets and homes.",
+            expH: "पेड़ पानी सोखते हैं, और प्राकृतिक नालियां इसे बहा ले जाती हैं। उन्हें हटाने का मतलब है कि पानी के पास जाने के लिए सड़कों और घरों के अलावा कोई जगह नहीं है।"
+        },
+        {
+            qE: "A 'Seismograph' is a device used to measure and record the intensity of:",
+            qH: "'सिस्मोग्राफ' (Seismograph) एक उपकरण है जिसका उपयोग किसकी तीव्रता को मापने और रिकॉर्ड करने के लिए किया जाता है?",
+            options: [
+                { e: "Cyclones", h: "चक्रवात", correct: false },
+                { e: "Tsunamis", h: "सुनामी", correct: false },
+                { e: "Earthquakes", h: "भूकंप (Earthquakes)", correct: true },
+                { e: "Volcanoes", h: "ज्वालामुखी", correct: false }
+            ],
+            expE: "Seismographs help scientists understand the strength and epicenter of an earthquake, aiding in immediate disaster response.",
+            expH: "सिस्मोग्राफ वैज्ञानिकों को भूकंप की ताकत और उपरिकेंद्र (epicenter) को समझने में मदद करते हैं, जिससे तत्काल आपदा प्रतिक्रिया में सहायता मिलती है।"
+        },
+        {
+            qE: "What does 'Capacity Building' mean in Disaster Management?",
+            qH: "आपदा प्रबंधन में 'क्षमता निर्माण' (Capacity Building) का क्या अर्थ है?",
+            options: [
+                { e: "Building taller buildings", h: "ऊंची इमारतें बनाना", correct: false },
+                { e: "Enhancing the skills, resources, and knowledge of communities and organizations to effectively handle disasters", h: "आपदाओं से प्रभावी ढंग से निपटने के लिए समुदायों और संगठनों के कौशल, संसाधनों और ज्ञान को बढ़ाना", correct: true },
+                { e: "Increasing the capacity of a water tank", h: "पानी की टंकी की क्षमता बढ़ाना", correct: false },
+                { e: "Storing more weapons", h: "अधिक हथियार जमा करना", correct: false }
+            ],
+            expE: "Training local citizens in first aid and emergency rescue (Capacity Building) ensures immediate help is available before NDRF arrives.",
+            expH: "स्थानीय नागरिकों को प्राथमिक चिकित्सा और आपातकालीन बचाव (क्षमता निर्माण) में प्रशिक्षित करना यह सुनिश्चित करता है कि NDRF के आने से पहले तत्काल सहायता उपलब्ध हो।"
+        },
+        {
+            qE: "Which phenomenon, often triggered by an underwater earthquake, causes massive destructive ocean waves?",
+            qH: "अक्सर पानी के नीचे भूकंप के कारण होने वाली कौन सी घटना बड़े पैमाने पर विनाशकारी समुद्री लहरों का कारण बनती है?",
+            options: [
+                { e: "Tornado", h: "बवंडर", correct: false },
+                { e: "Drought", h: "सूखा", correct: false },
+                { e: "Tsunami", h: "सुनामी (Tsunami)", correct: true },
+                { e: "Landslide", h: "भूस्खलन", correct: false }
+            ],
+            expE: "Tsunamis can travel across oceans at high speeds and devastate coastal areas, as seen in the 2004 Indian Ocean Tsunami.",
+            expH: "सुनामी उच्च गति से महासागरों में यात्रा कर सकती है और तटीय क्षेत्रों को तबाह कर सकती है, जैसा कि 2004 की हिंद महासागर सुनामी में देखा गया था।"
+        },
+        {
+            qE: "Bhopal Gas Tragedy was an example of a/an:",
+            qH: "भोपाल गैस त्रासदी किसका एक उदाहरण थी:",
+            options: [
+                { e: "Natural Disaster", h: "प्राकृतिक आपदा", correct: false },
+                { e: "Industrial/Chemical Disaster", h: "औद्योगिक/रासायनिक आपदा", correct: true },
+                { e: "Biological Disaster", h: "जैविक आपदा", correct: false },
+                { e: "Nuclear Disaster", h: "परमाणु आपदा", correct: false }
+            ],
+            expE: "It involved the leak of highly toxic Methyl Isocyanate (MIC) gas from a pesticide plant, killing thousands.",
+            expH: "इसमें कीटनाशक संयंत्र से अत्यधिक विषैली मिथाइल आइसोसाइनेट (MIC) गैस का रिसाव शामिल था, जिससे हजारों लोग मारे गए।"
+        },
+        {
+            qE: "What is 'Zoning' in disaster mitigation?",
+            qH: "आपदा शमन (mitigation) में 'ज़ोनिंग' (Zoning) क्या है?",
+            options: [
+                { e: "Dividing a city for political elections", h: "राजनीतिक चुनावों के लिए एक शहर का विभाजन", correct: false },
+                { e: "Restricting building construction in high-risk areas (like floodplains or fault lines) to prevent damage", h: "क्षति को रोकने के लिए उच्च जोखिम वाले क्षेत्रों (जैसे बाढ़ के मैदानों या फॉल्ट लाइनों) में भवन निर्माण को प्रतिबंधित करना", correct: true },
+                { e: "Creating special economic zones", h: "विशेष आर्थिक क्षेत्र (SEZ) बनाना", correct: false },
+                { e: "Dividing schools into zones", h: "स्कूलों को जोन में बांटना", correct: false }
+            ],
+            expE: "Zoning laws are a key mitigation strategy. If people aren't allowed to build houses in a flood zone, they won't lose their homes during a flood.",
+            expH: "ज़ोनिंग कानून एक प्रमुख शमन (mitigation) रणनीति है। यदि लोगों को बाढ़ क्षेत्र में घर बनाने की अनुमति नहीं है, तो बाढ़ के दौरान वे अपना घर नहीं खोएंगे।"
+        },
+        {
+            qE: "For BCA/BBA students, how can Information Technology (IT) best assist in Disaster Management?",
+            qH: "BCA/BBA छात्रों के लिए, सूचना प्रौद्योगिकी (IT) आपदा प्रबंधन में सबसे अच्छी सहायता कैसे कर सकती है?",
+            options: [
+                { e: "By replacing physical doctors with robots", h: "शारीरिक डॉक्टरों को रोबोट से बदलकर", correct: false },
+                { e: "Through predictive data analytics, GIS mapping, Early Warning Apps, and coordinating rescue logistics", h: "प्रेडिक्टिव डेटा एनालिटिक्स, GIS मैपिंग, अर्ली वार्निंग ऐप्स और बचाव रसद (logistics) के समन्वय के माध्यम से", correct: true },
+                { e: "By ignoring natural disasters", h: "प्राकृतिक आपदाओं को नजरअंदाज करके", correct: false },
+                { e: "IT has no role in disaster management", h: "आपदा प्रबंधन में आईटी (IT) की कोई भूमिका नहीं है", correct: false }
+            ],
+            expE: "Modern disaster response heavily relies on IT for tracking storms (satellites), sending mass SMS alerts, and mapping affected areas dynamically.",
+            expH: "आधुनिक आपदा प्रतिक्रिया तूफान (उपग्रहों) पर नज़र रखने, बड़े पैमाने पर एसएमएस अलर्ट भेजने और प्रभावित क्षेत्रों को गतिशील रूप से मैप करने के लिए आईटी पर बहुत अधिक निर्भर करती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

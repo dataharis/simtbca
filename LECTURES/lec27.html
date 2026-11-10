@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 27 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 27: Solid Waste Management</h2>
+            <p>Causes, Effects, and the 3 R's Strategy</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is 'Solid Waste'?",
+            qH: "'ठोस अपशिष्ट' (Solid Waste) क्या है?",
+            options: [
+                { e: "Smoke from a factory chimney", h: "कारखाने की चिमनी से निकलने वाला धुआं", correct: false },
+                { e: "Any discarded, abandoned, or unwanted solid material", h: "कोई भी फेंका हुआ, छोड़ा गया या अवांछित ठोस पदार्थ", correct: true },
+                { e: "Dirty water flowing in a river", h: "नदी में बहता गंदा पानी", correct: false },
+                { e: "Sound from heavy machinery", h: "भारी मशीनरी की आवाज़", correct: false }
+            ],
+            expE: "Solid waste includes everything from household garbage and plastic wrappers to industrial sludge and broken electronics.",
+            expH: "ठोस अपशिष्ट में घरेलू कचरे और प्लास्टिक रैपर से लेकर औद्योगिक कीचड़ (sludge) और टूटे हुए इलेक्ट्रॉनिक्स तक सब कुछ शामिल है।"
+        },
+        {
+            qE: "Which of the following is considered 'Municipal Solid Waste' (MSW)?",
+            qH: "निम्नलिखित में से किसे 'नगरपालिका ठोस अपशिष्ट' (MSW) माना जाता है?",
+            options: [
+                { e: "Toxic chemicals from a chemical plant", h: "रासायनिक संयंत्र से विषैले रसायन", correct: false },
+                { e: "Radioactive waste from a nuclear power plant", h: "परमाणु ऊर्जा संयंत्र से रेडियोधर्मी कचरा", correct: false },
+                { e: "Everyday items thrown away by households and businesses (like food scraps, paper, and packaging)", h: "घरों और व्यवसायों द्वारा फेंकी गई रोजमर्रा की चीजें (जैसे बचा हुआ भोजन, कागज और पैकेजिंग)", correct: true },
+                { e: "Leftover coal from a mine", h: "खदान से बचा हुआ कोयला", correct: false }
+            ],
+            expE: "MSW is common city garbage collected by local authorities.",
+            expH: "MSW आम शहर का कचरा है जो स्थानीय अधिकारियों द्वारा एकत्र किया जाता है।"
+        },
+        {
+            qE: "What is the meaning of 'Biodegradable Waste'?",
+            qH: "'बायोडिग्रेडेबल वेस्ट' (Biodegradable Waste) का क्या अर्थ है?",
+            options: [
+                { e: "Waste that lasts forever without breaking down", h: "कचरा जो बिना टूटे हमेशा के लिए रहता है", correct: false },
+                { e: "Waste that can be broken down naturally by microorganisms (like bacteria and fungi)", h: "कचरा जिसे सूक्ष्मजीवों (जैसे बैक्टीरिया और कवक) द्वारा प्राकृतिक रूप से तोड़ा जा सकता है", correct: true },
+                { e: "Waste made entirely of plastic", h: "पूरी तरह से प्लास्टिक से बना कचरा", correct: false },
+                { e: "Waste that is highly radioactive", h: "अत्यधिक रेडियोधर्मी कचरा", correct: false }
+            ],
+            expE: "Things like food scraps, leaves, and paper are biodegradable. They decompose and return to nature.",
+            expH: "बचा हुआ भोजन, पत्तियां और कागज जैसी चीजें बायोडिग्रेडेबल हैं। वे विघटित होकर प्रकृति में लौट जाते हैं।"
+        },
+        {
+            qE: "Which of the following is a classic example of 'Non-biodegradable' waste?",
+            qH: "निम्नलिखित में से कौन 'गैर-बायोडिग्रेडेबल' (Non-biodegradable) कचरे का एक उत्कृष्ट उदाहरण है?",
+            options: [
+                { e: "Apple core", h: "सेब का बचा हुआ हिस्सा", correct: false },
+                { e: "Plastic water bottle", h: "प्लास्टिक की पानी की बोतल", correct: true },
+                { e: "Cotton shirt", h: "सूती कमीज़", correct: false },
+                { e: "Wooden chair", h: "लकड़ी की कुर्सी", correct: false }
+            ],
+            expE: "Plastic cannot be easily broken down by nature; it takes hundreds of years to degrade, creating massive pollution problems.",
+            expH: "प्लास्टिक को प्रकृति द्वारा आसानी से नहीं तोड़ा जा सकता; इसे ख़राब होने में सैकड़ों वर्ष लगते हैं, जिससे प्रदूषण की भारी समस्याएँ पैदा होती हैं।"
+        },
+        {
+            qE: "A major cause of the rapid increase in solid waste globally is:",
+            qH: "विश्व स्तर पर ठोस कचरे में तेजी से वृद्धि का एक प्रमुख कारण है:",
+            options: [
+                { e: "People reading more books", h: "लोगों का अधिक किताबें पढ़ना", correct: false },
+                { e: "Increase in wild animal populations", h: "जंगली जानवरों की आबादी में वृद्धि", correct: false },
+                { e: "Urbanization, population growth, and a 'throwaway' consumer culture", h: "शहरीकरण, जनसंख्या वृद्धि, और 'इस्तेमाल करो और फेंको' उपभोक्ता संस्कृति", correct: true },
+                { e: "A decrease in factory production", h: "कारखाने के उत्पादन में कमी", correct: false }
+            ],
+            expE: "As cities grow and people buy more single-use products, the amount of garbage generated per person skyrockets.",
+            expH: "जैसे-जैसे शहर बढ़ते हैं और लोग अधिक सिंगल-यूज़ उत्पाद खरीदते हैं, प्रति व्यक्ति उत्पन्न होने वाले कचरे की मात्रा आसमान छू जाती है।"
+        },
+        {
+            qE: "What is 'E-Waste' (Electronic Waste)?",
+            qH: "'ई-कचरा' (E-Waste - इलेक्ट्रॉनिक अपशिष्ट) क्या है?",
+            options: [
+                { e: "Spam emails in your inbox", h: "आपके इनबॉक्स में स्पैम ईमेल", correct: false },
+                { e: "Discarded electrical or electronic devices like old mobile phones, laptops, and TVs", h: "पुराने मोबाइल फोन, लैपटॉप और टीवी जैसे फेंके गए इलेक्ट्रिकल या इलेक्ट्रॉनिक उपकरण", correct: true },
+                { e: "Energy wasted by leaving lights on", h: "लाइट चालू छोड़ने से बर्बाद हुई ऊर्जा", correct: false },
+                { e: "Electric cars", h: "इलेक्ट्रिक कारें", correct: false }
+            ],
+            expE: "E-waste is one of the fastest-growing waste streams globally and contains hazardous heavy metals like lead.",
+            expH: "ई-कचरा विश्व स्तर पर सबसे तेजी से बढ़ने वाली अपशिष्ट धाराओं (waste streams) में से एक है और इसमें सीसा जैसी खतरनाक भारी धातुएँ शामिल हैं।"
+        },
+        {
+            qE: "Why is open dumping of solid waste (throwing garbage in open fields) dangerous?",
+            qH: "ठोस कचरे की खुली डंपिंग (खुले मैदानों में कचरा फेंकना) खतरनाक क्यों है?",
+            options: [
+                { e: "It attracts disease-carrying insects/rats and contaminates the soil and groundwater", h: "यह बीमारी फैलाने वाले कीड़ों/चूहों को आकर्षित करता है और मिट्टी तथा भूजल को दूषित करता है", correct: true },
+                { e: "It creates new forests automatically", h: "यह स्वचालित रूप से नए जंगल बनाता है", correct: false },
+                { e: "It gives food to birds, which is good", h: "यह पक्षियों को भोजन देता है, जो अच्छा है", correct: false },
+                { e: "It makes the land more fertile immediately", h: "यह तुरंत भूमि को अधिक उपजाऊ बनाता है", correct: false }
+            ],
+            expE: "Open dumps are breeding grounds for diseases like dengue and malaria, and their toxic runoff pollutes nearby water sources.",
+            expH: "खुले डंप (कूड़े के ढेर) डेंगू और मलेरिया जैसी बीमारियों के प्रजनन स्थल हैं, और उनका विषैला बहाव आस-पास के जल स्रोतों को प्रदूषित करता है।"
+        },
+        {
+            qE: "What is a 'Sanitary Landfill'?",
+            qH: "'सेनेटरी लैंडफिल' (Sanitary Landfill) क्या है?",
+            options: [
+                { e: "A normal open garbage dump", h: "एक सामान्य खुला कचरा डंप", correct: false },
+                { e: "An engineered pit in the ground, lined with protective layers (like clay or plastic) to prevent waste from polluting the groundwater", h: "जमीन में एक इंजीनियर गड्ढा, जो कचरे को भूजल प्रदूषित करने से रोकने के लिए सुरक्षात्मक परतों (जैसे मिट्टी या प्लास्टिक) से ढका होता है", correct: true },
+                { e: "A place where only hospital waste is thrown", h: "वह स्थान जहाँ केवल अस्पताल का कचरा फेंका जाता है", correct: false },
+                { e: "A factory that burns garbage", h: "कचरा जलाने वाली फैक्ट्री", correct: false }
+            ],
+            expE: "Unlike open dumps, sanitary landfills isolate waste safely from the surrounding environment.",
+            expH: "खुले डंप के विपरीत, सेनेटरी लैंडफिल कचरे को आसपास के वातावरण से सुरक्षित रूप से अलग करते हैं।"
+        },
+        {
+            qE: "The toxic liquid that drains or 'leaches' from a landfill and can pollute groundwater is called:",
+            qH: "वह विषैला तरल जो लैंडफिल से निकलता या 'रिसता' (leaches) है और भूजल को प्रदूषित कर सकता है, क्या कहलाता है?",
+            options: [
+                { e: "Compost", h: "खाद (Compost)", correct: false },
+                { e: "Rainwater", h: "वर्षा जल", correct: false },
+                { e: "Leachate", h: "लीचेट (Leachate)", correct: true },
+                { e: "Sludge", h: "कीचड़ (Sludge)", correct: false }
+            ],
+            expE: "Leachate is a highly polluted liquid formed when rainwater mixes with decomposing garbage. Sanitary landfills have pipes to collect it safely.",
+            expH: "लीचेट एक अत्यधिक प्रदूषित तरल है जो बारिश के पानी के सड़ते हुए कचरे में मिलने पर बनता है। सेनेटरी लैंडफिल में इसे सुरक्षित रूप से इकट्ठा करने के लिए पाइप होते हैं।"
+        },
+        {
+            qE: "Which gas is primarily produced by rotting organic garbage inside a landfill?",
+            qH: "लैंडफिल के अंदर सड़ने वाले जैविक कचरे से मुख्य रूप से कौन सी गैस उत्पन्न होती है?",
+            options: [
+                { e: "Oxygen", h: "ऑक्सीजन", correct: false },
+                { e: "Methane (a potent greenhouse gas)", h: "मीथेन (एक शक्तिशाली ग्रीनहाउस गैस)", correct: true },
+                { e: "Nitrogen", h: "नाइट्रोजन", correct: false },
+                { e: "Helium", h: "हीलियम", correct: false }
+            ],
+            expE: "Methane is highly flammable and contributes significantly to global warming if it escapes into the atmosphere.",
+            expH: "मीथेन अत्यधिक ज्वलनशील है और यदि यह वायुमंडल में बच निकलती है तो ग्लोबल वार्मिंग में महत्वपूर्ण योगदान देती है।"
+        },
+        {
+            qE: "What is 'Incineration' in waste management?",
+            qH: "अपशिष्ट प्रबंधन में 'इंसिनरेशन' (Incineration / भस्मीकरण) क्या है?",
+            options: [
+                { e: "Burying waste underground", h: "कचरे को जमीन के नीचे गाड़ना", correct: false },
+                { e: "Burning solid waste at very high temperatures to reduce its volume and sometimes generate electricity", h: "ठोस कचरे की मात्रा कम करने और कभी-कभी बिजली पैदा करने के लिए उसे बहुत उच्च तापमान पर जलाना", correct: true },
+                { e: "Throwing waste in the ocean", h: "कचरे को समुद्र में फेंकना", correct: false },
+                { e: "Turning food waste into fertilizer naturally", h: "खाद्य अपशिष्ट को प्राकृतिक रूप से उर्वरक में बदलना", correct: false }
+            ],
+            expE: "Incineration reduces waste volume by up to 90%, but it must be done with strict air filters to prevent toxic smoke (air pollution).",
+            expH: "भस्मीकरण (Incineration) कचरे की मात्रा को 90% तक कम कर देता है, लेकिन जहरीले धुएं (वायु प्रदूषण) को रोकने के लिए इसे सख्त एयर फिल्टर के साथ किया जाना चाहिए।"
+        },
+        {
+            qE: "The process of converting organic waste (like vegetable peels and dry leaves) into nutrient-rich soil/fertilizer is called:",
+            qH: "जैविक कचरे (जैसे सब्जियों के छिलके और सूखी पत्तियां) को पोषक तत्वों से भरपूर मिट्टी/उर्वरक में बदलने की प्रक्रिया क्या कहलाती है?",
+            options: [
+                { e: "Composting", h: "कम्पोस्टिंग (Composting)", correct: true },
+                { e: "Incineration", h: "भस्मीकरण", correct: false },
+                { e: "Landfilling", h: "लैंडफिलिंग", correct: false },
+                { e: "Recycling of plastics", h: "प्लास्टिक का पुनर्चक्रण", correct: false }
+            ],
+            expE: "Composting is a natural biological process where microorganisms break down organic waste into 'compost', a great natural fertilizer.",
+            expH: "कम्पोस्टिंग एक प्राकृतिक जैविक प्रक्रिया है जहां सूक्ष्मजीव जैविक कचरे को 'खाद' में तोड़ देते हैं, जो एक बेहतरीन प्राकृतिक उर्वरक है।"
+        },
+        {
+            qE: "What is the fundamental strategy for effective waste management known as the '3 R's'?",
+            qH: "प्रभावी अपशिष्ट प्रबंधन के लिए '3 R' के नाम से जानी जाने वाली मौलिक रणनीति क्या है?",
+            options: [
+                { e: "Read, Run, Rest", h: "रीड, रन, रेस्ट", correct: false },
+                { e: "Reduce, Reuse, Recycle", h: "रिड्यूस, रीयूज, रीसायकल (कम करें, पुन: उपयोग करें, पुनर्चक्रण करें)", correct: true },
+                { e: "Remove, Rebuild, Retain", h: "रिमूव, रीबिल्ड, रिटेन", correct: false },
+                { e: "Repair, Replace, Reject", h: "रिपेयर, रिप्लेस, रिजेक्ट", correct: false }
+            ],
+            expE: "These three steps prioritize minimizing waste before deciding what to do with the leftover garbage.",
+            expH: "ये तीन कदम बचे हुए कचरे का क्या करना है, यह तय करने से पहले कचरे को कम करने को प्राथमिकता देते हैं।"
+        },
+        {
+            qE: "Which of the 3 R's is considered the most effective way to manage waste?",
+            qH: "कचरे के प्रबंधन के लिए 3 R में से किसे सबसे प्रभावी तरीका माना जाता है?",
+            options: [
+                { e: "Recycle (breaking items down to make new ones)", h: "रीसायकल (नई वस्तुएं बनाने के लिए पुरानी वस्तुओं को तोड़ना)", correct: false },
+                { e: "Reuse (using items again)", h: "रीयूज (वस्तुओं का दोबारा उपयोग करना)", correct: false },
+                { e: "Reduce (preventing waste from being created in the first place)", h: "रिड्यूस (कचरे को सबसे पहले पैदा होने से रोकना)", correct: true },
+                { e: "They are all exactly equal", h: "वे सभी बिल्कुल समान हैं", correct: false }
+            ],
+            expE: "Source reduction (Reduce) is the best because if you don't create the waste (e.g., bringing your own bag to the store), you don't have to manage it.",
+            expH: "स्रोत में कमी (Reduce) सबसे अच्छी है क्योंकि यदि आप कचरा पैदा नहीं करते हैं (जैसे, स्टोर में अपना खुद का बैग लाना), तो आपको इसका प्रबंधन नहीं करना पड़ेगा।"
+        },
+        {
+            qE: "Using an old glass jam jar to store spices in the kitchen is an example of:",
+            qH: "किचन में मसाले रखने के लिए कांच के पुराने जैम जार का इस्तेमाल करना किसका उदाहरण है?",
+            options: [
+                { e: "Reducing", h: "कम करना (Reducing)", correct: false },
+                { e: "Reusing", h: "पुन: उपयोग (Reusing)", correct: true },
+                { e: "Recycling", h: "पुनर्चक्रण (Recycling)", correct: false },
+                { e: "Refusing", h: "अस्वीकार करना (Refusing)", correct: false }
+            ],
+            expE: "Reuse means using an object again for the same or a different purpose without changing its form.",
+            expH: "पुन: उपयोग का अर्थ है किसी वस्तु का रूप बदले बिना उसे उसी या भिन्न उद्देश्य के लिए फिर से उपयोग करना।"
+        },
+        {
+            qE: "Taking old newspapers, breaking them down into paper pulp, and manufacturing new cardboard boxes is an example of:",
+            qH: "पुराने अख़बारों को ले जाना, उन्हें पेपर पल्प में तोड़ना और नए कार्डबोर्ड बॉक्स (गत्ते के डिब्बे) बनाना किसका उदाहरण है?",
+            options: [
+                { e: "Reducing", h: "कम करना", correct: false },
+                { e: "Reusing", h: "पुन: उपयोग", correct: false },
+                { e: "Recycling", h: "पुनर्चक्रण (Recycling)", correct: true },
+                { e: "Incineration", h: "भस्मीकरण", correct: false }
+            ],
+            expE: "Recycling involves processing used materials to create new, raw materials or products.",
+            expH: "रीसाइक्लिंग में नए, कच्चे माल या उत्पाद बनाने के लिए प्रयुक्त सामग्रियों को संसाधित करना शामिल है।"
+        },
+        {
+            qE: "Why is 'Waste Segregation' (separating dry/plastic waste from wet/organic waste) at home important?",
+            qH: "घर पर 'अपशिष्ट पृथक्करण' (सूखे/प्लास्टिक कचरे को गीले/जैविक कचरे से अलग करना) क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because mixed garbage cannot be easily recycled or composted", h: "क्योंकि मिश्रित कचरे को आसानी से रीसायकल या खाद नहीं बनाया जा सकता है", correct: true },
+                { e: "Just to give the garbage collectors more work", h: "बस कचरा उठाने वालों को अधिक काम देने के लिए", correct: false },
+                { e: "Because plastic gets angry if mixed with food", h: "क्योंकि खाने में मिला देने से प्लास्टिक गुस्सा हो जाता है", correct: false },
+                { e: "It is not important at all", h: "यह बिल्कुल भी महत्वपूर्ण नहीं है", correct: false }
+            ],
+            expE: "If wet food ruins paper or plastic, those materials can no longer be recycled and must go to a landfill.",
+            expH: "यदि गीला भोजन कागज या प्लास्टिक को खराब कर देता है, तो उन सामग्रियों को पुनर्चक्रित नहीं किया जा सकता है और उन्हें लैंडफिल में जाना होगा।"
+        },
+        {
+            qE: "In solid waste management, what is a 'Transfer Station'?",
+            qH: "ठोस अपशिष्ट प्रबंधन में 'ट्रांसफर स्टेशन' (Transfer Station) क्या है?",
+            options: [
+                { e: "A train station for people", h: "लोगों के लिए एक रेलवे स्टेशन", correct: false },
+                { e: "A temporary facility where local collection trucks empty their garbage to be loaded onto larger vehicles for transport to a distant landfill", h: "एक अस्थायी सुविधा जहां स्थानीय संग्रह ट्रक अपने कचरे को दूर के लैंडफिल तक ले जाने के लिए बड़े वाहनों पर लादने के लिए खाली करते हैं", correct: true },
+                { e: "A place where garbage is permanently buried", h: "वह स्थान जहाँ कचरा स्थायी रूप से गाड़ दिया जाता है", correct: false },
+                { e: "A factory that makes plastic bags", h: "प्लास्टिक बैग बनाने वाली फैक्ट्री", correct: false }
+            ],
+            expE: "Transfer stations make garbage collection more efficient and save fuel by reducing the number of small trucks driving to the landfill.",
+            expH: "ट्रांसफर स्टेशन कचरा संग्रहण को अधिक कुशल बनाते हैं और लैंडफिल में जाने वाले छोटे ट्रकों की संख्या कम करके ईंधन बचाते हैं।"
+        },
+        {
+            qE: "Hospital waste (like used syringes, bandages, and expired medicines) is categorized as:",
+            qH: "अस्पताल के कचरे (जैसे इस्तेमाल की गई सिरिंज, पट्टियाँ और एक्सपायर हो चुकी दवाएं) को किस रूप में वर्गीकृत किया गया है?",
+            options: [
+                { e: "General Municipal Waste", h: "सामान्य नगरपालिका अपशिष्ट", correct: false },
+                { e: "Bio-medical (Hazardous) Waste", h: "जैव-चिकित्सा (खतरनाक) अपशिष्ट / Bio-medical Waste", correct: true },
+                { e: "E-Waste", h: "ई-कचरा", correct: false },
+                { e: "Agricultural Waste", h: "कृषि अपशिष्ट", correct: false }
+            ],
+            expE: "Bio-medical waste is highly infectious and must be handled and disposed of (usually via incineration) separately from normal garbage.",
+            expH: "जैव-चिकित्सा अपशिष्ट अत्यधिक संक्रामक है और इसे सामान्य कचरे से अलग से प्रबंधित और निपटाया जाना चाहिए (आमतौर पर भस्मीकरण के माध्यम से)।"
+        },
+        {
+            qE: "How can BBA/BCA professionals best contribute to reducing E-Waste?",
+            qH: "BBA/BCA पेशेवर ई-कचरे (E-Waste) को कम करने में सबसे अच्छा योगदान कैसे दे सकते हैं?",
+            options: [
+                { e: "By throwing old laptops in the nearest river", h: "पुराने लैपटॉप को नजदीकी नदी में फेंक कर", correct: false },
+                { e: "By keeping old phones in their drawers forever", h: "पुराने फोन को हमेशा अपने ड्रावर (दराज) में रखकर", correct: false },
+                { e: "By designing durable software, extending device lifespans, and ensuring IT hardware is given to authorized e-waste recyclers", h: "टिकाऊ सॉफ्टवेयर डिजाइन करके, डिवाइस के जीवनकाल को बढ़ाकर, और यह सुनिश्चित करके कि आईटी हार्डवेयर अधिकृत ई-कचरा रीसाइक्लर्स को दिया जाए", correct: true },
+                { e: "By burning broken keyboards in the office parking lot", h: "कार्यालय की पार्किंग में टूटे हुए कीबोर्ड जलाकर", correct: false }
+            ],
+            expE: "Proper corporate disposal policies ensure toxic metals from electronics don't pollute the environment.",
+            expH: "उचित कॉर्पोरेट निपटान नीतियां यह सुनिश्चित करती हैं कि इलेक्ट्रॉनिक्स से निकलने वाली जहरीली धातुएं पर्यावरण को प्रदूषित न करें।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

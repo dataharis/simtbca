@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 11 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 11: Natural Ecosystems</h2>
+            <p>Structure, Functions, and Ecological Characteristics</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is an Ecosystem?",
+            qH: "पारिस्थितिकी तंत्र (Ecosystem) क्या है?",
+            options: [
+                { e: "A place where only animals live", h: "वह स्थान जहाँ केवल जानवर रहते हैं", correct: false },
+                { e: "A biological community of interacting organisms and their physical environment", h: "परस्पर क्रिया करने वाले जीवों और उनके भौतिक पर्यावरण का एक जैविक समुदाय", correct: true },
+                { e: "A large city with tall buildings", h: "ऊंची इमारतों वाला एक बड़ा शहर", correct: false },
+                { e: "Only the non-living parts of nature", h: "प्रकृति के केवल निर्जीव अंग", correct: false }
+            ],
+            expE: "An ecosystem includes all living things (plants, animals, organisms) interacting with each other and their non-living environments (weather, earth, sun, soil).",
+            expH: "एक पारिस्थितिकी तंत्र में एक दूसरे और उनके निर्जीव वातावरण (मौसम, पृथ्वी, सूर्य, मिट्टी) के साथ बातचीत करने वाली सभी जीवित चीजें (पौधे, जानवर, जीव) शामिल हैं।"
+        },
+        {
+            qE: "Who coined the term 'Ecosystem' in 1935?",
+            qH: "1935 में 'पारिस्थितिकी तंत्र' (Ecosystem) शब्द किसने गढ़ा था?",
+            options: [
+                { e: "Charles Darwin", h: "चार्ल्स डार्विन", correct: false },
+                { e: "Albert Einstein", h: "अल्बर्ट आइंस्टीन", correct: false },
+                { e: "A.G. Tansley", h: "ए.जी. टैन्सले", correct: true },
+                { e: "Gregor Mendel", h: "ग्रेगर मेंडल", correct: false }
+            ],
+            expE: "Arthur Roy Clapham first proposed it, but British ecologist Arthur Tansley fully developed and popularized the concept in 1935.",
+            expH: "आर्थर रॉय क्लैफम ने पहली बार इसका प्रस्ताव रखा था, लेकिन ब्रिटिश पारिस्थितिकीविद् आर्थर टैन्सले ने 1935 में इस अवधारणा को पूरी तरह से विकसित और लोकप्रिय बनाया।"
+        },
+        {
+            qE: "What are the two main components of an ecosystem?",
+            qH: "पारिस्थितिकी तंत्र के दो मुख्य घटक क्या हैं?",
+            options: [
+                { e: "Plants and Animals", h: "पौधे और जानवर", correct: false },
+                { e: "Biotic and Abiotic components", h: "जैविक (Biotic) और अजैविक (Abiotic) घटक", correct: true },
+                { e: "Water and Soil", h: "पानी और मिट्टी", correct: false },
+                { e: "Air and Light", h: "हवा और प्रकाश", correct: false }
+            ],
+            expE: "Biotic refers to living things (plants, animals), while Abiotic refers to non-living things (sunlight, water, minerals).",
+            expH: "जैविक (Biotic) का तात्पर्य जीवित चीजों (पौधों, जानवरों) से है, जबकि अजैविक (Abiotic) का तात्पर्य निर्जीव चीजों (सूर्य के प्रकाश, पानी, खनिजों) से है।"
+        },
+        {
+            qE: "Organisms that can make their own food using sunlight are called:",
+            qH: "सूर्य के प्रकाश का उपयोग करके अपना भोजन स्वयं बनाने वाले जीव क्या कहलाते हैं?",
+            options: [
+                { e: "Consumers (Heterotrophs)", h: "उपभोक्ता (हेटेरोट्रॉफ़्स)", correct: false },
+                { e: "Producers (Autotrophs)", h: "उत्पादक (ऑटोट्रॉफ़्स)", correct: true },
+                { e: "Decomposers", h: "अपघटक (Decomposers)", correct: false },
+                { e: "Scavengers", h: "स्कैवेंजर्स (सफाईकर्मी)", correct: false }
+            ],
+            expE: "Green plants, algae, and some bacteria are producers because they produce their own food through photosynthesis.",
+            expH: "हरे पौधे, शैवाल और कुछ बैक्टीरिया उत्पादक हैं क्योंकि वे प्रकाश संश्लेषण के माध्यम से अपना भोजन स्वयं बनाते हैं।"
+        },
+        {
+            qE: "Which of the following is a classic example of a Producer?",
+            qH: "निम्नलिखित में से कौन उत्पादक (Producer) का एक उत्कृष्ट उदाहरण है?",
+            options: [
+                { e: "Lion", h: "शेर", correct: false },
+                { e: "Mushroom", h: "मशरूम", correct: false },
+                { e: "Green Grass", h: "हरी घास", correct: true },
+                { e: "Human", h: "मनुष्य", correct: false }
+            ],
+            expE: "Green grass uses solar energy to make food, forming the base of the food chain.",
+            expH: "हरी घास भोजन बनाने के लिए सौर ऊर्जा का उपयोग करती है, जिससे खाद्य श्रृंखला का आधार बनता है।"
+        },
+        {
+            qE: "Organisms that cannot make their own food and depend on others for energy are called:",
+            qH: "वे जीव जो अपना भोजन स्वयं नहीं बना सकते और ऊर्जा के लिए दूसरों पर निर्भर रहते हैं, कहलाते हैं:",
+            options: [
+                { e: "Consumers (Heterotrophs)", h: "उपभोक्ता (Heterotrophs)", correct: true },
+                { e: "Producers (Autotrophs)", h: "उत्पादक (Autotrophs)", correct: false },
+                { e: "Minerals", h: "खनिज", correct: false },
+                { e: "Abiotic factors", h: "अजैविक कारक", correct: false }
+            ],
+            expE: "Animals, including humans, are consumers because they must consume plants or other animals to survive.",
+            expH: "मनुष्यों सहित जानवर उपभोक्ता हैं क्योंकि जीवित रहने के लिए उन्हें पौधों या अन्य जानवरों का उपभोग करना चाहिए।"
+        },
+        {
+            qE: "Animals that eat only plants (herbivores) are known as:",
+            qH: "वे जानवर जो केवल पौधे खाते हैं (शाकाहारी) किस रूप में जाने जाते हैं?",
+            options: [
+                { e: "Secondary Consumers", h: "द्वितीयक उपभोक्ता", correct: false },
+                { e: "Tertiary Consumers", h: "तृतीयक उपभोक्ता", correct: false },
+                { e: "Primary Consumers", h: "प्राथमिक उपभोक्ता", correct: true },
+                { e: "Decomposers", h: "अपघटक", correct: false }
+            ],
+            expE: "Primary consumers (like rabbits, cows, or deer) are the first level of consumers in a food chain, eating producers directly.",
+            expH: "प्राथमिक उपभोक्ता (जैसे खरगोश, गाय या हिरण) खाद्य श्रृंखला में उपभोक्ताओं का पहला स्तर हैं, जो सीधे उत्पादकों को खाते हैं।"
+        },
+        {
+            qE: "Which of the following organisms represents a 'Decomposer'?",
+            qH: "निम्नलिखित में से कौन सा जीव 'अपघटक' (Decomposer) का प्रतिनिधित्व करता है?",
+            options: [
+                { e: "Tiger", h: "बाघ", correct: false },
+                { e: "Fungi and Bacteria", h: "कवक और बैक्टीरिया", correct: true },
+                { e: "Eagle", h: "चील", correct: false },
+                { e: "Mango Tree", h: "आम का पेड़", correct: false }
+            ],
+            expE: "Decomposers break down dead plants and animals into simpler substances, returning nutrients to the soil.",
+            expH: "अपघटक मृत पौधों और जानवरों को सरल पदार्थों में तोड़ देते हैं, जिससे पोषक तत्व मिट्टी में वापस आ जाते हैं।"
+        },
+        {
+            qE: "The sequence of who eats whom in a biological community to obtain nutrition is called a:",
+            qH: "पोषण प्राप्त करने के लिए जैविक समुदाय में कौन किसे खाता है, इसका क्रम क्या कहलाता है?",
+            options: [
+                { e: "Food Cycle", h: "खाद्य चक्र", correct: false },
+                { e: "Food Chain", h: "खाद्य श्रृंखला (Food Chain)", correct: true },
+                { e: "Energy Pyramid", h: "ऊर्जा पिरामिड", correct: false },
+                { e: "Ecosystem network", h: "पारिस्थितिकी तंत्र नेटवर्क", correct: false }
+            ],
+            expE: "A food chain shows a single, straight pathway of energy transfer (e.g., Grass -> Grasshopper -> Frog -> Snake).",
+            expH: "एक खाद्य श्रृंखला ऊर्जा हस्तांतरण का एक एकल, सीधा मार्ग दिखाती है (जैसे, घास -> टिड्डा -> मेंढक -> सांप)।"
+        },
+        {
+            qE: "A complex network of many interconnected food chains in an ecosystem is called a:",
+            qH: "पारिस्थितिकी तंत्र में कई परस्पर जुड़ी खाद्य श्रृंखलाओं का एक जटिल नेटवर्क क्या कहलाता है?",
+            options: [
+                { e: "Food Web", h: "खाद्य जाल (Food Web)", correct: true },
+                { e: "Food Pyramid", h: "खाद्य पिरामिड", correct: false },
+                { e: "Trophic level", h: "पोषण स्तर", correct: false },
+                { e: "Biosphere", h: "जीवमंडल", correct: false }
+            ],
+            expE: "Most animals eat more than one kind of food, so food chains overlap and connect to form a food web.",
+            expH: "अधिकांश जानवर एक से अधिक प्रकार का भोजन खाते हैं, इसलिए खाद्य श्रृंखलाएं आपस में जुड़कर एक खाद्य जाल बनाती हैं।"
+        },
+        {
+            qE: "What is the primary and ultimate source of energy for almost all ecosystems on Earth?",
+            qH: "पृथ्वी पर लगभग सभी पारिस्थितिक तंत्रों के लिए ऊर्जा का प्राथमिक और अंतिम स्रोत क्या है?",
+            options: [
+                { e: "Water", h: "पानी", correct: false },
+                { e: "Soil", h: "मिट्टी", correct: false },
+                { e: "The Sun", h: "सूर्य", correct: true },
+                { e: "Wind", h: "हवा", correct: false }
+            ],
+            expE: "The Sun provides the solar energy that producers (plants) convert into chemical energy, which then fuels the whole ecosystem.",
+            expH: "सूर्य वह सौर ऊर्जा प्रदान करता है जिसे उत्पादक (पौधे) रासायनिक ऊर्जा में परिवर्तित करते हैं, जो फिर पूरे पारिस्थितिकी तंत्र को ऊर्जा प्रदान करता है।"
+        },
+        {
+            qE: "In a food chain, how does energy flow?",
+            qH: "खाद्य श्रृंखला में ऊर्जा का प्रवाह कैसे होता है?",
+            options: [
+                { e: "In one direction only (Unidirectional)", h: "केवल एक दिशा में (एकदिशीय)", correct: true },
+                { e: "In a circular motion", h: "वृत्ताकार गति में", correct: false },
+                { e: "In a reversible direction", h: "प्रतिवर्ती (उलटी) दिशा में", correct: false },
+                { e: "Randomly in all directions", h: "यादृच्छिक रूप से सभी दिशाओं में", correct: false }
+            ],
+            expE: "Energy flows from the sun to producers, then to consumers, and finally to decomposers. It cannot flow backward.",
+            expH: "ऊर्जा सूर्य से उत्पादकों तक, फिर उपभोक्ताओं तक और अंत में अपघटकों तक प्रवाहित होती है। यह पीछे की ओर नहीं बह सकती।"
+        },
+        {
+            qE: "According to the '10% Law' given by Raymond Lindeman, how much energy is typically passed from one trophic level to the next?",
+            qH: "रेमंड लिंडमैन द्वारा दिए गए '10% नियम' के अनुसार, आमतौर पर एक पोषण स्तर (trophic level) से दूसरे पोषण स्तर में कितनी ऊर्जा स्थानांतरित होती है?",
+            options: [
+                { e: "100%", h: "100%", correct: false },
+                { e: "50%", h: "50%", correct: false },
+                { e: "10%", h: "10%", correct: true },
+                { e: "90%", h: "90%", correct: false }
+            ],
+            expE: "Only about 10% of the energy is transferred to the next level. The rest (90%) is lost as heat during metabolic processes.",
+            expH: "केवल 10% ऊर्जा ही अगले स्तर तक स्थानांतरित होती है। शेष (90%) चयापचय प्रक्रियाओं के दौरान गर्मी के रूप में खो जाती है।"
+        },
+        {
+            qE: "The specific position or level an organism occupies in a food chain is called its:",
+            qH: "खाद्य श्रृंखला में कोई जीव जो विशिष्ट स्थान या स्तर रखता है, वह क्या कहलाता है?",
+            options: [
+                { e: "Trophic level", h: "पोषण स्तर (Trophic level)", correct: true },
+                { e: "Habitat", h: "आवास", correct: false },
+                { e: "Biome", h: "बायोम", correct: false },
+                { e: "Ecoline", h: "इकोलाइन", correct: false }
+            ],
+            expE: "Trophic levels categorize organisms by how they gain their energy (e.g., Level 1: Producers, Level 2: Primary Consumers).",
+            expH: "पोषण स्तर (Trophic levels) जीवों को इस आधार पर वर्गीकृत करते हैं कि वे अपनी ऊर्जा कैसे प्राप्त करते हैं (जैसे, स्तर 1: उत्पादक, स्तर 2: प्राथमिक उपभोक्ता)।"
+        },
+        {
+            qE: "Which group of organisms forms the base (bottom layer) of an ecological energy pyramid?",
+            qH: "जीवों का कौन सा समूह पारिस्थितिक ऊर्जा पिरामिड का आधार (सबसे निचली परत) बनाता है?",
+            options: [
+                { e: "Top Predators", h: "शीर्ष शिकारी", correct: false },
+                { e: "Primary Consumers", h: "प्राथमिक उपभोक्ता", correct: false },
+                { e: "Decomposers", h: "अपघटक", correct: false },
+                { e: "Producers", h: "उत्पादक (Producers)", correct: true }
+            ],
+            expE: "Producers always form the base of the pyramid because they capture the initial energy from the sun and have the highest total biomass.",
+            expH: "उत्पादक हमेशा पिरामिड का आधार बनाते हैं क्योंकि वे सूर्य से प्रारंभिक ऊर्जा ग्रहण करते हैं और उनका कुल बायोमास सबसे अधिक होता है।"
+        },
+        {
+            qE: "Which of the following is an example of an 'Abiotic' component of a forest ecosystem?",
+            qH: "निम्नलिखित में से कौन सा वन पारिस्थितिकी तंत्र के 'अजैविक' (Abiotic) घटक का उदाहरण है?",
+            options: [
+                { e: "Trees", h: "पेड़", correct: false },
+                { e: "Birds", h: "पक्षी", correct: false },
+                { e: "Soil temperature and rainfall", h: "मिट्टी का तापमान और वर्षा", correct: true },
+                { e: "Insects", h: "कीड़े", correct: false }
+            ],
+            expE: "Abiotic factors are the non-living chemical and physical parts of the environment that affect living organisms.",
+            expH: "अजैविक कारक पर्यावरण के निर्जीव रासायनिक और भौतिक भाग हैं जो जीवित जीवों को प्रभावित करते हैं।"
+        },
+        {
+            qE: "A crop field, an aquarium, or a botanical garden are examples of:",
+            qH: "फसल का खेत, एक्वेरियम, या वनस्पति उद्यान (botanical garden) किसके उदाहरण हैं?",
+            options: [
+                { e: "Natural Ecosystems", h: "प्राकृतिक पारिस्थितिकी तंत्र", correct: false },
+                { e: "Artificial (Man-made) Ecosystems", h: "कृत्रिम (मानव निर्मित) पारिस्थितिकी तंत्र", correct: true },
+                { e: "Marine Ecosystems", h: "समुद्री पारिस्थितिकी तंत्र", correct: false },
+                { e: "Dead Ecosystems", h: "मृत पारिस्थितिकी तंत्र", correct: false }
+            ],
+            expE: "These ecosystems are created, maintained, and controlled by humans.",
+            expH: "ये पारिस्थितिकी तंत्र मनुष्यों द्वारा बनाए, बनाए रखे और नियंत्रित किए जाते हैं।"
+        },
+        {
+            qE: "A forest, a desert, and an ocean are all examples of:",
+            qH: "जंगल, रेगिस्तान और महासागर किसके उदाहरण हैं?",
+            options: [
+                { e: "Natural Ecosystems", h: "प्राकृतिक पारिस्थितिकी तंत्र (Natural Ecosystems)", correct: true },
+                { e: "Artificial Ecosystems", h: "कृत्रिम पारिस्थितिकी तंत्र", correct: false },
+                { e: "Only Terrestrial Ecosystems", h: "केवल स्थलीय पारिस्थितिकी तंत्र", correct: false },
+                { e: "Micro-ecosystems", h: "सूक्ष्म पारिस्थितिकी तंत्र", correct: false }
+            ],
+            expE: "These operate naturally in the wild without any major human interference.",
+            expH: "ये किसी भी बड़े मानवीय हस्तक्षेप के बिना जंगली वातावरण में स्वाभाविक रूप से काम करते हैं।"
+        },
+        {
+            qE: "Which type of consumers eat both plants and animals?",
+            qH: "किस प्रकार के उपभोक्ता पौधे और जानवर दोनों को खाते हैं?",
+            options: [
+                { e: "Carnivores", h: "मांसाहारी", correct: false },
+                { e: "Herbivores", h: "शाकाहारी", correct: false },
+                { e: "Omnivores", h: "सर्वाहारी (Omnivores)", correct: true },
+                { e: "Detritivores", h: "डेट्रिटिवोर्स", correct: false }
+            ],
+            expE: "Omnivores (like bears, crows, and humans) consume a mixed diet of both producers (plants) and other consumers (meat).",
+            expH: "सर्वाहारी (जैसे भालू, कौवे और मनुष्य) उत्पादकों (पौधों) और अन्य उपभोक्ताओं (मांस) दोनों का मिश्रित आहार लेते हैं।"
+        },
+        {
+            qE: "The basic functional unit of nature where living organisms interact among themselves and with the physical environment is the:",
+            qH: "प्रकृति की मूल कार्यात्मक इकाई जहाँ जीवित जीव आपस में और भौतिक पर्यावरण के साथ अंतःक्रिया करते हैं, वह है:",
+            options: [
+                { e: "Population", h: "आबादी (Population)", correct: false },
+                { e: "Species", h: "प्रजातियां (Species)", correct: false },
+                { e: "Ecosystem", h: "पारिस्थितिकी तंत्र (Ecosystem)", correct: true },
+                { e: "Organ", h: "अंग", correct: false }
+            ],
+            expE: "This is the standard definition of an Ecosystem in Environmental Science.",
+            expH: "पर्यावरण विज्ञान में पारिस्थितिकी तंत्र की यह मानक परिभाषा है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

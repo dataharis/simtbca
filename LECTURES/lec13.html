@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 13 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 13: Biodiversity</h2>
+            <p>Importance, Levels, and Major Threats</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is 'Biodiversity'?",
+            qH: "'जैव विविधता' (Biodiversity) क्या है?",
+            options: [
+                { e: "Only the animals living in a zoo", h: "केवल चिड़ियाघर में रहने वाले जानवर", correct: false },
+                { e: "The variety of all living organisms on Earth", h: "पृथ्वी पर सभी जीवित जीवों की विविधता", correct: true },
+                { e: "A type of physical environment", h: "एक प्रकार का भौतिक वातावरण", correct: false },
+                { e: "Only the plants in a forest", h: "जंगल में केवल पौधे", correct: false }
+            ],
+            expE: "Biodiversity is a combination of two words: Biological and Diversity. It refers to the immense variety of life on Earth.",
+            expH: "जैव विविधता दो शब्दों का संयोजन है: जैविक और विविधता। यह पृथ्वी पर जीवन की विशाल विविधता को संदर्भित करता है।"
+        },
+        {
+            qE: "Which of the following is NOT a main level of biodiversity?",
+            qH: "निम्नलिखित में से कौन सा जैव विविधता का मुख्य स्तर नहीं है?",
+            options: [
+                { e: "Genetic diversity", h: "आनुवंशिक विविधता", correct: false },
+                { e: "Species diversity", h: "प्रजाति विविधता", correct: false },
+                { e: "Ecosystem diversity", h: "पारिस्थितिकी तंत्र विविधता", correct: false },
+                { e: "Climate diversity", h: "जलवायु विविधता", correct: true }
+            ],
+            expE: "Biodiversity is primarily studied at three levels: Genetic (genes), Species (organisms), and Ecosystem (habitats).",
+            expH: "जैव विविधता का अध्ययन मुख्य रूप से तीन स्तरों पर किया जाता है: आनुवंशिक (जीन), प्रजाति (जीव), और पारिस्थितिकी तंत्र (आवास)।"
+        },
+        {
+            qE: "The differences in DNA among individuals of the same species (like different breeds of dogs) is called:",
+            qH: "एक ही प्रजाति के व्यक्तियों के बीच डीएनए (DNA) में अंतर (जैसे कुत्तों की विभिन्न नस्लें) क्या कहलाता है?",
+            options: [
+                { e: "Species Diversity", h: "प्रजाति विविधता", correct: false },
+                { e: "Genetic Diversity", h: "आनुवंशिक विविधता (Genetic Diversity)", correct: true },
+                { e: "Ecosystem Diversity", h: "पारिस्थितिकी तंत्र विविधता", correct: false },
+                { e: "Global Diversity", h: "वैश्विक विविधता", correct: false }
+            ],
+            expE: "Genetic diversity ensures that species can adapt to changing environments and resist diseases.",
+            expH: "आनुवंशिक विविधता यह सुनिश्चित करती है कि प्रजातियां बदलते परिवेश के अनुकूल हो सकें और बीमारियों का विरोध कर सकें।"
+        },
+        {
+            qE: "Why is biodiversity important for humans?",
+            qH: "मनुष्यों के लिए जैव विविधता क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "It provides us with food, medicine, and clean air", h: "यह हमें भोजन, दवा और स्वच्छ हवा प्रदान करती है", correct: true },
+                { e: "It makes the Earth look beautiful only", h: "यह केवल पृथ्वी को सुंदर बनाती है", correct: false },
+                { e: "It has no practical use", h: "इसका कोई व्यावहारिक उपयोग नहीं है", correct: false },
+                { e: "It increases traffic", h: "यह यातायात (traffic) को बढ़ाती है", correct: false }
+            ],
+            expE: "Humans rely entirely on the Earth's biodiversity for agriculture, medicine, and ecological balance.",
+            expH: "मनुष्य कृषि, चिकित्सा और पारिस्थितिक संतुलन के लिए पूरी तरह से पृथ्वी की जैव विविधता पर निर्भर है।"
+        },
+        {
+            qE: "Which biome is known to have the highest biodiversity on Earth?",
+            qH: "पृथ्वी पर किस बायोम में सबसे अधिक जैव विविधता पाई जाती है?",
+            options: [
+                { e: "Desert", h: "रेगिस्तान", correct: false },
+                { e: "Tundra", h: "टुंड्रा", correct: false },
+                { e: "Tropical Rainforests", h: "उष्णकटिबंधीय वर्षावन (Tropical Rainforests)", correct: true },
+                { e: "Grassland", h: "घास का मैदान", correct: false }
+            ],
+            expE: "Tropical rainforests (like the Amazon) hold more than half of the world's plant and animal species.",
+            expH: "उष्णकटिबंधीय वर्षावनों (जैसे अमेज़ॅन) में दुनिया की आधे से अधिक पौधों और जानवरों की प्रजातियां पाई जाती हैं।"
+        },
+        {
+            qE: "What is currently the biggest threat to biodiversity worldwide?",
+            qH: "वर्तमान में दुनिया भर में जैव विविधता के लिए सबसे बड़ा खतरा क्या है?",
+            options: [
+                { e: "Natural aging of animals", h: "जानवरों की प्राकृतिक उम्र बढ़ना", correct: false },
+                { e: "Habitat loss and destruction", h: "आवास का नुकसान और विनाश (Habitat Loss)", correct: true },
+                { e: "Earthquakes", h: "भूकंप", correct: false },
+                { e: "Solar eclipses", h: "सूर्य ग्रहण", correct: false }
+            ],
+            expE: "Cutting down forests for agriculture and urban development destroys the homes of millions of species.",
+            expH: "कृषि और शहरी विकास के लिए जंगलों को काटने से लाखों प्रजातियों के घर नष्ट हो जाते हैं।"
+        },
+        {
+            qE: "What is 'Poaching'?",
+            qH: "'अवैध शिकार' (Poaching) क्या है?",
+            options: [
+                { e: "Cooking an egg in boiling water", h: "उबलते पानी में अंडा पकाना", correct: false },
+                { e: "Planting new trees", h: "नए पेड़ लगाना", correct: false },
+                { e: "The illegal hunting and capturing of wild animals", h: "जंगली जानवरों का अवैध शिकार करना और उन्हें पकड़ना", correct: true },
+                { e: "Keeping pets at home", h: "घर में पालतू जानवर रखना", correct: false }
+            ],
+            expE: "Poaching is a major threat to animals like tigers, rhinos, and elephants who are killed for their body parts.",
+            expH: "बाघ, गैंडे और हाथी जैसे जानवरों के लिए अवैध शिकार एक बड़ा खतरा है जिन्हें उनके शरीर के अंगों के लिए मार दिया जाता है।"
+        },
+        {
+            qE: "What happens when a species becomes 'Extinct'?",
+            qH: "जब कोई प्रजाति 'विलुप्त' (Extinct) हो जाती है तो क्या होता है?",
+            options: [
+                { e: "It moves to another forest", h: "वह दूसरे जंगल में चली जाती है", correct: false },
+                { e: "Its population increases", h: "उसकी जनसंख्या बढ़ जाती है", correct: false },
+                { e: "It goes to sleep for a long time", h: "वह लंबे समय तक सो जाती है", correct: false },
+                { e: "It disappears forever and no longer exists on Earth", h: "वह हमेशा के लिए गायब हो जाती है और अब पृथ्वी पर मौजूद नहीं है", correct: true }
+            ],
+            expE: "Extinction is forever. Once the last individual of a species dies, that species is gone permanently.",
+            expH: "विलुप्त होना हमेशा के लिए है। एक बार जब किसी प्रजाति का अंतिम व्यक्ति मर जाता है, तो वह प्रजाति स्थायी रूप से समाप्त हो जाती है।"
+        },
+        {
+            qE: "An example of a famous bird that became extinct due to human activities is the:",
+            qH: "मानव गतिविधियों के कारण विलुप्त होने वाले एक प्रसिद्ध पक्षी का उदाहरण है:",
+            options: [
+                { e: "Sparrow", h: "गौरैया", correct: false },
+                { e: "Dodo", h: "डोडो (Dodo)", correct: true },
+                { e: "Pigeon", h: "कबूतर", correct: false },
+                { e: "Crow", h: "कौआ", correct: false }
+            ],
+            expE: "The Dodo bird, native to Mauritius, was hunted to extinction by sailors in the 17th century.",
+            expH: "डोडो पक्षी, जो मॉरीशस का मूल निवासी था, 17वीं शताब्दी में नाविकों द्वारा शिकार के कारण विलुप्त हो गया था।"
+        },
+        {
+            qE: "What are 'Invasive species'?",
+            qH: "'आक्रामक प्रजातियां' (Invasive species) क्या हैं?",
+            options: [
+                { e: "Native plants that grow very slowly", h: "देशी पौधे जो बहुत धीरे-धीरे बढ़ते हैं", correct: false },
+                { e: "Non-native (foreign) species that spread rapidly and harm the local ecosystem", h: "गैर-देशी (विदेशी) प्रजातियां जो तेजी से फैलती हैं और स्थानीय पारिस्थितिकी तंत्र को नुकसान पहुंचाती हैं", correct: true },
+                { e: "Endangered animals", h: "लुप्तप्राय जानवर", correct: false },
+                { e: "Domesticated pets", h: "पालतू जानवर", correct: false }
+            ],
+            expE: "Invasive species outcompete native species for food and resources, often driving local species to extinction.",
+            expH: "आक्रामक प्रजातियां भोजन और संसाधनों के लिए देशी प्रजातियों को पछाड़ देती हैं, जिससे अक्सर स्थानीय प्रजातियां विलुप्त हो जाती हैं।"
+        },
+        {
+            qE: "Breaking a large, continuous forest into smaller, isolated patches by building roads or cities is called:",
+            qH: "सड़कों या शहरों का निर्माण करके एक बड़े, निरंतर जंगल को छोटे, अलग-थलग टुकड़ों में तोड़ने को क्या कहा जाता है?",
+            options: [
+                { e: "Afforestation", h: "वनीकरण", correct: false },
+                { e: "Habitat Fragmentation", h: "आवास विखंडन (Habitat Fragmentation)", correct: true },
+                { e: "Poaching", h: "अवैध शिकार", correct: false },
+                { e: "Overgrazing", h: "अत्यधिक चराई", correct: false }
+            ],
+            expE: "Fragmentation traps animals in small areas, making it hard for them to find food, mates, and survive.",
+            expH: "विखंडन जानवरों को छोटे क्षेत्रों में फंसा देता है, जिससे उनके लिए भोजन, साथी खोजना और जीवित रहना मुश्किल हो जाता है।"
+        },
+        {
+            qE: "Harvesting fish or cutting trees faster than they can naturally reproduce is known as:",
+            qH: "प्राकृतिक रूप से प्रजनन करने की तुलना में तेजी से मछलियां पकड़ना या पेड़ काटना क्या कहलाता है?",
+            options: [
+                { e: "Conservation", h: "संरक्षण", correct: false },
+                { e: "Overexploitation", h: "अत्यधिक दोहन (Overexploitation)", correct: true },
+                { e: "Protection", h: "सुरक्षा", correct: false },
+                { e: "Agriculture", h: "कृषि", correct: false }
+            ],
+            expE: "Overexploitation (like overfishing) drastically reduces population sizes, pushing species toward extinction.",
+            expH: "अत्यधिक दोहन (जैसे अत्यधिक मछली पकड़ना) जनसंख्या के आकार को काफी कम कर देता है, जिससे प्रजातियां विलुप्त होने की ओर धकेल दी जाती हैं।"
+        },
+        {
+            qE: "Which of the following animals is primarily poached for its valuable tusk (ivory)?",
+            qH: "निम्नलिखित में से किस जानवर का शिकार मुख्य रूप से उसके मूल्यवान दांत (हाथीदांत / ivory) के लिए किया जाता है?",
+            options: [
+                { e: "Tiger", h: "बाघ", correct: false },
+                { e: "Rhino", h: "गैंडा", correct: false },
+                { e: "Elephant", h: "हाथी (Elephant)", correct: true },
+                { e: "Deer", h: "हिरण", correct: false }
+            ],
+            expE: "Elephants are illegally killed in large numbers just to harvest their ivory tusks.",
+            expH: "हाथियों को बड़ी संख्या में अवैध रूप से केवल उनके हाथीदांत प्राप्त करने के लिए मारा जाता है।"
+        },
+        {
+            qE: "The acronym 'HIPPO' represents the major threats to biodiversity. What does the 'H' stand for?",
+            qH: "'HIPPO' संक्षिप्त नाम जैव विविधता के प्रमुख खतरों का प्रतिनिधित्व करता है। इसमें 'H' का क्या अर्थ है?",
+            options: [
+                { e: "Hunting", h: "शिकार", correct: false },
+                { e: "Human population", h: "मानव जनसंख्या", correct: false },
+                { e: "Habitat Loss", h: "आवास का नुकसान (Habitat Loss)", correct: true },
+                { e: "Heat", h: "गर्मी", correct: false }
+            ],
+            expE: "HIPPO stands for Habitat loss, Invasive species, Pollution, Population (human), and Overharvesting.",
+            expH: "HIPPO का अर्थ है: आवास का नुकसान (H), आक्रामक प्रजातियां (I), प्रदूषण (P), मानव जनसंख्या (P), और अत्यधिक संचयन (O)।"
+        },
+        {
+            qE: "Species that are found ONLY in one specific geographic area and nowhere else are called:",
+            qH: "वे प्रजातियां जो केवल एक विशिष्ट भौगोलिक क्षेत्र में पाई जाती हैं और कहीं और नहीं, क्या कहलाती हैं?",
+            options: [
+                { e: "Epidemic species", h: "महामारी प्रजातियां", correct: false },
+                { e: "Extinct species", h: "विलुप्त प्रजातियां", correct: false },
+                { e: "Invasive species", h: "आक्रामक प्रजातियां", correct: false },
+                { e: "Endemic species", h: "स्थानिक (Endemic) प्रजातियां", correct: true }
+            ],
+            expE: "Endemic species are highly vulnerable to extinction because if their single habitat is destroyed, they die out completely.",
+            expH: "स्थानिक (Endemic) प्रजातियां विलुप्त होने के प्रति अत्यधिक संवेदनशील होती हैं क्योंकि यदि उनका एकमात्र आवास नष्ट हो जाता है, तो वे पूरी तरह से खत्म हो जाती हैं।"
+        },
+        {
+            qE: "How does severe pollution threaten biodiversity?",
+            qH: "गंभीर प्रदूषण जैव विविधता के लिए कैसे खतरा पैदा करता है?",
+            options: [
+                { e: "By providing more nutrients", h: "अधिक पोषक तत्व प्रदान करके", correct: false },
+                { e: "By poisoning air, water, and soil, killing sensitive species", h: "हवा, पानी और मिट्टी में जहर घोलकर, संवेदनशील प्रजातियों को मारकर", correct: true },
+                { e: "By increasing animal reproduction", h: "पशु प्रजनन बढ़ाकर", correct: false },
+                { e: "By making animals stronger", h: "जानवरों को मजबूत बनाकर", correct: false }
+            ],
+            expE: "Chemicals, plastics, and oil spills directly kill wildlife and destroy their habitats.",
+            expH: "रसायन, प्लास्टिक और तेल रिसाव सीधे वन्यजीवों को मारते हैं और उनके आवासों को नष्ट कर देते हैं।"
+        },
+        {
+            qE: "What is a 'Threatened' or 'Endangered' species?",
+            qH: "'संकटग्रस्त' या 'लुप्तप्राय' (Endangered) प्रजाति क्या है?",
+            options: [
+                { e: "A species that is highly aggressive", h: "एक प्रजाति जो अत्यधिक आक्रामक है", correct: false },
+                { e: "A species whose population is so low that it is at high risk of becoming extinct", h: "एक प्रजाति जिसकी जनसंख्या इतनी कम है कि उसके विलुप्त होने का उच्च जोखिम है", correct: true },
+                { e: "A species that has already disappeared", h: "एक प्रजाति जो पहले ही गायब हो चुकी है", correct: false },
+                { e: "A new species recently discovered", h: "हाल ही में खोजी गई एक नई प्रजाति", correct: false }
+            ],
+            expE: "Endangered species (like the Giant Panda or Snow Leopard) require urgent protection to survive.",
+            expH: "लुप्तप्राय प्रजातियों (जैसे विशाल पांडा या हिम तेंदुआ) को जीवित रहने के लिए तत्काल सुरक्षा की आवश्यकता होती है।"
+        },
+        {
+            qE: "Why are insects like bees essential for maintaining biodiversity?",
+            qH: "जैव विविधता बनाए रखने के लिए मधुमक्खियों जैसे कीड़े क्यों आवश्यक हैं?",
+            options: [
+                { e: "They provide milk", h: "वे दूध देते हैं", correct: false },
+                { e: "They clean the rivers", h: "वे नदियों को साफ करते हैं", correct: false },
+                { e: "They are the main pollinators for many plants and crops", h: "वे कई पौधों और फसलों के लिए मुख्य परागणकर्ता (pollinators) हैं", correct: true },
+                { e: "They prevent earthquakes", h: "वे भूकंप को रोकते हैं", correct: false }
+            ],
+            expE: "Without pollinators like bees, many plants wouldn't be able to reproduce, leading to a collapse in the food chain.",
+            expH: "मधुमक्खियों जैसे परागणकों के बिना, कई पौधे प्रजनन करने में सक्षम नहीं होंगे, जिससे खाद्य श्रृंखला का पतन हो जाएगा।"
+        },
+        {
+            qE: "What is the effect of Climate Change on biodiversity?",
+            qH: "जैव विविधता पर जलवायु परिवर्तन (Climate Change) का क्या प्रभाव पड़ता है?",
+            options: [
+                { e: "It makes all animals live longer", h: "यह सभी जानवरों को लंबा जीवन देता है", correct: false },
+                { e: "It alters habitats and temperatures, forcing species to migrate or die", h: "यह आवासों और तापमान को बदल देता है, जिससे प्रजातियों को पलायन करने या मरने के लिए मजबूर होना पड़ता है", correct: true },
+                { e: "It has no effect on plants", h: "इसका पौधों पर कोई प्रभाव नहीं पड़ता है", correct: false },
+                { e: "It stops pollution", h: "यह प्रदूषण को रोकता है", correct: false }
+            ],
+            expE: "Rising temperatures change environments faster than species can adapt, leading to massive biodiversity loss.",
+            expH: "बढ़ता तापमान प्रजातियों के अनुकूल होने की तुलना में पर्यावरण को तेजी से बदल देता है, जिससे जैव विविधता का भारी नुकसान होता है।"
+        },
+        {
+            qE: "Which of the following is a simple way you can help protect biodiversity?",
+            qH: "निम्नलिखित में से कौन सा एक सरल तरीका है जिससे आप जैव विविधता की रक्षा करने में मदद कर सकते हैं?",
+            options: [
+                { e: "Throwing plastic in the river", h: "नदी में प्लास्टिक फेंकना", correct: false },
+                { e: "Cutting down trees in your neighborhood", h: "अपने पड़ोस में पेड़ काटना", correct: false },
+                { e: "Burning garbage", h: "कचरा जलाना", correct: false },
+                { e: "Planting native trees and not buying products made from endangered animals", h: "देशी पेड़ लगाना और लुप्तप्राय जानवरों से बने उत्पाद नहीं खरीदना", correct: true }
+            ],
+            expE: "Supporting local ecosystems by planting native species and making eco-friendly consumer choices directly helps biodiversity.",
+            expH: "देशी प्रजातियों को लगाकर स्थानीय पारिस्थितिक तंत्र का समर्थन करना और पर्यावरण के अनुकूल उपभोक्ता विकल्प चुनना सीधे जैव विविधता में मदद करता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

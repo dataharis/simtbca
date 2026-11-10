@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 18 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 18: Environmental Legislation</h2>
+            <p>Overview of Key Laws and the Judiciary's Role</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the term 'Legislation' mean in the context of the environment?",
+            qH: "पर्यावरण के संदर्भ में 'विधान' (Legislation) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Planting trees", h: "पेड़ लगाना", correct: false },
+                { e: "Laws and rules created by the government to protect nature", h: "प्रकृति की रक्षा के लिए सरकार द्वारा बनाए गए कानून और नियम", correct: true },
+                { e: "Scientific experiments", h: "वैज्ञानिक प्रयोग", correct: false },
+                { e: "Public awareness campaigns", h: "जन जागरूकता अभियान", correct: false }
+            ],
+            expE: "Environmental legislation refers to the set of laws and regulations established to manage and protect the environment.",
+            expH: "पर्यावरण विधान से तात्पर्य पर्यावरण के प्रबंधन और संरक्षण के लिए स्थापित कानूनों और विनियमों के समूह से है।"
+        },
+        {
+            qE: "Which major international conference in 1972 heavily influenced India to pass strict environmental laws?",
+            qH: "1972 में किस प्रमुख अंतर्राष्ट्रीय सम्मेलन ने भारत को सख्त पर्यावरण कानून पारित करने के लिए अत्यधिक प्रभावित किया?",
+            options: [
+                { e: "The Paris Agreement", h: "पेरिस समझौता", correct: false },
+                { e: "The Stockholm Conference", h: "स्टॉकहोम सम्मेलन", correct: true },
+                { e: "The Kyoto Protocol", h: "क्योटो प्रोटोकॉल", correct: false },
+                { e: "The Rio Earth Summit", h: "रियो पृथ्वी सम्मेलन", correct: false }
+            ],
+            expE: "The UN Conference on the Human Environment (Stockholm, 1972) was the first major conference on environmental issues, prompting India to act.",
+            expH: "मानव पर्यावरण पर संयुक्त राष्ट्र सम्मेलन (स्टॉकहोम, 1972) पर्यावरणीय मुद्दों पर पहला बड़ा सम्मेलन था, जिसने भारत को कार्रवाई करने के लिए प्रेरित किया।"
+        },
+        {
+            qE: "The original Constitution of India (adopted in 1950) did not have direct provisions for environmental protection. It was added by which Amendment?",
+            qH: "भारत के मूल संविधान (1950 में अपनाया गया) में पर्यावरण संरक्षण के लिए प्रत्यक्ष प्रावधान नहीं थे। इसे किस संशोधन (Amendment) द्वारा जोड़ा गया था?",
+            options: [
+                { e: "42nd Amendment (1976)", h: "42वां संशोधन (1976)", correct: true },
+                { e: "44th Amendment", h: "44वां संशोधन", correct: false },
+                { e: "73rd Amendment", h: "73वां संशोधन", correct: false },
+                { e: "86th Amendment", h: "86वां संशोधन", correct: false }
+            ],
+            expE: "The 42nd Amendment (1976) introduced specific environmental protection duties for both the State and the citizens.",
+            expH: "42वें संशोधन (1976) ने राज्य और नागरिकों दोनों के लिए विशिष्ट पर्यावरण संरक्षण कर्तव्य पेश किए।"
+        },
+        {
+            qE: "Which Article of the Indian Constitution states that 'The State shall endeavor to protect and improve the environment and to safeguard the forests and wildlife of the country'?",
+            qH: "भारतीय संविधान का कौन सा अनुच्छेद कहता है कि 'राज्य पर्यावरण की रक्षा और उसमें सुधार करने और देश के जंगलों और वन्यजीवों की रक्षा करने का प्रयास करेगा'?",
+            options: [
+                { e: "Article 21", h: "अनुच्छेद 21", correct: false },
+                { e: "Article 48A", h: "अनुच्छेद 48A", correct: true },
+                { e: "Article 14", h: "अनुच्छेद 14", correct: false },
+                { e: "Article 370", h: "अनुच्छेद 370", correct: false }
+            ],
+            expE: "Article 48A falls under the Directive Principles of State Policy, guiding the government to protect nature.",
+            expH: "अनुच्छेद 48A राज्य के नीति निर्देशक सिद्धांतों के अंतर्गत आता है, जो सरकार को प्रकृति की रक्षा के लिए मार्गदर्शन करता है।"
+        },
+        {
+            qE: "Which Article of the Indian Constitution makes it a Fundamental Duty of every citizen 'to protect and improve the natural environment'?",
+            qH: "भारतीय संविधान का कौन सा अनुच्छेद प्रत्येक नागरिक का मौलिक कर्तव्य (Fundamental Duty) बनाता है कि वह 'प्राकृतिक पर्यावरण की रक्षा और सुधार करे'?",
+            options: [
+                { e: "Article 19", h: "अनुच्छेद 19", correct: false },
+                { e: "Article 32", h: "अनुच्छेद 32", correct: false },
+                { e: "Article 51A (g)", h: "अनुच्छेद 51A (g)", correct: true },
+                { e: "Article 371", h: "अनुच्छेद 371", correct: false }
+            ],
+            expE: "Article 51A(g) places a duty on all Indian citizens to protect forests, lakes, rivers, wildlife, and have compassion for living creatures.",
+            expH: "अनुच्छेद 51A(g) सभी भारतीय नागरिकों पर जंगलों, झीलों, नदियों, वन्यजीवों की रक्षा करने और जीवित प्राणियों के प्रति दया रखने का कर्तव्य डालता है।"
+        },
+        {
+            qE: "What is the full form of 'NGT' in India?",
+            qH: "भारत में 'NGT' का पूर्ण रूप क्या है?",
+            options: [
+                { e: "National Green Tribunal", h: "नेशनल ग्रीन ट्रिब्यूनल (National Green Tribunal)", correct: true },
+                { e: "National Growth Trust", h: "नेशनल ग्रोथ ट्रस्ट", correct: false },
+                { e: "Nature Guardian Team", h: "नेचर गार्जियन टीम", correct: false },
+                { e: "New Global Treaty", h: "न्यू ग्लोबल ट्रीटी", correct: false }
+            ],
+            expE: "The NGT is a specialized judicial body equipped with expertise solely for the purpose of adjudicating environmental cases in the country.",
+            expH: "NGT एक विशिष्ट न्यायिक निकाय है जो देश में केवल पर्यावरण से संबंधित मामलों के निपटारे के लिए विशेषज्ञता से लैस है।"
+        },
+        {
+            qE: "In which year was the National Green Tribunal (NGT) established?",
+            qH: "नेशनल ग्रीन ट्रिब्यूनल (NGT) की स्थापना किस वर्ष हुई थी?",
+            options: [
+                { e: "1986", h: "1986", correct: false },
+                { e: "2010", h: "2010", correct: true },
+                { e: "1974", h: "1974", correct: false },
+                { e: "2020", h: "2020", correct: false }
+            ],
+            expE: "The NGT was established on 18th October 2010 under the National Green Tribunal Act 2010.",
+            expH: "NGT की स्थापना 18 अक्टूबर 2010 को राष्ट्रीय हरित अधिकरण (NGT) अधिनियम 2010 के तहत की गई थी।"
+        },
+        {
+            qE: "What is the primary role of the Indian Judiciary (Supreme Court and High Courts) in environmental protection?",
+            qH: "पर्यावरण संरक्षण में भारतीय न्यायपालिका (सुप्रीम कोर्ट और हाई कोर्ट) की प्राथमिक भूमिका क्या है?",
+            options: [
+                { e: "To manufacture solar panels", h: "सौर पैनल बनाने के लिए", correct: false },
+                { e: "To enforce environmental laws and punish violators", h: "पर्यावरण कानूनों को लागू करना और उल्लंघनकर्ताओं को दंडित करना", correct: true },
+                { e: "To plant trees in cities", h: "शहरों में पेड़ लगाना", correct: false },
+                { e: "To collect garbage from streets", h: "सड़कों से कूड़ा इकट्ठा करना", correct: false }
+            ],
+            expE: "The courts interpret laws, give landmark judgments (like closing polluting factories), and hold governments and industries accountable.",
+            expH: "अदालतें कानूनों की व्याख्या करती हैं, ऐतिहासिक फैसले (जैसे प्रदूषण फैलाने वाले कारखानों को बंद करना) देती हैं, और सरकारों और उद्योगों को जवाबदेह ठहराती हैं।"
+        },
+        {
+            qE: "Citizens can file cases in the Supreme Court directly for the protection of the environment for the public good. This tool is known as:",
+            qH: "जनता की भलाई के लिए पर्यावरण की रक्षा हेतु नागरिक सीधे सुप्रीम कोर्ट में मामले दर्ज कर सकते हैं। इस उपकरण को क्या कहा जाता है?",
+            options: [
+                { e: "FIR (First Information Report)", h: "एफआईआर (प्रथम सूचना रिपोर्ट)", correct: false },
+                { e: "PIL (Public Interest Litigation)", h: "पीआईएल (जनहित याचिका - Public Interest Litigation)", correct: true },
+                { e: "RTI (Right to Information)", h: "आरटीआई (सूचना का अधिकार)", correct: false },
+                { e: "GST (Goods and Services Tax)", h: "जीएसटी (वस्तु एवं सेवा कर)", correct: false }
+            ],
+            expE: "PILs allow anyone to approach the courts to seek justice on behalf of the environment and communities affected by pollution.",
+            expH: "जनहित याचिका (PIL) किसी को भी प्रदूषण से प्रभावित पर्यावरण और समुदायों की ओर से न्याय मांगने के लिए अदालतों से संपर्क करने की अनुमति देती है।"
+        },
+        {
+            qE: "Which famous Indian environmental lawyer filed numerous PILs resulting in landmark judgments, like protecting the Taj Mahal from air pollution?",
+            qH: "किस प्रसिद्ध भारतीय पर्यावरण वकील ने कई जनहित याचिकाएं (PIL) दायर कीं, जिसके परिणामस्वरूप वायु प्रदूषण से ताजमहल की रक्षा करने जैसे ऐतिहासिक फैसले आए?",
+            options: [
+                { e: "Ram Jethmalani", h: "राम जेठमलानी", correct: false },
+                { e: "Harish Salve", h: "हरीश साल्वे", correct: false },
+                { e: "M. C. Mehta", h: "एम. सी. मेहता (M. C. Mehta)", correct: true },
+                { e: "Kapil Sibal", h: "कपिल सिब्बल", correct: false }
+            ],
+            expE: "M.C. Mehta is a pioneer in environmental law in India whose cases led to the introduction of lead-free petrol and the protection of the Ganges and Taj Mahal.",
+            expH: "एम.सी. मेहता भारत में पर्यावरण कानून के प्रणेता हैं, जिनके मामलों के कारण सीसा रहित (lead-free) पेट्रोल की शुरुआत हुई और गंगा तथा ताजमहल को संरक्षण मिला।"
+        },
+        {
+            qE: "The 'Polluter Pays Principle' mandated by the Indian Judiciary means:",
+            qH: "भारतीय न्यायपालिका द्वारा अनिवार्य 'प्रदूषक भुगतान सिद्धांत' (Polluter Pays Principle) का क्या अर्थ है?",
+            options: [
+                { e: "The person or company causing pollution must pay for the damage and the cleanup", h: "प्रदूषण पैदा करने वाले व्यक्ति या कंपनी को नुकसान और सफाई के लिए भुगतान करना होगा", correct: true },
+                { e: "The government will pay the polluter to stop", h: "सरकार प्रदूषण फैलाने वाले को रुकने के लिए भुगतान करेगी", correct: false },
+                { e: "Pollution is legal if you pay a small fee", h: "यदि आप एक छोटा सा शुल्क देते हैं तो प्रदूषण वैध है", correct: false },
+                { e: "Only poor people pay for pollution", h: "केवल गरीब लोग ही प्रदूषण का भुगतान करते हैं", correct: false }
+            ],
+            expE: "This principle holds industries financially responsible for the environmental damage they cause and for restoring the ecology.",
+            expH: "यह सिद्धांत उद्योगों को उनके द्वारा किए गए पर्यावरणीय नुकसान और पारिस्थितिकी को बहाल करने के लिए वित्तीय रूप से जिम्मेदार ठहराता है।"
+        },
+        {
+            qE: "What is the 'Precautionary Principle' adopted by environmental courts?",
+            qH: "पर्यावरण अदालतों द्वारा अपनाया गया 'एहतियाती सिद्धांत' (Precautionary Principle) क्या है?",
+            options: [
+                { e: "Wait for total scientific proof before stopping a dangerous project", h: "किसी खतरनाक परियोजना को रोकने से पहले पूर्ण वैज्ञानिक प्रमाण की प्रतीक्षा करना", correct: false },
+                { e: "If a project might cause severe environmental harm, action should be taken to stop it even if scientific proof is not 100% certain", h: "यदि कोई परियोजना गंभीर पर्यावरणीय नुकसान का कारण बन सकती है, तो उसे रोकने के लिए कार्रवाई की जानी चाहिए, भले ही वैज्ञानिक प्रमाण 100% निश्चित न हों", correct: true },
+                { e: "Take precautions only after the damage is fully done", h: "नुकसान पूरी तरह से होने के बाद ही सावधानी बरतना", correct: false },
+                { e: "Always wear safety helmets", h: "हमेशा सुरक्षा हेलमेट पहनना", correct: false }
+            ],
+            expE: "It means 'better safe than sorry'. We shouldn't wait for absolute proof of harm before taking action to protect nature.",
+            expH: "इसका अर्थ है 'पछताने से बेहतर है सुरक्षित रहना'। हमें प्रकृति की रक्षा के लिए कार्रवाई करने से पहले नुकसान के पूर्ण प्रमाण की प्रतीक्षा नहीं करनी चाहिए।"
+        },
+        {
+            qE: "The Supreme Court has widely interpreted 'Article 21' (Right to Life) to also include:",
+            qH: "सुप्रीम कोर्ट ने 'अनुच्छेद 21' (जीवन का अधिकार) की व्यापक व्याख्या करके इसमें किसे शामिल किया है?",
+            options: [
+                { e: "The right to drive a car", h: "कार चलाने का अधिकार", correct: false },
+                { e: "The right to a pollution-free environment (clean air and water)", h: "प्रदूषण मुक्त पर्यावरण (स्वच्छ हवा और पानी) का अधिकार", correct: true },
+                { e: "The right to own a business", h: "व्यवसाय का मालिक होने का अधिकार", correct: false },
+                { e: "The right to free internet", h: "मुफ्त इंटरनेट का अधिकार", correct: false }
+            ],
+            expE: "The court ruled that a person cannot truly live a dignified life without clean air and water, thus linking the environment to fundamental human rights.",
+            expH: "अदालत ने फैसला सुनाया कि एक व्यक्ति स्वच्छ हवा और पानी के बिना वास्तव में सम्मानजनक जीवन नहीं जी सकता है, इस प्रकार पर्यावरण को मौलिक मानवाधिकारों से जोड़ दिया।"
+        },
+        {
+            qE: "Why is it important for BCA/BBA students to understand environmental legislation?",
+            qH: "BCA/BBA के छात्रों के लिए पर्यावरण विधान (कानून) को समझना क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because they will become lawyers", h: "क्योंकि वे वकील बनेंगे", correct: false },
+                { e: "Because future businesses and IT operations must strictly comply with these laws to avoid heavy fines and closures", h: "क्योंकि भविष्य के व्यवसायों और आईटी संचालन को भारी जुर्माने और बंद होने से बचने के लिए इन कानूनों का सख्ती से पालन करना चाहिए", correct: true },
+                { e: "Because it teaches them how to code faster", h: "क्योंकि यह उन्हें तेजी से कोडिंग करना सिखाता है", correct: false },
+                { e: "Because it is completely irrelevant to business", h: "क्योंकि यह व्यवसाय के लिए पूरी तरह अप्रासंगिक है", correct: false }
+            ],
+            expE: "Every business operation, from manufacturing to server data centers, is governed by environmental laws to ensure sustainability.",
+            expH: "विनिर्माण से लेकर सर्वर डेटा केंद्रों तक हर व्यावसायिक संचालन, स्थिरता सुनिश्चित करने के लिए पर्यावरण कानूनों द्वारा शासित होता है।"
+        },
+        {
+            qE: "What is the primary role of the Central Pollution Control Board (CPCB)?",
+            qH: "केंद्रीय प्रदूषण नियंत्रण बोर्ड (CPCB) की प्राथमिक भूमिका क्या है?",
+            options: [
+                { e: "To monitor, control, and abate water and air pollution in the country", h: "देश में जल और वायु प्रदूषण की निगरानी, ​​नियंत्रण और रोकथाम करना", correct: true },
+                { e: "To cut down forests for development", h: "विकास के लिए जंगल काटना", correct: false },
+                { e: "To manage the country's finances", h: "देश के वित्त का प्रबंधन करना", correct: false },
+                { e: "To build highways", h: "राजमार्ग (highways) बनाना", correct: false }
+            ],
+            expE: "The CPCB is the apex organization in India in the field of pollution control, setting standards for air and water quality.",
+            expH: "CPCB भारत में प्रदूषण नियंत्रण के क्षेत्र में शीर्ष संगठन है, जो वायु और जल गुणवत्ता के लिए मानक निर्धारित करता है।"
+        },
+        {
+            qE: "In India, what happens if an industry violates environmental laws and refuses to stop polluting?",
+            qH: "भारत में, यदि कोई उद्योग पर्यावरण कानूनों का उल्लंघन करता है और प्रदूषण रोकने से इनकार करता है, तो क्या होता है?",
+            options: [
+                { e: "Nothing happens", h: "कुछ नहीं होता", correct: false },
+                { e: "The Pollution Control Board and Courts can order the factory to be sealed and closed immediately", h: "प्रदूषण नियंत्रण बोर्ड और अदालतें कारखाने को तुरंत सील करने और बंद करने का आदेश दे सकती हैं", correct: true },
+                { e: "The government gives them an award", h: "सरकार उन्हें ईनाम देती है", correct: false },
+                { e: "They are given free electricity", h: "उन्हें मुफ्त बिजली दी जाती है", correct: false }
+            ],
+            expE: "The judiciary and regulatory bodies have strict powers to close down non-compliant industries and cut off their electricity/water supply.",
+            expH: "न्यायपालिका और नियामक निकायों के पास गैर-अनुपालन वाले उद्योगों को बंद करने और उनकी बिजली/पानी की आपूर्ति काटने की सख्त शक्तियाँ हैं।"
+        },
+        {
+            qE: "Which rule did the Supreme Court establish (in the Oleum gas leak case) meaning hazardous industries are completely responsible for any harm caused, with no exceptions?",
+            qH: "सुप्रीम कोर्ट ने कौन सा नियम स्थापित किया (ओलियम गैस रिसाव मामले में) जिसका अर्थ है कि खतरनाक उद्योग बिना किसी अपवाद के किसी भी नुकसान के लिए पूरी तरह से जिम्मेदार हैं?",
+            options: [
+                { e: "Strict Liability", h: "सख्त दायित्व", correct: false },
+                { e: "Absolute Liability", h: "पूर्ण दायित्व (Absolute Liability)", correct: true },
+                { e: "No Liability", h: "कोई दायित्व नहीं", correct: false },
+                { e: "Shared Liability", h: "साझा दायित्व", correct: false }
+            ],
+            expE: "Absolute Liability means that an enterprise engaged in a hazardous activity has a complete (absolute) obligation to compensate for any harm, regardless of negligence.",
+            expH: "पूर्ण दायित्व का अर्थ है कि खतरनाक गतिविधि में लगे उद्यम (कंपनी) का किसी भी नुकसान की भरपाई करने का पूर्ण दायित्व है, चाहे लापरवाही कुछ भी हो।"
+        },
+        {
+            qE: "Who can approach the National Green Tribunal (NGT) with a complaint?",
+            qH: "राष्ट्रीय हरित अधिकरण (NGT) में शिकायत लेकर कौन जा सकता है?",
+            options: [
+                { e: "Only the President of India", h: "केवल भारत के राष्ट्रपति", correct: false },
+                { e: "Only foreign countries", h: "केवल विदेशी देश", correct: false },
+                { e: "Any aggrieved citizen, NGO, or organization affected by environmental issues", h: "कोई भी पीड़ित नागरिक, NGO, या पर्यावरणीय मुद्दों से प्रभावित संगठन", correct: true },
+                { e: "Only the Police", h: "केवल पुलिस", correct: false }
+            ],
+            expE: "The NGT is accessible to common citizens, NGOs, and activists seeking remedies for environmental damages.",
+            expH: "NGT आम नागरिकों, गैर सरकारी संगठनों (NGO) और पर्यावरणीय क्षति के लिए उपाय चाहने वाले कार्यकर्ताओं के लिए सुलभ है।"
+        },
+        {
+            qE: "Which central ministry is primarily responsible for implementing environmental legislation in India?",
+            qH: "भारत में पर्यावरण कानून को लागू करने के लिए मुख्य रूप से कौन सा केंद्रीय मंत्रालय जिम्मेदार है?",
+            options: [
+                { e: "Ministry of Finance", h: "वित्त मंत्रालय", correct: false },
+                { e: "Ministry of Environment, Forest and Climate Change (MoEFCC)", h: "पर्यावरण, वन और जलवायु परिवर्तन मंत्रालय (MoEFCC)", correct: true },
+                { e: "Ministry of Defense", h: "रक्षा मंत्रालय", correct: false },
+                { e: "Ministry of Home Affairs", h: "गृह मंत्रालय", correct: false }
+            ],
+            expE: "MoEFCC is the nodal agency in the administrative structure of the Central Government for planning, promoting, and coordinating environmental programs.",
+            expH: "MoEFCC पर्यावरण कार्यक्रमों की योजना बनाने, उन्हें बढ़ावा देने और समन्वय करने के लिए केंद्र सरकार के प्रशासनिक ढांचे में नोडल एजेंसी है।"
+        },
+        {
+            qE: "Why are specialized tribunals like the NGT necessary?",
+            qH: "NGT जैसे विशेष न्यायाधिकरणों (tribunals) की आवश्यकता क्यों है?",
+            options: [
+                { e: "Because regular courts are fast", h: "क्योंकि नियमित अदालतें तेज होती हैं", correct: false },
+                { e: "To ensure speedy and expert disposal of cases relating to environmental protection", h: "पर्यावरण संरक्षण से संबंधित मामलों का शीघ्र और विशेषज्ञ निपटान सुनिश्चित करने के लिए", correct: true },
+                { e: "To collect taxes from animals", h: "जानवरों से टैक्स वसूलने के लिए", correct: false },
+                { e: "To shut down all businesses completely", h: "सभी व्यवसायों को पूरी तरह से बंद करने के लिए", correct: false }
+            ],
+            expE: "Regular courts are overburdened. The NGT has scientific experts alongside judges to quickly and accurately resolve complex environmental disputes.",
+            expH: "नियमित अदालतों पर काम का बोझ है। जटिल पर्यावरणीय विवादों को जल्दी और सटीक रूप से हल करने के लिए NGT में न्यायाधीशों के साथ-साथ वैज्ञानिक विशेषज्ञ भी हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

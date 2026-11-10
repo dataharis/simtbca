@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 26 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 26: Environmental Pollution</h2>
+            <p>Types of Pollution (Air, Water, Noise, Soil, Marine) & Impacts</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is 'Pollution' in environmental terms?",
+            qH: "पर्यावरण के संदर्भ में 'प्रदूषण' (Pollution) क्या है?",
+            options: [
+                { e: "Cleaning up the forest", h: "जंगल की सफाई करना", correct: false },
+                { e: "The addition of harmful substances to the environment that cause adverse effects", h: "पर्यावरण में हानिकारक पदार्थों का जुड़ना जो प्रतिकूल प्रभाव पैदा करते हैं", correct: true },
+                { e: "Planting trees near factories", h: "कारखानों के पास पेड़ लगाना", correct: false },
+                { e: "The natural flow of river water", h: "नदी के पानी का प्राकृतिक बहाव", correct: false }
+            ],
+            expE: "Pollution occurs when contaminants are introduced into the natural environment, causing damage to nature or human health.",
+            expH: "प्रदूषण तब होता है जब प्राकृतिक पर्यावरण में संदूषक (contaminants) शामिल हो जाते हैं, जिससे प्रकृति या मानव स्वास्थ्य को नुकसान होता है।"
+        },
+        {
+            qE: "Vehicle exhaust and factory smoke are the main causes of which type of pollution?",
+            qH: "वाहनों का धुआं और कारखानों का धुआं मुख्य रूप से किस प्रकार के प्रदूषण का कारण हैं?",
+            options: [
+                { e: "Soil Pollution", h: "मृदा प्रदूषण", correct: false },
+                { e: "Noise Pollution", h: "ध्वनि प्रदूषण", correct: false },
+                { e: "Air Pollution", h: "वायु प्रदूषण (Air Pollution)", correct: true },
+                { e: "Marine Pollution", h: "समुद्री प्रदूषण", correct: false }
+            ],
+            expE: "Vehicles and factories release harmful gases like Carbon Monoxide (CO) and Nitrogen Oxides (NOx) into the air.",
+            expH: "वाहन और कारखाने हवा में कार्बन मोनोऑक्साइड (CO) और नाइट्रोजन ऑक्साइड (NOx) जैसी हानिकारक गैसें छोड़ते हैं।"
+        },
+        {
+            qE: "Loud, unwanted sound that causes physical and mental discomfort is known as:",
+            qH: "तेज़, अवांछित ध्वनि जो शारीरिक और मानसिक परेशानी का कारण बनती है, क्या कहलाती है?",
+            options: [
+                { e: "Air Pollution", h: "वायु प्रदूषण", correct: false },
+                { e: "Noise Pollution", h: "ध्वनि प्रदूषण (Noise Pollution)", correct: true },
+                { e: "Vibration Pollution", h: "कंपन प्रदूषण", correct: false },
+                { e: "Visual Pollution", h: "दृश्य प्रदूषण", correct: false }
+            ],
+            expE: "Noise pollution from traffic, construction, or loud music can lead to hearing loss, stress, and sleep disturbance.",
+            expH: "यातायात, निर्माण, या तेज संगीत से होने वाले ध्वनि प्रदूषण से सुनने की क्षमता में कमी, तनाव और नींद में खलल पड़ सकता है।"
+        },
+        {
+            qE: "The famous 'Minamata disease' in Japan was caused by which water pollutant?",
+            qH: "जापान में प्रसिद्ध 'मिनामाता रोग' किस जल प्रदूषक के कारण हुआ था?",
+            options: [
+                { e: "Plastic", h: "प्लास्टिक", correct: false },
+                { e: "Lead", h: "सीसा (Lead)", correct: false },
+                { e: "Mercury", h: "पारा (Mercury)", correct: true },
+                { e: "Oil", h: "तेल", correct: false }
+            ],
+            expE: "Minamata disease is a severe neurological syndrome caused by severe mercury poisoning from industrial wastewater dumped into the sea.",
+            expH: "मिनामाता रोग एक गंभीर न्यूरोलॉजिकल सिंड्रोम है जो समुद्र में फेंके गए औद्योगिक अपशिष्ट जल से गंभीर पारा विषाक्तता (mercury poisoning) के कारण होता है।"
+        },
+        {
+            qE: "Oil spills and massive plastic dumping are the major causes of:",
+            qH: "तेल रिसाव और प्लास्टिक डंपिंग (फेंकना) किसके प्रमुख कारण हैं?",
+            options: [
+                { e: "Air Pollution", h: "वायु प्रदूषण", correct: false },
+                { e: "Marine Pollution", h: "समुद्री प्रदूषण (Marine Pollution)", correct: true },
+                { e: "Noise Pollution", h: "ध्वनि प्रदूषण", correct: false },
+                { e: "Thermal Pollution", h: "तापीय प्रदूषण", correct: false }
+            ],
+            expE: "Marine pollution specifically refers to the harmful entry of chemicals, particles, and waste into the ocean.",
+            expH: "समुद्री प्रदूषण विशेष रूप से महासागर में रसायनों, कणों और कचरे के हानिकारक प्रवेश को संदर्भित करता है।"
+        },
+        {
+            qE: "Excessive use of chemical pesticides and fertilizers primarily causes:",
+            qH: "रासायनिक कीटनाशकों और उर्वरकों के अत्यधिक उपयोग से मुख्य रूप से क्या होता है?",
+            options: [
+                { e: "Noise Pollution", h: "ध्वनि प्रदूषण", correct: false },
+                { e: "Soil Pollution", h: "मृदा प्रदूषण (Soil Pollution)", correct: true },
+                { e: "Light Pollution", h: "प्रकाश प्रदूषण", correct: false },
+                { e: "Thermal Pollution", h: "तापीय प्रदूषण", correct: false }
+            ],
+            expE: "Chemicals get trapped in the soil, killing beneficial microbes and degrading the fertility of the land over time.",
+            expH: "रसायन मिट्टी में फंस जाते हैं, जिससे लाभकारी सूक्ष्मजीव मर जाते हैं और समय के साथ भूमि की उर्वरता कम हो जाती है।"
+        },
+        {
+            qE: "In air pollution, what does 'PM' stand for in PM2.5?",
+            qH: "वायु प्रदूषण में, PM2.5 में 'PM' का क्या अर्थ है?",
+            options: [
+                { e: "Poisonous Matter", h: "पॉइजनस मैटर", correct: false },
+                { e: "Pollution Measurement", h: "पॉल्यूशन मेजरमेंट", correct: false },
+                { e: "Particulate Matter", h: "पार्टिकुलेट मैटर (Particulate Matter)", correct: true },
+                { e: "Primary Molecule", h: "प्राइमरी मॉलिक्यूल", correct: false }
+            ],
+            expE: "Particulate Matter (PM) refers to tiny solid or liquid particles suspended in the air that can deeply penetrate the lungs.",
+            expH: "पार्टिकुलेट मैटर (PM) हवा में निलंबित छोटे ठोस या तरल कणों को संदर्भित करता है जो फेफड़ों में गहराई तक प्रवेश कर सकते हैं।"
+        },
+        {
+            qE: "Which highly toxic gas from car exhausts reduces the oxygen-carrying capacity of human blood?",
+            qH: "कार के निकास से निकलने वाली कौन सी अत्यधिक जहरीली गैस मानव रक्त की ऑक्सीजन ले जाने की क्षमता को कम कर देती है?",
+            options: [
+                { e: "Carbon Dioxide (CO2)", h: "कार्बन डाइऑक्साइड (CO2)", correct: false },
+                { e: "Oxygen (O2)", h: "ऑक्सीजन (O2)", correct: false },
+                { e: "Carbon Monoxide (CO)", h: "कार्बन मोनोऑक्साइड (CO)", correct: true },
+                { e: "Methane (CH4)", h: "मीथेन (CH4)", correct: false }
+            ],
+            expE: "Carbon Monoxide binds to hemoglobin in the blood much faster than oxygen, causing suffocation or death in enclosed spaces.",
+            expH: "कार्बन मोनोऑक्साइड रक्त में हीमोग्लोबिन से ऑक्सीजन की तुलना में बहुत तेजी से जुड़ती है, जिससे बंद स्थानों में घुटन या मृत्यु हो सकती है।"
+        },
+        {
+            qE: "When factories discharge hot water directly into rivers, it causes:",
+            qH: "जब कारखाने गर्म पानी को सीधे नदियों में छोड़ते हैं, तो इससे क्या होता है?",
+            options: [
+                { e: "Noise pollution", h: "ध्वनि प्रदूषण", correct: false },
+                { e: "Thermal pollution", h: "तापीय प्रदूषण (Thermal pollution)", correct: true },
+                { e: "Air pollution", h: "वायु प्रदूषण", correct: false },
+                { e: "Radioactive pollution", h: "रेडियोधर्मी प्रदूषण", correct: false }
+            ],
+            expE: "Thermal pollution drastically increases the water temperature, which lowers oxygen levels and kills aquatic life like fish.",
+            expH: "तापीय प्रदूषण पानी के तापमान को काफी बढ़ा देता है, जिससे ऑक्सीजन का स्तर कम हो जाता है और मछली जैसे जलीय जीव मर जाते हैं।"
+        },
+        {
+            qE: "What is the standard unit used to measure the intensity of noise?",
+            qH: "शोर (noise) की तीव्रता मापने के लिए प्रयुक्त मानक इकाई क्या है?",
+            options: [
+                { e: "Celsius (°C)", h: "सेल्सियस", correct: false },
+                { e: "Decibel (dB)", h: "डेसिबल (dB)", correct: true },
+                { e: "Kilogram (kg)", h: "किलोग्राम", correct: false },
+                { e: "Meter (m)", h: "मीटर", correct: false }
+            ],
+            expE: "Sound is measured in decibels (dB). Prolonged exposure to noise above 85 dB can cause hearing damage.",
+            expH: "ध्वनि को डेसिबल (dB) में मापा जाता है। 85 dB से अधिक शोर के लंबे समय तक संपर्क में रहने से सुनने की क्षमता को नुकसान हो सकता है।"
+        },
+        {
+            qE: "Which of these diseases is commonly spread through polluted drinking water?",
+            qH: "इनमें से कौन सी बीमारी आमतौर पर प्रदूषित पेयजल से फैलती है?",
+            options: [
+                { e: "Cholera", h: "हैजा (Cholera)", correct: true },
+                { e: "Asthma", h: "अस्थमा", correct: false },
+                { e: "Lung Cancer", h: "फेफड़ों का कैंसर", correct: false },
+                { e: "Deafness", h: "बहरापन", correct: false }
+            ],
+            expE: "Cholera, typhoid, and dysentery are severe waterborne diseases caused by drinking water contaminated with sewage.",
+            expH: "हैजा, टाइफाइड और पेचिश सीवेज से दूषित पानी पीने के कारण होने वाली गंभीर जलजनित बीमारियाँ हैं।"
+        },
+        {
+            qE: "A dangerous, thick mixture of smoke and fog in the air is commonly called:",
+            qH: "हवा में धुएं और कोहरे के खतरनाक, गाढ़े मिश्रण को आम तौर पर क्या कहा जाता है?",
+            options: [
+                { e: "Cloud", h: "बादल", correct: false },
+                { e: "Smog", h: "स्मॉग (Smog)", correct: true },
+                { e: "Rain", h: "बारिश", correct: false },
+                { e: "Dust storm", h: "धूल भरी आंधी", correct: false }
+            ],
+            expE: "Smog (Smoke + Fog) severely reduces visibility and causes acute respiratory problems, especially during winters in cities like Delhi.",
+            expH: "स्मॉग (धुआं + कोहरा) दृश्यता को गंभीर रूप से कम करता है और तीव्र श्वसन समस्याओं का कारण बनता है, विशेष रूप से दिल्ली जैसे शहरों में सर्दियों के दौरान।"
+        },
+        {
+            qE: "Microplastics (tiny plastic pieces) are currently a massive threat to which ecosystem?",
+            qH: "माइक्रोप्लास्टिक्स (प्लास्टिक के छोटे टुकड़े) वर्तमान में किस पारिस्थितिकी तंत्र के लिए एक बड़ा खतरा हैं?",
+            options: [
+                { e: "Marine / Oceans", h: "समुद्री / महासागर", correct: true },
+                { e: "Desert", h: "रेगिस्तान", correct: false },
+                { e: "High Mountains", h: "ऊंचे पहाड़", correct: false },
+                { e: "Forests", h: "जंगल", correct: false }
+            ],
+            expE: "Marine animals mistakenly eat microplastics, which block their digestive systems and introduce toxins into the human food chain via seafood.",
+            expH: "समुद्री जानवर गलती से माइक्रोप्लास्टिक खा लेते हैं, जो उनके पाचन तंत्र को अवरुद्ध कर देते हैं और समुद्री भोजन के माध्यम से मानव खाद्य श्रृंखला में विषाक्त पदार्थों को शामिल कर देते हैं।"
+        },
+        {
+            qE: "How does severe environmental pollution pose a financial risk to modern businesses?",
+            qH: "गंभीर पर्यावरण प्रदूषण आधुनिक व्यवसायों के लिए वित्तीय जोखिम कैसे पैदा करता है?",
+            options: [
+                { e: "It makes their products sell faster", h: "यह उनके उत्पादों को तेजी से बिकवाता है", correct: false },
+                { e: "Through regulatory fines, factory closures, and poor employee health", h: "नियामक जुर्माने, कारखाने बंद होने और खराब कर्मचारी स्वास्थ्य के माध्यम से", correct: true },
+                { e: "It reduces their taxes", h: "यह उनके करों (taxes) को कम करता है", correct: false },
+                { e: "It has zero financial impact", h: "इसका कोई वित्तीय प्रभाव नहीं पड़ता", correct: false }
+            ],
+            expE: "Polluting companies face huge legal penalties from the government and lose the trust of eco-conscious consumers.",
+            expH: "प्रदूषण फैलाने वाली कंपनियों को सरकार से भारी कानूनी दंड का सामना करना पड़ता है और पर्यावरण के प्रति जागरूक उपभोक्ताओं का विश्वास खोना पड़ता है।"
+        },
+        {
+            qE: "The overgrowth of algae in lakes due to fertilizer runoff (nutrient pollution), which eventually kills fish, is called:",
+            qH: "उर्वरक के बहने (पोषक तत्व प्रदूषण) के कारण झीलों में शैवाल (algae) का अत्यधिक विकास, जो अंततः मछलियों को मारता है, क्या कहलाता है?",
+            options: [
+                { e: "Eutrophication", h: "सुपोषण (Eutrophication)", correct: true },
+                { e: "Evaporation", h: "वाष्पीकरण", correct: false },
+                { e: "Afforestation", h: "वनीकरण", correct: false },
+                { e: "Biomagnification", h: "बायोमैग्निफिकेशन", correct: false }
+            ],
+            expE: "Eutrophication depletes oxygen in the water, creating 'dead zones' where no aquatic life can survive.",
+            expH: "सुपोषण (Eutrophication) पानी में ऑक्सीजन को कम कर देता है, जिससे 'मृत क्षेत्र' बन जाते हैं जहां कोई भी जलीय जीवन जीवित नहीं रह सकता है।"
+        },
+        {
+            qE: "Which type of pollution directly degrades the physical and chemical structure of agricultural land?",
+            qH: "किस प्रकार का प्रदूषण सीधे कृषि भूमि की भौतिक और रासायनिक संरचना को ख़राब (degrade) करता है?",
+            options: [
+                { e: "Noise Pollution", h: "ध्वनि प्रदूषण", correct: false },
+                { e: "Marine Pollution", h: "समुद्री प्रदूषण", correct: false },
+                { e: "Soil Pollution", h: "मृदा प्रदूषण (Soil Pollution)", correct: true },
+                { e: "Light Pollution", h: "प्रकाश प्रदूषण", correct: false }
+            ],
+            expE: "Soil pollution from industrial waste and excess chemicals makes the land infertile and unable to grow crops safely.",
+            expH: "औद्योगिक कचरे और अतिरिक्त रसायनों से होने वाला मृदा प्रदूषण भूमि को बंजर बना देता है और सुरक्षित रूप से फसल उगाने में असमर्थ बना देता है।"
+        },
+        {
+            qE: "Areas around hospitals, courts, and schools where honking vehicles is strictly prohibited are legally called:",
+            qH: "अस्पतालों, अदालतों और स्कूलों के आसपास के क्षेत्र जहां वाहनों के हॉर्न बजाना सख्त वर्जित है, कानूनी तौर पर क्या कहलाते हैं?",
+            options: [
+                { e: "Free Zones", h: "फ्री ज़ोन", correct: false },
+                { e: "Silence Zones", h: "साइलेंस ज़ोन (Silence Zones)", correct: true },
+                { e: "Parking Zones", h: "पार्किंग ज़ोन", correct: false },
+                { e: "Green Zones", h: "ग्रीन ज़ोन", correct: false }
+            ],
+            expE: "Silence zones are declared up to 100 meters around these sensitive areas to prevent noise pollution.",
+            expH: "ध्वनि प्रदूषण को रोकने के लिए इन संवेदनशील क्षेत्रों के 100 मीटर के दायरे को साइलेंस ज़ोन घोषित किया गया है।"
+        },
+        {
+            qE: "A 'Primary Pollutant' is emitted directly from a source. Which of the following is a primary air pollutant?",
+            qH: "एक 'प्राथमिक प्रदूषक' (Primary Pollutant) सीधे स्रोत से उत्सर्जित होता है। निम्नलिखित में से कौन प्राथमिक वायु प्रदूषक है?",
+            options: [
+                { e: "Ozone", h: "ओजोन", correct: false },
+                { e: "Smog", h: "स्मॉग", correct: false },
+                { e: "Carbon Dioxide (CO2) from a car exhaust", h: "कार के निकास से कार्बन डाइऑक्साइड (CO2)", correct: true },
+                { e: "Acid Rain", h: "अम्ल वर्षा (Acid rain)", correct: false }
+            ],
+            expE: "CO2 is released directly into the air. (Secondary pollutants like smog or ozone form when primary pollutants react in the air).",
+            expH: "CO2 सीधे हवा में छोड़ी जाती है। (स्मॉग या ओजोन जैसे द्वितीयक प्रदूषक तब बनते हैं जब हवा में प्राथमिक प्रदूषक प्रतिक्रिया करते हैं)।"
+        },
+        {
+            qE: "What is an 'Oil Spill'?",
+            qH: "'ऑयल स्पिल' (Oil Spill - तेल रिसाव) क्या है?",
+            options: [
+                { e: "Using cooking oil at home", h: "घर पर खाना पकाने के तेल का उपयोग करना", correct: false },
+                { e: "The accidental release of liquid petroleum directly into the ocean or coastal waters", h: "तरल पेट्रोलियम का सीधे समुद्र या तटीय जल में आकस्मिक रिसाव", correct: true },
+                { e: "Putting oil in a car engine", h: "कार के इंजन में तेल डालना", correct: false },
+                { e: "Painting a wall with oil paints", h: "दीवार को तेल वाले पेंट से रंगना", correct: false }
+            ],
+            expE: "Oil spills from tanker ships are disastrous for marine life, coating birds' feathers and suffocating fish.",
+            expH: "टैंकर जहाजों से तेल का रिसाव समुद्री जीवन के लिए विनाशकारी है, जो पक्षियों के पंखों को ढक लेता है और मछलियों का दम घोंट देता है।"
+        },
+        {
+            qE: "What is the most effective and legal way for a manufacturing industry to prevent water pollution?",
+            qH: "विनिर्माण उद्योग के लिए जल प्रदूषण को रोकने का सबसे प्रभावी और कानूनी तरीका क्या है?",
+            options: [
+                { e: "Dumping waste at night when nobody is looking", h: "रात में कचरा डंप करना जब कोई नहीं देख रहा हो", correct: false },
+                { e: "Treating the wastewater in an Effluent Treatment Plant (ETP) before releasing it", h: "अपशिष्ट जल (wastewater) को छोड़ने से पहले एफ्लुएंट ट्रीटमेंट प्लांट (ETP) में उसका उपचार करना", correct: true },
+                { e: "Mixing the waste with drinking water", h: "कचरे को पीने के पानी में मिलाना", correct: false },
+                { e: "Moving the factory to another country", h: "कारखाने को दूसरे देश में ले जाना", correct: false }
+            ],
+            expE: "ETPs are mandatory. They filter and neutralize toxic chemicals so the discharged water does not harm the environment.",
+            expH: "ईटीपी (ETPs) अनिवार्य हैं। वे जहरीले रसायनों को फ़िल्टर और बेअसर करते हैं ताकि छोड़ा गया पानी पर्यावरण को नुकसान न पहुँचाए।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

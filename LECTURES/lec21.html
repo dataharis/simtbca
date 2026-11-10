@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 21 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 21: The Environment (Protection) Act, 1986</h2>
+            <p>Comprehensive Environmental Legislation in India</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "In which year was the Environment (Protection) Act (EPA) passed in India?",
+            qH: "भारत में पर्यावरण (संरक्षण) अधिनियम (EPA) किस वर्ष पारित किया गया था?",
+            options: [
+                { e: "1972", h: "1972", correct: false },
+                { e: "1981", h: "1981", correct: false },
+                { e: "1986", h: "1986", correct: true },
+                { e: "2000", h: "2000", correct: false }
+            ],
+            expE: "The Environment (Protection) Act was passed in 1986 as a comprehensive legislation to protect the environment.",
+            expH: "पर्यावरण (संरक्षण) अधिनियम 1986 में पर्यावरण की रक्षा के लिए एक व्यापक कानून के रूप में पारित किया गया था।"
+        },
+        {
+            qE: "Which tragic industrial disaster triggered the Government of India to enact the Environment (Protection) Act, 1986?",
+            qH: "किस दुखद औद्योगिक आपदा ने भारत सरकार को पर्यावरण (संरक्षण) अधिनियम, 1986 लागू करने के लिए प्रेरित किया?",
+            options: [
+                { e: "Chernobyl Nuclear Disaster", h: "चेरनोबिल परमाणु आपदा", correct: false },
+                { e: "Bhopal Gas Tragedy (1984)", h: "भोपाल गैस त्रासदी (1984)", correct: true },
+                { e: "Uttarakhand Floods", h: "उत्तराखंड बाढ़", correct: false },
+                { e: "London Smog", h: "लंदन स्मॉग", correct: false }
+            ],
+            expE: "The devastating Bhopal Gas Tragedy exposed the weaknesses in earlier laws, leading to the creation of this strict and comprehensive Act.",
+            expH: "विनाशकारी भोपाल गैस त्रासदी ने पहले के कानूनों की कमजोरियों को उजागर किया, जिससे इस सख्त और व्यापक अधिनियम का निर्माण हुआ।"
+        },
+        {
+            qE: "The Environment (Protection) Act, 1986 is widely known by which popular name?",
+            qH: "पर्यावरण (संरक्षण) अधिनियम, 1986 को व्यापक रूप से किस लोकप्रिय नाम से जाना जाता है?",
+            options: [
+                { e: "The Air and Water Act", h: "वायु और जल अधिनियम", correct: false },
+                { e: "The Umbrella Act", h: "अम्ब्रेला (छतरी) अधिनियम", correct: true },
+                { e: "The Green Constitution", h: "हरित संविधान", correct: false },
+                { e: "The Factory Act", h: "फैक्ट्री अधिनियम", correct: false }
+            ],
+            expE: "It is called an 'Umbrella Act' because it provides a broad framework that covers all areas of environmental protection (water, air, land, hazards).",
+            expH: "इसे 'अम्ब्रेला एक्ट' (Umbrella Act) कहा जाता है क्योंकि यह एक व्यापक ढांचा प्रदान करता है जो पर्यावरण संरक्षण के सभी क्षेत्रों (जल, वायु, भूमि, खतरों) को कवर करता है।"
+        },
+        {
+            qE: "According to the EPA 1986, what does the definition of 'Environment' include?",
+            qH: "EPA 1986 के अनुसार, 'पर्यावरण' की परिभाषा में क्या शामिल है?",
+            options: [
+                { e: "Only forests and wildlife", h: "केवल जंगल और वन्यजीव", correct: false },
+                { e: "Water, air and land and the inter-relationship which exists among them and human beings, other living creatures, plants, micro-organisms, and property", h: "जल, वायु और भूमि तथा वह अंतर्संबंध जो उनके और मनुष्य, अन्य जीवित प्राणियों, पौधों, सूक्ष्मजीवों और संपत्ति के बीच मौजूद है", correct: true },
+                { e: "Only the atmosphere", h: "केवल वायुमंडल", correct: false },
+                { e: "Only national parks", h: "केवल राष्ट्रीय उद्यान", correct: false }
+            ],
+            expE: "The EPA gives a very comprehensive definition of the environment, covering all physical, biological, and social elements.",
+            expH: "EPA पर्यावरण की एक बहुत व्यापक परिभाषा देता है, जिसमें सभी भौतिक, जैविक और सामाजिक तत्व शामिल हैं।"
+        },
+        {
+            qE: "The Environment (Protection) Act was passed under which Article of the Indian Constitution (which gives power to enact laws for implementing international agreements)?",
+            qH: "पर्यावरण (संरक्षण) अधिनियम भारतीय संविधान के किस अनुच्छेद (जो अंतर्राष्ट्रीय समझौतों को लागू करने के लिए कानून बनाने की शक्ति देता है) के तहत पारित किया गया था?",
+            options: [
+                { e: "Article 253", h: "अनुच्छेद 253", correct: true },
+                { e: "Article 21", h: "अनुच्छेद 21", correct: false },
+                { e: "Article 14", h: "अनुच्छेद 14", correct: false },
+                { e: "Article 48A", h: "अनुच्छेद 48A", correct: false }
+            ],
+            expE: "Article 253 empowers the Parliament to make laws to implement decisions taken at international conferences (like the Stockholm Conference).",
+            expH: "अनुच्छेद 253 संसद को अंतर्राष्ट्रीय सम्मेलनों (जैसे स्टॉकहोम सम्मेलन) में लिए गए निर्णयों को लागू करने के लिए कानून बनाने का अधिकार देता है।"
+        },
+        {
+            qE: "Under the EPA 1986, who is given the power to take all measures for protecting and improving the quality of the environment?",
+            qH: "EPA 1986 के तहत, पर्यावरण की गुणवत्ता की रक्षा और सुधार के लिए सभी उपाय करने की शक्ति किसे दी गई है?",
+            options: [
+                { e: "The State Governments individually", h: "व्यक्तिगत रूप से राज्य सरकारों को", correct: false },
+                { e: "The Central Government", h: "केंद्र सरकार को", correct: true },
+                { e: "The Supreme Court", h: "सुप्रीम कोर्ट को", correct: false },
+                { e: "Local Municipalities", h: "स्थानीय नगर पालिकाओं को", correct: false }
+            ],
+            expE: "The Act heavily centralizes power, giving the Central Government overarching authority to coordinate actions of state bodies and set national standards.",
+            expH: "अधिनियम शक्ति को भारी रूप से केंद्रीकृत करता है, जिससे केंद्र सरकार को राज्य निकायों के कार्यों का समन्वय करने और राष्ट्रीय मानक निर्धारित करने का व्यापक अधिकार मिलता है।"
+        },
+        {
+            qE: "What does 'Hazardous Substance' mean according to this Act?",
+            qH: "इस अधिनियम के अनुसार 'खतरनाक पदार्थ' (Hazardous Substance) का क्या अर्थ है?",
+            options: [
+                { e: "Any substance that smells bad", h: "कोई भी पदार्थ जिससे दुर्गंध आती हो", correct: false },
+                { e: "Any substance or preparation which, by reason of its chemical or physio-chemical properties, is liable to cause harm to human beings, living creatures, plants, micro-organisms, property, or the environment", h: "कोई भी पदार्थ या मिश्रण जो अपने रासायनिक या भौतिक-रासायनिक गुणों के कारण मनुष्य, जीवित प्राणियों, पौधों, सूक्ष्मजीवों, संपत्ति या पर्यावरण को नुकसान पहुंचाने के लिए उत्तरदायी है", correct: true },
+                { e: "Only radioactive materials", h: "केवल रेडियोधर्मी सामग्री", correct: false },
+                { e: "Only solid waste", h: "केवल ठोस कचरा", correct: false }
+            ],
+            expE: "This definition is broad enough to cover toxic chemicals, explosives, flammable liquids, and bio-medical waste.",
+            expH: "यह परिभाषा इतनी व्यापक है कि इसमें विषैले रसायन, विस्फोटक, ज्वलनशील तरल पदार्थ और जैव-चिकित्सा अपशिष्ट शामिल हो सकते हैं।"
+        },
+        {
+            qE: "If an industry completely ignores the rules of the Environment (Protection) Act, what is the maximum penalty they can face?",
+            qH: "यदि कोई उद्योग पूरी तरह से पर्यावरण (संरक्षण) अधिनियम के नियमों की अनदेखी करता है, तो उसे अधिकतम कितने दंड का सामना करना पड़ सकता है?",
+            options: [
+                { e: "A fine of ₹500", h: "₹500 का जुर्माना", correct: false },
+                { e: "Imprisonment up to 5 years, or fine up to ₹1 Lakh, or both", h: "5 साल तक की कैद, या ₹1 लाख तक का जुर्माना, या दोनों", correct: true },
+                { e: "Only a written apology is required", h: "केवल लिखित माफ़ी की आवश्यकता है", correct: false },
+                { e: "They just have to plant trees", h: "उन्हें बस पेड़ लगाने होंगे", correct: false }
+            ],
+            expE: "Section 15 states that contravention of any provision can lead to severe punishment, and if the failure continues, an additional fine of ₹5,000 per day applies.",
+            expH: "धारा 15 में कहा गया है कि किसी भी प्रावधान के उल्लंघन से कड़ी सजा हो सकती है, और यदि विफलता जारी रहती है, तो प्रति दिन ₹5,000 का अतिरिक्त जुर्माना लागू होता है।"
+        },
+        {
+            qE: "Who is responsible if an offense under this Act is committed by a Company?",
+            qH: "यदि इस अधिनियम के तहत कोई अपराध किसी कंपनी द्वारा किया जाता है, तो कौन जिम्मेदार है?",
+            options: [
+                { e: "Only the workers on duty", h: "केवल ड्यूटी पर मौजूद कर्मचारी", correct: false },
+                { e: "Every person who was directly in charge of, and was responsible to, the company for the conduct of its business (e.g., Directors/Managers)", h: "प्रत्येक व्यक्ति जो सीधे तौर पर प्रभारी था, और व्यवसाय के संचालन के लिए कंपनी के प्रति जिम्मेदार था (जैसे, निदेशक/प्रबंधक)", correct: true },
+                { e: "Only the government", h: "केवल सरकार", correct: false },
+                { e: "The consumers who buy the product", h: "उत्पाद खरीदने वाले उपभोक्ता", correct: false }
+            ],
+            expE: "Corporate liability (Section 16) ensures that top management cannot hide behind the company name and are held personally accountable.",
+            expH: "कॉर्पोरेट दायित्व (धारा 16) यह सुनिश्चित करता है कि शीर्ष प्रबंधन कंपनी के नाम के पीछे छिप नहीं सकता है और व्यक्तिगत रूप से जवाबदेह ठहराया जाता है।"
+        },
+        {
+            qE: "Can a normal citizen file a complaint in court against a polluting factory under the EPA?",
+            qH: "क्या कोई सामान्य नागरिक EPA के तहत प्रदूषण फैलाने वाले कारखाने के खिलाफ अदालत में शिकायत दर्ज कर सकता है?",
+            options: [
+                { e: "No, citizens cannot interfere", h: "नहीं, नागरिक हस्तक्षेप नहीं कर सकते", correct: false },
+                { e: "Yes, by giving a notice of not less than 60 days to the Central Government or authorized officer", h: "हां, केंद्र सरकार या अधिकृत अधिकारी को कम से कम 60 दिन का नोटिस देकर", correct: true },
+                { e: "Yes, they can arrest the factory owner directly", h: "हां, वे फैक्ट्री मालिक को सीधे गिरफ्तार कर सकते हैं", correct: false },
+                { e: "No, only police can file complaints", h: "नहीं, केवल पुलिस ही शिकायत दर्ज कर सकती है", correct: false }
+            ],
+            expE: "Section 19 allows citizens to take legal action if the government fails to act within 60 days of being notified.",
+            expH: "धारा 19 नागरिकों को कानूनी कार्रवाई करने की अनुमति देती है यदि सरकार अधिसूचित होने के 60 दिनों के भीतर कार्रवाई करने में विफल रहती है।"
+        },
+        {
+            qE: "Which scheme was instituted by the Government of India under this Act to label environmentally friendly consumer products?",
+            qH: "पर्यावरण के अनुकूल उपभोक्ता उत्पादों को लेबल करने के लिए इस अधिनियम के तहत भारत सरकार द्वारा कौन सी योजना शुरू की गई थी?",
+            options: [
+                { e: "Eco-Mark Scheme", h: "इको-मार्क (Eco-Mark) योजना", correct: true },
+                { e: "Green Tick Scheme", h: "ग्रीन टिक योजना", correct: false },
+                { e: "Safe Product Scheme", h: "सुरक्षित उत्पाद योजना", correct: false },
+                { e: "Clean India Label", h: "स्वच्छ भारत लेबल", correct: false }
+            ],
+            expE: "The 'Ecomark' scheme (with an earthen pot as its logo) identifies products that have a lesser environmental impact.",
+            expH: "'इकोमार्क' योजना (जिसका लोगो एक मिट्टी का बर्तन है) उन उत्पादों की पहचान करती है जिनका पर्यावरणीय प्रभाव कम होता है।"
+        },
+        {
+            qE: "Under the EPA, what are 'Environmental Laboratories'?",
+            qH: "EPA के तहत 'पर्यावरण प्रयोगशालाएं' (Environmental Laboratories) क्या हैं?",
+            options: [
+                { e: "Labs that create artificial environments", h: "लैब जो कृत्रिम वातावरण बनाती हैं", correct: false },
+                { e: "Laboratories recognized by the Central Government to carry out analysis of water, air, soil, or other substances", h: "जल, वायु, मिट्टी या अन्य पदार्थों का विश्लेषण करने के लिए केंद्र सरकार द्वारा मान्यता प्राप्त प्रयोगशालाएँ", correct: true },
+                { e: "Places where animals are bred", h: "वे स्थान जहाँ जानवरों का प्रजनन कराया जाता है", correct: false },
+                { e: "Factories that make chemicals", h: "रसायन बनाने वाले कारखाने", correct: false }
+            ],
+            expE: "These labs test samples collected by officers to provide scientific proof of pollution in court.",
+            expH: "ये प्रयोगशालाएं अदालत में प्रदूषण का वैज्ञानिक प्रमाण प्रदान करने के लिए अधिकारियों द्वारा एकत्र किए गए नमूनों का परीक्षण करती हैं।"
+        },
+        {
+            qE: "What does the term 'Handling' mean in relation to hazardous substances under the Act?",
+            qH: "अधिनियम के तहत खतरनाक पदार्थों के संबंध में 'हैंडलिंग' (Handling) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Just holding the substance with bare hands", h: "पदार्थ को नंगे हाथों से पकड़ना", correct: false },
+                { e: "Manufacture, processing, treatment, package, storage, transportation, use, collection, destruction, or offering for sale", h: "निर्माण, प्रसंस्करण, उपचार, पैकेज, भंडारण, परिवहन, उपयोग, संग्रह, विनाश, या बिक्री के लिए पेश करना", correct: true },
+                { e: "Only importing from other countries", h: "केवल अन्य देशों से आयात करना", correct: false },
+                { e: "Throwing it in the river", h: "इसे नदी में फेंकना", correct: false }
+            ],
+            expE: "The law strictly regulates every single step of a hazardous substance's lifecycle to prevent disasters like Bhopal.",
+            expH: "कानून भोपाल जैसी आपदाओं को रोकने के लिए खतरनाक पदार्थ के जीवनचक्र के हर एक चरण को सख्ती से नियंत्रित करता है।"
+        },
+        {
+            qE: "Does the Environment (Protection) Act, 1986 override other existing environmental laws (like the Water Act or Air Act) in case of a conflict?",
+            qH: "क्या पर्यावरण (संरक्षण) अधिनियम, 1986 किसी विवाद की स्थिति में अन्य मौजूदा पर्यावरण कानूनों (जैसे जल अधिनियम या वायु अधिनियम) को अधिलेखित (override) करता है?",
+            options: [
+                { e: "No, the older laws always win", h: "नहीं, पुराने कानून हमेशा जीतते हैं", correct: false },
+                { e: "Yes, it acts as an umbrella legislation and its rules generally prevail to plug gaps in older laws", h: "हाँ, यह एक अम्ब्रेला (छतरी) कानून के रूप में कार्य करता है और इसके नियम आम तौर पर पुराने कानूनों की कमियों को दूर करने के लिए प्रबल होते हैं", correct: true },
+                { e: "No, they have equal power", h: "नहीं, उनके पास समान शक्ति है", correct: false },
+                { e: "The Act does not mention this", h: "अधिनियम में इसका उल्लेख नहीं है", correct: false }
+            ],
+            expE: "As an 'Umbrella Act', it gives the Central Government overriding powers to take any steps deemed necessary to protect the environment.",
+            expH: "एक 'अम्ब्रेला अधिनियम' के रूप में, यह पर्यावरण की रक्षा के लिए आवश्यक समझे जाने वाले कोई भी कदम उठाने के लिए केंद्र सरकार को व्यापक शक्तियां देता है।"
+        },
+        {
+            qE: "Which rule created under the EPA mandates the safe disposal of old computers and mobile phones?",
+            qH: "EPA के तहत बनाए गए किस नियम में पुराने कंप्यूटरों और मोबाइल फोनों के सुरक्षित निपटान को अनिवार्य किया गया है?",
+            options: [
+                { e: "Water Pollution Rules", h: "जल प्रदूषण नियम", correct: false },
+                { e: "E-Waste (Management) Rules", h: "ई-कचरा (प्रबंधन) नियम / E-Waste Rules", correct: true },
+                { e: "Air Quality Rules", h: "वायु गुणवत्ता नियम", correct: false },
+                { e: "Forest Conservation Rules", h: "वन संरक्षण नियम", correct: false }
+            ],
+            expE: "The E-Waste rules (formulated under the EPA) are especially relevant for IT and BCA/BBA students, mandating safe recycling of electronics.",
+            expH: "ई-कचरा नियम (EPA के तहत तैयार) विशेष रूप से आईटी और बीसीए/बीबीए छात्रों के लिए प्रासंगिक हैं, जो इलेक्ट्रॉनिक्स के सुरक्षित रीसाइक्लिंग को अनिवार्य करते हैं।"
+        },
+        {
+            qE: "If a government officer takes a sample of polluted water from a factory under the EPA, what must they do immediately?",
+            qH: "यदि कोई सरकारी अधिकारी EPA के तहत किसी कारखाने से प्रदूषित पानी का नमूना लेता है, तो उसे तुरंत क्या करना चाहिए?",
+            options: [
+                { e: "Drink it to test toxicity", h: "विषाक्तता का परीक्षण करने के लिए इसे पिएं", correct: false },
+                { e: "Inform the occupier of his intention, divide the sample into parts, seal it, and send it to an environmental lab", h: "कब्जाधारी (मालिक) को अपने इरादे के बारे में सूचित करें, नमूने को भागों में विभाजित करें, इसे सील करें, और इसे एक पर्यावरण प्रयोगशाला में भेजें", correct: true },
+                { e: "Throw it back into the river", h: "इसे वापस नदी में फेंक दें", correct: false },
+                { e: "Hide it from the factory owner", h: "इसे फैक्ट्री मालिक से छिपाएं", correct: false }
+            ],
+            expE: "The law requires a strict legal procedure for collecting evidence so it cannot be tampered with before reaching the lab.",
+            expH: "कानून को साक्ष्य एकत्र करने के लिए एक सख्त कानूनी प्रक्रिया की आवश्यकता है ताकि प्रयोगशाला तक पहुंचने से पहले इसके साथ छेड़छाड़ न की जा सके।"
+        },
+        {
+            qE: "What power does the Central Government have regarding the location of industries under the EPA?",
+            qH: "EPA के तहत उद्योगों के स्थान के संबंध में केंद्र सरकार के पास क्या अधिकार है?",
+            options: [
+                { e: "It can restrict or completely prohibit industries from operating in certain sensitive areas (like near coasts or wildlife reserves)", h: "यह उद्योगों को कुछ संवेदनशील क्षेत्रों (जैसे तटों या वन्यजीव अभ्यारण्यों के पास) में काम करने से प्रतिबंधित या पूरी तरह से रोक सकता है", correct: true },
+                { e: "It must allow industries to open anywhere they want", h: "इसे उद्योगों को कहीं भी खुलने की अनुमति देनी चाहिए", correct: false },
+                { e: "It can only control the color of the factory", h: "यह केवल कारखाने के रंग को नियंत्रित कर सकता है", correct: false },
+                { e: "It has no power over location", h: "स्थान पर इसका कोई अधिकार नहीं है", correct: false }
+            ],
+            expE: "The government uses this power to create 'Eco-Sensitive Zones' where highly polluting industries are not allowed.",
+            expH: "सरकार इस शक्ति का उपयोग 'पर्यावरण-संवेदनशील क्षेत्र' बनाने के लिए करती है जहां अत्यधिक प्रदूषण फैलाने वाले उद्योगों की अनुमति नहीं है।"
+        },
+        {
+            qE: "Who sets the standards for the emission or discharge of environmental pollutants under this Act?",
+            qH: "इस अधिनियम के तहत पर्यावरण प्रदूषकों के उत्सर्जन या निर्वहन के लिए मानक कौन निर्धारित करता है?",
+            options: [
+                { e: "The Central Government (usually via the CPCB)", h: "केंद्र सरकार (आमतौर पर CPCB के माध्यम से)", correct: true },
+                { e: "The local villagers", h: "स्थानीय ग्रामीण", correct: false },
+                { e: "The factory owners themselves", h: "कारखाने के मालिक स्वयं", correct: false },
+                { e: "International courts", h: "अंतरराष्ट्रीय अदालतें", correct: false }
+            ],
+            expE: "The Central Government lays down strict, nationwide standards that all industries must follow.",
+            expH: "केंद्र सरकार सख्त, राष्ट्रव्यापी मानक निर्धारित करती है जिनका सभी उद्योगों को पालन करना चाहिए।"
+        },
+        {
+            qE: "The Environment (Protection) Act allows the government to demand information from businesses. Can a business refuse to provide data about their emissions?",
+            qH: "पर्यावरण (संरक्षण) अधिनियम सरकार को व्यवसायों से जानकारी मांगने की अनुमति देता है। क्या कोई व्यवसाय अपने उत्सर्जन के बारे में डेटा प्रदान करने से इंकार कर सकता है?",
+            options: [
+                { e: "Yes, it is their private data", h: "हाँ, यह उनका निजी डेटा है", correct: false },
+                { e: "No, whoever is asked must legally furnish information regarding emissions and hazardous substances", h: "नहीं, जिससे भी पूछा जाए उसे उत्सर्जन और खतरनाक पदार्थों के संबंध में कानूनी रूप से जानकारी देनी होगी", correct: true },
+                { e: "Yes, if they pay a small fee", h: "हां, अगर वे एक छोटा सा शुल्क देते हैं", correct: false },
+                { e: "Only foreign companies can refuse", h: "केवल विदेशी कंपनियाँ ही मना कर सकती हैं", correct: false }
+            ],
+            expE: "Section 20 makes it mandatory for industries to provide requested environmental data. Refusal is an offense.",
+            expH: "धारा 20 उद्योगों के लिए मांगे गए पर्यावरणीय डेटा को प्रदान करना अनिवार्य बनाती है। इंकार करना एक अपराध है।"
+        },
+        {
+            qE: "Why is the EPA 1986 considered a vital piece of legislation for BBA/BCA students to understand?",
+            qH: "BBA/BCA छात्रों के लिए EPA 1986 को समझना एक महत्वपूर्ण कानून क्यों माना जाता है?",
+            options: [
+                { e: "Because modern businesses, IT parks, and tech startups must comply with its various rules (like e-waste, hazardous waste) to operate legally", h: "क्योंकि आधुनिक व्यवसायों, आईटी पार्कों और तकनीकी स्टार्टअप्स को कानूनी रूप से काम करने के लिए इसके विभिन्न नियमों (जैसे ई-कचरा, खतरनाक अपशिष्ट) का पालन करना चाहिए", correct: true },
+                { e: "Because it teaches software engineering", h: "क्योंकि यह सॉफ्टवेयर इंजीनियरिंग सिखाता है", correct: false },
+                { e: "Because it allows them to bypass the law", h: "क्योंकि यह उन्हें कानून को दरकिनार करने की अनुमति देता है", correct: false },
+                { e: "It is only for biology students", h: "यह केवल जीव विज्ञान के छात्रों के लिए है", correct: false }
+            ],
+            expE: "Whether you run an office (producing e-waste) or a factory (emissions), the EPA's 'umbrella' rules govern your corporate responsibilities.",
+            expH: "चाहे आप कोई कार्यालय (ई-कचरा पैदा करने वाला) चलाते हों या कोई कारखाना (उत्सर्जन), EPA के 'छतरी' नियम आपकी कॉर्पोरेट जिम्मेदारियों को नियंत्रित करते हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

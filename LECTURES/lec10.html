@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 10 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 10: Resource Conservation & Equity</h2>
+            <p>Inter/Intra-generational Equity and Public Awareness</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does 'Resource Conservation' mean?",
+            qH: "'संसाधन संरक्षण' (Resource Conservation) का क्या अर्थ है?",
+            options: [
+                { e: "Using natural resources as quickly as possible", h: "प्राकृतिक संसाधनों का यथाशीघ्र उपयोग करना", correct: false },
+                { e: "Careful management and protection of natural resources", h: "प्राकृतिक संसाधनों का सावधानीपूर्वक प्रबंधन और संरक्षण", correct: true },
+                { e: "Stopping the use of all resources entirely", h: "सभी संसाधनों का उपयोग पूरी तरह से रोकना", correct: false },
+                { e: "Hiding resources from other countries", h: "अन्य देशों से संसाधन छिपाना", correct: false }
+            ],
+            expE: "Conservation is the sustainable and careful use of natural resources so they do not get exhausted.",
+            expH: "संरक्षण प्राकृतिक संसाधनों का टिकाऊ और सावधानीपूर्वक उपयोग है ताकि वे समाप्त न हों।"
+        },
+        {
+            qE: "Which of the following represents the '3 R's' of waste management and conservation?",
+            qH: "निम्नलिखित में से कौन अपशिष्ट प्रबंधन और संरक्षण के '3 R' को दर्शाता है?",
+            options: [
+                { e: "Read, Run, Rest", h: "रीड, रन, रेस्ट", correct: false },
+                { e: "Reduce, Reuse, Recycle", h: "रिड्यूस, रीयूज, रीसायकल (कम करें, पुन: उपयोग करें, पुनर्चक्रण करें)", correct: true },
+                { e: "Remove, Rebuild, Retain", h: "रिमूव, रीबिल्ड, रिटेन", correct: false },
+                { e: "Repair, Replenish, Reject", h: "रिपेयर, रिप्लेनिश, रिजेक्ट", correct: false }
+            ],
+            expE: "The 3 R's (Reduce, Reuse, Recycle) are the fundamental steps to minimize waste and conserve resources.",
+            expH: "3 R (Reduce, Reuse, Recycle) कचरे को कम करने और संसाधनों के संरक्षण के मूलभूत चरण हैं।"
+        },
+        {
+            qE: "What does the concept of 'Inter-generational Equity' refer to?",
+            qH: "'अंतर-पीढ़ीगत समानता' (Inter-generational Equity) की अवधारणा का क्या अर्थ है?",
+            options: [
+                { e: "Fair distribution of resources between rich and poor countries today", h: "आज अमीर और गरीब देशों के बीच संसाधनों का उचित वितरण", correct: false },
+                { e: "Leaving enough healthy resources for future generations (our children and grandchildren)", h: "भविष्य की पीढ़ियों (हमारे बच्चों और पोते-पोतियों) के लिए पर्याप्त स्वस्थ संसाधन छोड़ना", correct: true },
+                { e: "Earning equal salaries for all generations", h: "सभी पीढ़ियों के लिए समान वेतन अर्जित करना", correct: false },
+                { e: "Using older technologies instead of new ones", h: "नई तकनीकों के बजाय पुरानी तकनीकों का उपयोग करना", correct: false }
+            ],
+            expE: "Inter-generational equity ensures that the needs of the present do not compromise the ability of future generations to meet their needs.",
+            expH: "अंतर-पीढ़ीगत समानता यह सुनिश्चित करती है कि वर्तमान की जरूरतें भविष्य की पीढ़ियों की अपनी जरूरतों को पूरा करने की क्षमता से समझौता न करें।"
+        },
+        {
+            qE: "What does 'Intra-generational Equity' mean?",
+            qH: "'अंतः-पीढ़ीगत समानता' (Intra-generational Equity) का क्या अर्थ है?",
+            options: [
+                { e: "Fairness and equal access to resources among all people living in the PRESENT generation", h: "वर्तमान पीढ़ी में रहने वाले सभी लोगों के बीच निष्पक्षता और संसाधनों तक समान पहुंच", correct: true },
+                { e: "Saving all money for the future", h: "भविष्य के लिए सारा पैसा बचाना", correct: false },
+                { e: "Treating older people with respect", h: "वृद्ध लोगों के साथ सम्मान से पेश आना", correct: false },
+                { e: "Planting trees for the next 100 years", h: "अगले 100 वर्षों के लिए पेड़ लगाना", correct: false }
+            ],
+            expE: "Intra-generational equity focuses on justice and reducing the gap between the rich and the poor globally today.",
+            expH: "अंतः-पीढ़ीगत समानता आज विश्व स्तर पर न्याय और अमीर और गरीब के बीच की खाई को कम करने पर केंद्रित है।"
+        },
+        {
+            qE: "If rich countries consume 80% of global resources while the poorest nations struggle for basic needs, this violates the principle of:",
+            qH: "यदि अमीर देश वैश्विक संसाधनों का 80% उपभोग करते हैं जबकि सबसे गरीब राष्ट्र बुनियादी जरूरतों के लिए संघर्ष करते हैं, तो यह किस सिद्धांत का उल्लंघन है?",
+            options: [
+                { e: "Inter-generational equity", h: "अंतर-पीढ़ीगत समानता", correct: false },
+                { e: "Intra-generational equity", h: "अंतः-पीढ़ीगत समानता", correct: true },
+                { e: "Technological advancement", h: "तकनीकी प्रगति", correct: false },
+                { e: "Economic profitability", h: "आर्थिक लाभप्रदता", correct: false }
+            ],
+            expE: "This shows a lack of fairness among people living right now, hence violating intra-generational equity.",
+            expH: "यह अभी जीवित लोगों के बीच निष्पक्षता की कमी को दर्शाता है, इसलिए यह अंतः-पीढ़ीगत समानता का उल्लंघन करता है।"
+        },
+        {
+            qE: "Why is 'Public Awareness' crucial for environmental conservation?",
+            qH: "पर्यावरण संरक्षण के लिए 'जन जागरूकता' (Public Awareness) क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because governments alone cannot solve environmental problems without the active participation of citizens", h: "क्योंकि नागरिकों की सक्रिय भागीदारी के बिना सरकारें अकेले पर्यावरणीय समस्याओं का समाधान नहीं कर सकती हैं", correct: true },
+                { e: "Because it makes people watch more television", h: "क्योंकि इससे लोग ज्यादा टेलीविजन देखते हैं", correct: false },
+                { e: "Because it increases the cost of natural resources", h: "क्योंकि इससे प्राकृतिक संसाधनों की लागत बढ़ जाती है", correct: false },
+                { e: "Because it stops all industrial growth", h: "क्योंकि यह सभी औद्योगिक विकास को रोकता है", correct: false }
+            ],
+            expE: "Environmental protection requires mass movement; educated and aware citizens naturally adopt eco-friendly habits.",
+            expH: "पर्यावरण संरक्षण के लिए जन आंदोलन की आवश्यकता है; शिक्षित और जागरूक नागरिक स्वाभाविक रूप से पर्यावरण के अनुकूल आदतें अपनाते हैं।"
+        },
+        {
+            qE: "When is 'World Environment Day' celebrated globally to raise awareness?",
+            qH: "जागरूकता बढ़ाने के लिए विश्व स्तर पर 'विश्व पर्यावरण दिवस' कब मनाया जाता है?",
+            options: [
+                { e: "1st January", h: "1 जनवरी", correct: false },
+                { e: "5th June", h: "5 जून", correct: true },
+                { e: "22nd April", h: "22 अप्रैल", correct: false },
+                { e: "15th August", h: "15 अगस्त", correct: false }
+            ],
+            expE: "World Environment Day is celebrated on 5th June every year to encourage awareness and action for the protection of the environment.",
+            expH: "पर्यावरण की सुरक्षा के लिए जागरूकता और कार्रवाई को प्रोत्साहित करने के लिए हर साल 5 जून को विश्व पर्यावरण दिवस मनाया जाता है।"
+        },
+        {
+            qE: "Which of the following is a practical example of 'Reducing' (from the 3 R's)?",
+            qH: "निम्नलिखित में से कौन सा 'रिड्यूस' (कम करने) का एक व्यावहारिक उदाहरण है?",
+            options: [
+                { e: "Melting old plastic bottles to make new ones", h: "पुरानी प्लास्टिक की बोतलों को पिघलाकर नई बोतलें बनाना", correct: false },
+                { e: "Using a single-use plastic bag for shopping", h: "खरीदारी के लिए सिंगल-यूज़ प्लास्टिक बैग का उपयोग करना", correct: false },
+                { e: "Turning off the tap while brushing your teeth to save water", h: "पानी बचाने के लिए दांत ब्रश करते समय नल बंद करना", correct: true },
+                { e: "Throwing old clothes in the garbage", h: "पुराने कपड़ों को कचरे में फेंकना", correct: false }
+            ],
+            expE: "Reducing means minimizing the amount of resources we consume and waste we create.",
+            expH: "कम करने (Reduce) का मतलब है कि हम संसाधनों की खपत को कम करें और कचरे को कम से कम पैदा करें।"
+        },
+        {
+            qE: "Using an old glass jar to store kitchen spices instead of throwing it away is an example of:",
+            qH: "रसोई के मसालों को स्टोर करने के लिए पुराने कांच के जार को फेंकने के बजाय उसका उपयोग करना किसका उदाहरण है?",
+            options: [
+                { e: "Recycle", h: "पुनर्चक्रण (Recycle)", correct: false },
+                { e: "Reuse", h: "पुन: उपयोग (Reuse)", correct: true },
+                { e: "Reduce", h: "कम करना (Reduce)", correct: false },
+                { e: "Refuse", h: "अस्वीकार करना (Refuse)", correct: false }
+            ],
+            expE: "Reuse means using an item again for the same or a different purpose without processing it.",
+            expH: "पुन: उपयोग का अर्थ है किसी वस्तु को बिना संसाधित किए उसी या भिन्न उद्देश्य के लिए फिर से उपयोग करना।"
+        },
+        {
+            qE: "The famous quote 'We do not inherit the Earth from our ancestors, we borrow it from our children' perfectly supports which concept?",
+            qH: "प्रसिद्ध उद्धरण 'हमें यह पृथ्वी अपने पूर्वजों से विरासत में नहीं मिली है, हमने इसे अपने बच्चों से उधार लिया है' किस अवधारणा का पूरी तरह से समर्थन करता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Industrialization", h: "औद्योगीकरण", correct: false },
+                { e: "Inter-generational Equity", h: "अंतर-पीढ़ीगत समानता (Inter-generational Equity)", correct: true },
+                { e: "Capitalism", h: "पूंजीवाद", correct: false }
+            ],
+            expE: "This quote highlights that we must keep the planet healthy for the future generations (our children).",
+            expH: "यह उद्धरण इस बात पर प्रकाश डालता है कि हमें भविष्य की पीढ़ियों (हमारे बच्चों) के लिए ग्रह को स्वस्थ रखना चाहिए।"
+        },
+        {
+            qE: "What is the role of 'Eco-Clubs' established in schools and colleges?",
+            qH: "स्कूलों और कॉलेजों में स्थापित 'इको-क्लबों' की क्या भूमिका है?",
+            options: [
+                { e: "To teach computer programming", h: "कंप्यूटर प्रोग्रामिंग सिखाने के लिए", correct: false },
+                { e: "To create environmental awareness and involve students in green activities", h: "पर्यावरण जागरूकता पैदा करना और छात्रों को हरित गतिविधियों में शामिल करना", correct: true },
+                { e: "To organize sports tournaments only", h: "केवल खेल टूर्नामेंट आयोजित करने के लिए", correct: false },
+                { e: "To promote unhealthy junk food", h: "अस्वास्थ्यकर जंक फूड को बढ़ावा देना", correct: false }
+            ],
+            expE: "Eco-clubs educate youth through tree planting, clean-up drives, and awareness campaigns.",
+            expH: "इको-क्लब वृक्षारोपण, सफाई अभियान और जागरूकता अभियानों के माध्यम से युवाओं को शिक्षित करते हैं।"
+        },
+        {
+            qE: "How can mass media (TV, Radio, Social Media) best contribute to environmental sustainability?",
+            qH: "मास मीडिया (टीवी, रेडियो, सोशल मीडिया) पर्यावरणीय स्थिरता में सबसे अच्छा योगदान कैसे दे सकता है?",
+            options: [
+                { e: "By promoting excessive consumption of plastic products", h: "प्लास्टिक उत्पादों की अत्यधिक खपत को बढ़ावा देकर", correct: false },
+                { e: "By completely ignoring natural disasters", h: "प्राकृतिक आपदाओं को पूरी तरह से नजरअंदाज करके", correct: false },
+                { e: "By broadcasting educational campaigns and raising public awareness on ecological issues", h: "शैक्षिक अभियानों का प्रसारण करके और पारिस्थितिक मुद्दों पर जन जागरूकता बढ़ाकर", correct: true },
+                { e: "By showing only entertainment movies", h: "केवल मनोरंजन फिल्में दिखाकर", correct: false }
+            ],
+            expE: "Mass media has a huge reach and is the most powerful tool to change public behavior towards nature.",
+            expH: "मास मीडिया की पहुंच बहुत बड़ी है और यह प्रकृति के प्रति लोगों के व्यवहार को बदलने का सबसे शक्तिशाली उपकरण है।"
+        },
+        {
+            qE: "Which of the following is NOT a good practice for resource conservation?",
+            qH: "निम्नलिखित में से कौन सा संसाधन संरक्षण के लिए अच्छा अभ्यास नहीं है?",
+            options: [
+                { e: "Rainwater harvesting", h: "वर्षा जल संचयन", correct: false },
+                { e: "Using energy-efficient LED bulbs", h: "ऊर्जा-कुशल एलईडी (LED) बल्ब का उपयोग करना", correct: false },
+                { e: "Leaving electrical appliances on standby all night", h: "बिजली के उपकरणों को पूरी रात स्टैंडबाय पर छोड़ देना", correct: true },
+                { e: "Using public transport or carpooling", h: "सार्वजनिक परिवहन या कारपूलिंग का उपयोग करना", correct: false }
+            ],
+            expE: "Leaving appliances on consumes 'vampire power' (wastes electricity). They should be switched off entirely.",
+            expH: "उपकरणों को चालू छोड़ने से 'वैम्पायर पावर' की खपत होती है (बिजली बर्बाद होती है)। उन्हें पूरी तरह से बंद कर देना चाहिए।"
+        },
+        {
+            qE: "The concept of 'Equitable Use of Resources' emphasizes that:",
+            qH: "'संसाधनों के समान उपयोग' (Equitable Use of Resources) की अवधारणा इस बात पर जोर देती है कि:",
+            options: [
+                { e: "Only rich countries should use the best resources", h: "केवल अमीर देशों को ही सर्वोत्तम संसाधनों का उपयोग करना चाहिए", correct: false },
+                { e: "Natural resources should be shared fairly among all communities to improve everyone's quality of life", h: "सभी के जीवन की गुणवत्ता में सुधार के लिए प्राकृतिक संसाधनों को सभी समुदायों के बीच समान रूप से साझा किया जाना चाहिए", correct: true },
+                { e: "Resources should not be used by humans at all", h: "संसाधनों का मनुष्य द्वारा बिल्कुल भी उपयोग नहीं किया जाना चाहिए", correct: false },
+                { e: "Only urban areas should get electricity", h: "केवल शहरी क्षेत्रों को ही बिजली मिलनी चाहिए", correct: false }
+            ],
+            expE: "Equity means fairness. Everyone, regardless of their economic status, deserves access to clean water, air, and energy.",
+            expH: "इक्विटी का मतलब निष्पक्षता है। हर कोई, चाहे उनकी आर्थिक स्थिति कुछ भी हो, स्वच्छ पानी, हवा और ऊर्जा तक पहुंच का हकदार है।"
+        },
+        {
+            qE: "When we convert waste materials into new materials and objects, it is called:",
+            qH: "जब हम अपशिष्ट (waste) पदार्थों को नए पदार्थों और वस्तुओं में परिवर्तित करते हैं, तो इसे क्या कहा जाता है?",
+            options: [
+                { e: "Reusing", h: "पुन: उपयोग", correct: false },
+                { e: "Recycling", h: "पुनर्चक्रण (Recycling)", correct: true },
+                { e: "Reducing", h: "कम करना", correct: false },
+                { e: "Rejecting", h: "अस्वीकार करना", correct: false }
+            ],
+            expE: "Recycling involves breaking down the waste (like melting old glass or processing paper) to create something new.",
+            expH: "रीसाइक्लिंग में कुछ नया बनाने के लिए कचरे को तोड़ना (जैसे पुराने कांच को पिघलाना या कागज को संसाधित करना) शामिल है।"
+        },
+        {
+            qE: "Sustainable Development is essentially the perfect balance between:",
+            qH: "सतत विकास (Sustainable Development) अनिवार्य रूप से किसके बीच सही संतुलन है?",
+            options: [
+                { e: "Pollution and Deforestation", h: "प्रदूषण और वनों की कटाई", correct: false },
+                { e: "Economic progress and Environmental conservation", h: "आर्थिक प्रगति और पर्यावरण संरक्षण", correct: true },
+                { e: "Rich people and Poor people", h: "अमीर लोग और गरीब लोग", correct: false },
+                { e: "Technology and Space exploration", h: "प्रौद्योगिकी और अंतरिक्ष अन्वेषण", correct: false }
+            ],
+            expE: "It aims to achieve economic growth without permanently harming the natural environment.",
+            expH: "इसका उद्देश्य प्राकृतिक पर्यावरण को स्थायी रूप से नुकसान पहुंचाए बिना आर्थिक विकास हासिल करना है।"
+        },
+        {
+            qE: "Why should Environmental Education ideally begin at the primary school level?",
+            qH: "आदर्श रूप से पर्यावरण शिक्षा (Environmental Education) प्राथमिक विद्यालय स्तर पर क्यों शुरू होनी चाहिए?",
+            options: [
+                { e: "Because young children are better at planting trees than adults", h: "क्योंकि छोटे बच्चे वयस्कों की तुलना में पेड़ लगाने में बेहतर होते हैं", correct: false },
+                { e: "Because childhood is the best time to form lifelong eco-friendly habits and values", h: "क्योंकि बचपन आजीवन पर्यावरण के अनुकूल आदतें और मूल्य बनाने का सबसे अच्छा समय है", correct: true },
+                { e: "Because children don't have to study other subjects", h: "क्योंकि बच्चों को अन्य विषय नहीं पढ़ने पड़ते", correct: false },
+                { e: "Because the government saves money this way", h: "क्योंकि इस तरह सरकार का पैसा बचता है", correct: false }
+            ],
+            expE: "Instilling environmental ethics at a young age ensures that the next generation grows up to be responsible citizens.",
+            expH: "कम उम्र में पर्यावरण नैतिकता पैदा करने से यह सुनिश्चित होता है कि अगली पीढ़ी जिम्मेदार नागरिक बनकर बड़ी हो।"
+        },
+        {
+            qE: "Which of the following is a consequence of ignoring intra-generational equity?",
+            qH: "अंतः-पीढ़ीगत समानता की अनदेखी करने का निम्नलिखित में से कौन सा परिणाम है?",
+            options: [
+                { e: "Global peace", h: "वैश्विक शांति", correct: false },
+                { e: "Equal wealth distribution", h: "समान धन वितरण", correct: false },
+                { e: "Poverty, hunger, and resource-based conflicts in poorer regions", h: "गरीब क्षेत्रों में गरीबी, भुखमरी और संसाधन आधारित संघर्ष", correct: true },
+                { e: "A completely clean environment", h: "पूरी तरह से स्वच्छ वातावरण", correct: false }
+            ],
+            expE: "When resources are monopolized by a few, it leads to severe inequality, poverty, and social unrest.",
+            expH: "जब संसाधनों पर कुछ लोगों का एकाधिकार हो जाता है, तो इससे गंभीर असमानता, गरीबी और सामाजिक अशांति पैदा होती है।"
+        },
+        {
+            qE: "Earth Day is celebrated globally on which date to support environmental protection?",
+            qH: "पर्यावरण संरक्षण का समर्थन करने के लिए विश्व स्तर पर 'पृथ्वी दिवस' (Earth Day) किस तारीख को मनाया जाता है?",
+            options: [
+                { e: "22nd April", h: "22 अप्रैल", correct: true },
+                { e: "5th June", h: "5 जून", correct: false },
+                { e: "2nd October", h: "2 अक्टूबर", correct: false },
+                { e: "1st December", h: "1 दिसंबर", correct: false }
+            ],
+            expE: "Earth Day (April 22) is one of the largest environmental awareness events worldwide.",
+            expH: "पृथ्वी दिवस (22 अप्रैल) दुनिया भर में सबसे बड़े पर्यावरण जागरूकता कार्यक्रमों में से एक है।"
+        },
+        {
+            qE: "Which simple action by an IT/BCA student best represents resource conservation?",
+            qH: "एक IT/BCA छात्र द्वारा की गई कौन सी सरल कार्रवाई संसाधन संरक्षण का सबसे अच्छा प्रतिनिधित्व करती है?",
+            options: [
+                { e: "Printing every single email they receive", h: "प्राप्त होने वाले प्रत्येक ईमेल को प्रिंट करना", correct: false },
+                { e: "Using cloud storage and enabling power-saving modes on computers", h: "क्लाउड स्टोरेज का उपयोग करना और कंप्यूटर पर पावर-सेविंग मोड सक्षम करना", correct: true },
+                { e: "Throwing old laptops in regular trash bins", h: "पुराने लैपटॉप को नियमित कूड़ेदान में फेंकना", correct: false },
+                { e: "Leaving the computer lab AC running all weekend", h: "कंप्यूटर लैब के AC को पूरे सप्ताहांत चालू छोड़ना", correct: false }
+            ],
+            expE: "Green computing (saving power and reducing paper/e-waste) is how IT professionals contribute to conservation.",
+            expH: "ग्रीन कंप्यूटिंग (बिजली बचाना और कागज/ई-कचरे को कम करना) वह तरीका है जिससे आईटी पेशेवर संरक्षण में योगदान करते हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

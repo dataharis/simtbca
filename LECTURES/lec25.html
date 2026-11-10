@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 25 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 25: Human Population Growth</h2>
+            <p>Demographic Changes in India & Environmental Impacts</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is the scientific study of human populations, including their size, structure, and distribution called?",
+            qH: "मानव आबादी, उसके आकार, संरचना और वितरण के वैज्ञानिक अध्ययन को क्या कहा जाता है?",
+            options: [
+                { e: "Geography", h: "भूगोल", correct: false },
+                { e: "Demography", h: "जनसांख्यिकी (Demography)", correct: true },
+                { e: "Ecology", h: "पारिस्थितिकी", correct: false },
+                { e: "Sociology", h: "समाज शास्त्र", correct: false }
+            ],
+            expE: "Demography is the statistical study of human populations, examining birth rates, death rates, and income.",
+            expH: "जनसांख्यिकी (Demography) मानव आबादी का सांख्यिकीय अध्ययन है, जिसमें जन्म दर, मृत्यु दर और आय की जांच की जाती है।"
+        },
+        {
+            qE: "To raise awareness about global population issues, 'World Population Day' is celebrated every year on:",
+            qH: "वैश्विक जनसंख्या के मुद्दों के बारे में जागरूकता बढ़ाने के लिए, हर साल 'विश्व जनसंख्या दिवस' (World Population Day) कब मनाया जाता है?",
+            options: [
+                { e: "5th June", h: "5 जून", correct: false },
+                { e: "22nd April", h: "22 अप्रैल", correct: false },
+                { e: "11th July", h: "11 जुलाई", correct: true },
+                { e: "1st December", h: "1 दिसंबर", correct: false }
+            ],
+            expE: "World Population Day is observed on July 11 to highlight the urgency and importance of population issues.",
+            expH: "जनसंख्या के मुद्दों की तात्कालिकता और महत्व को उजागर करने के लिए 11 जुलाई को विश्व जनसंख्या दिवस मनाया जाता है।"
+        },
+        {
+            qE: "Which country is currently recognized as having the largest human population in the world?",
+            qH: "वर्तमान में किस देश को दुनिया में सबसे अधिक मानव आबादी वाले देश के रूप में मान्यता प्राप्त है?",
+            options: [
+                { e: "United States", h: "संयुक्त राज्य अमेरिका", correct: false },
+                { e: "China", h: "चीन", correct: false },
+                { e: "India", h: "भारत", correct: true },
+                { e: "Russia", h: "रूस", correct: false }
+            ],
+            expE: "As of recent UN demographic data (2023 onwards), India has surpassed China to become the world's most populous country.",
+            expH: "हाल के संयुक्त राष्ट्र के जनसांख्यिकीय डेटा (2023 के बाद) के अनुसार, भारत चीन को पछाड़कर दुनिया का सबसे अधिक आबादी वाला देश बन गया है।"
+        },
+        {
+            qE: "What does the term 'Census' mean?",
+            qH: "'जनगणना' (Census) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "A tax collected from citizens", h: "नागरिकों से वसूला जाने वाला कर (टैक्स)", correct: false },
+                { e: "The official counting of a country's population and gathering of demographic data", h: "किसी देश की जनसंख्या की आधिकारिक गिनती और जनसांख्यिकीय डेटा एकत्र करना", correct: true },
+                { e: "A survey of wild animals only", h: "केवल जंगली जानवरों का सर्वेक्षण", correct: false },
+                { e: "A method to clean water", h: "पानी साफ करने की एक विधि", correct: false }
+            ],
+            expE: "A census provides critical data on age, sex, employment, and education to help governments plan policies.",
+            expH: "जनगणना सरकारों को नीतियां बनाने में मदद करने के लिए उम्र, लिंग, रोजगार और शिक्षा पर महत्वपूर्ण डेटा प्रदान करती है।"
+        },
+        {
+            qE: "In India, how often is the national Census typically conducted?",
+            qH: "भारत में, आम तौर पर राष्ट्रीय जनगणना कितनी बार (कितने वर्षों में) आयोजित की जाती है?",
+            options: [
+                { e: "Every 5 years", h: "हर 5 साल में", correct: false },
+                { e: "Every 10 years", h: "हर 10 साल में", correct: true },
+                { e: "Every 15 years", h: "हर 15 साल में", correct: false },
+                { e: "Every 20 years", h: "हर 20 साल में", correct: false }
+            ],
+            expE: "The Census of India is traditionally conducted once every decade (10 years) by the Registrar General and Census Commissioner.",
+            expH: "भारत की जनगणना पारंपरिक रूप से हर दशक (10 वर्ष) में एक बार महापंजीयक और जनगणना आयुक्त द्वारा आयोजित की जाती है।"
+        },
+        {
+            qE: "A sudden, rapid increase in the number of humans in a short period is commonly referred to as:",
+            qH: "थोड़े समय में मनुष्यों की संख्या में अचानक, तीव्र वृद्धि को आमतौर पर क्या कहा जाता है?",
+            options: [
+                { e: "Population Extinction", h: "जनसंख्या विलुप्ति", correct: false },
+                { e: "Population Density", h: "जनसंख्या घनत्व", correct: false },
+                { e: "Population Explosion", h: "जनसंख्या विस्फोट (Population Explosion)", correct: true },
+                { e: "Population Stabilization", h: "जनसंख्या स्थिरीकरण", correct: false }
+            ],
+            expE: "Population explosion strains Earth's resources, leading to food shortages, poverty, and environmental degradation.",
+            expH: "जनसंख्या विस्फोट पृथ्वी के संसाधनों पर दबाव डालता है, जिससे भोजन की कमी, गरीबी और पर्यावरण का क्षरण होता है।"
+        },
+        {
+            qE: "What does 'Birth Rate' (or Natality) indicate in demographic studies?",
+            qH: "जनसांख्यिकीय अध्ययनों में 'जन्म दर' (Natality) क्या दर्शाती है?",
+            options: [
+                { e: "The total number of children in a country", h: "किसी देश में बच्चों की कुल संख्या", correct: false },
+                { e: "The number of live births per 1,000 people in a population per year", h: "प्रति वर्ष किसी जनसंख्या में प्रति 1,000 लोगों पर जीवित जन्मों की संख्या", correct: true },
+                { e: "The number of hospitals in a city", h: "एक शहर में अस्पतालों की संख्या", correct: false },
+                { e: "The number of people migrating to a country", h: "किसी देश में प्रवास करने वाले लोगों की संख्या", correct: false }
+            ],
+            expE: "Crude Birth Rate is a basic measure of population growth, calculated per 1,000 individuals.",
+            expH: "क्रूड जन्म दर जनसंख्या वृद्धि का एक मूल उपाय है, जिसकी गणना प्रति 1,000 व्यक्तियों पर की जाती है।"
+        },
+        {
+            qE: "What does 'Infant Mortality Rate' (IMR) measure?",
+            qH: "'शिशु मृत्यु दर' (IMR) क्या मापता है?",
+            options: [
+                { e: "The number of deaths of babies under one year of age per 1,000 live births", h: "प्रति 1,000 जीवित जन्मों पर एक वर्ष से कम उम्र के बच्चों की मृत्यु की संख्या", correct: true },
+                { e: "The number of adults dying from diseases", h: "बीमारियों से मरने वाले वयस्कों की संख्या", correct: false },
+                { e: "The number of children born in a hospital", h: "अस्पताल में पैदा हुए बच्चों की संख्या", correct: false },
+                { e: "The total death rate of a country", h: "किसी देश की कुल मृत्यु दर", correct: false }
+            ],
+            expE: "IMR is a critical indicator of a country's health, nutrition, and medical care standards.",
+            expH: "IMR किसी देश के स्वास्थ्य, पोषण और चिकित्सा देखभाल मानकों का एक महत्वपूर्ण संकेतक है।"
+        },
+        {
+            qE: "Which of the following was a primary cause for the rapid population growth (explosion) in India during the 20th century?",
+            qH: "20वीं सदी के दौरान भारत में तीव्र जनसंख्या वृद्धि (विस्फोट) का प्राथमिक कारण निम्नलिखित में से क्या था?",
+            options: [
+                { e: "A drastic increase in the birth rate", h: "जन्म दर में भारी वृद्धि", correct: false },
+                { e: "A rapid decline in the death rate due to better medical facilities and disease control", h: "बेहतर चिकित्सा सुविधाओं और रोग नियंत्रण के कारण मृत्यु दर में तेजी से गिरावट", correct: true },
+                { e: "Massive immigration from other countries", h: "अन्य देशों से भारी आप्रवास", correct: false },
+                { e: "Lack of agricultural food", h: "कृषि भोजन का अभाव", correct: false }
+            ],
+            expE: "While birth rates remained high, modern medicine and sanitation drastically reduced death rates, causing a population boom.",
+            expH: "जबकि जन्म दर उच्च बनी रही, आधुनिक चिकित्सा और स्वच्छता ने मृत्यु दर को काफी कम कर दिया, जिससे जनसंख्या में उछाल आया।"
+        },
+        {
+            qE: "What does 'Life Expectancy' refer to?",
+            qH: "'जीवन प्रत्याशा' (Life Expectancy) का क्या तात्पर्य है?",
+            options: [
+                { e: "The average number of years a person is expected to live based on current mortality rates", h: "वर्तमान मृत्यु दर के आधार पर किसी व्यक्ति के जीवित रहने की अपेक्षित औसत आयु (वर्षों में)", correct: true },
+                { e: "The maximum age a human can reach", h: "अधिकतम आयु जिस तक मानव पहुँच सकता है", correct: false },
+                { e: "The amount of time it takes to cure a disease", h: "किसी बीमारी को ठीक करने में लगने वाला समय", correct: false },
+                { e: "The working age of an employee", h: "एक कर्मचारी की कामकाजी उम्र", correct: false }
+            ],
+            expE: "Better healthcare and nutrition increase a country's life expectancy.",
+            expH: "बेहतर स्वास्थ्य सेवा और पोषण देश की जीवन प्रत्याशा (Life Expectancy) को बढ़ाते हैं।"
+        },
+        {
+            qE: "A situation where a country's working-age population (15-64 years) is larger than its non-working (dependent) population is called:",
+            qH: "ऐसी स्थिति जहाँ किसी देश की कामकाजी उम्र की आबादी (15-64 वर्ष) उसकी गैर-कामकाजी (आश्रित) आबादी से अधिक हो, क्या कहलाती है?",
+            options: [
+                { e: "Population Pyramid", h: "जनसंख्या पिरामिड", correct: false },
+                { e: "Demographic Dividend", h: "जनसांख्यिकीय लाभांश (Demographic Dividend)", correct: true },
+                { e: "Zero Population Growth", h: "शून्य जनसंख्या वृद्धि", correct: false },
+                { e: "Population Deficit", h: "जनसंख्या घाटा", correct: false }
+            ],
+            expE: "India is currently experiencing a Demographic Dividend, which can lead to high economic growth if the youth are properly skilled and employed.",
+            expH: "भारत वर्तमान में जनसांख्यिकीय लाभांश का अनुभव कर रहा है, यदि युवाओं को उचित कौशल और रोजगार मिले तो इससे उच्च आर्थिक विकास हो सकता है।"
+        },
+        {
+            qE: "Which graphical tool is used to show the age and sex distribution of a population?",
+            qH: "किसी जनसंख्या की आयु और लिंग वितरण को दर्शाने के लिए किस ग्राफिकल टूल का उपयोग किया जाता है?",
+            options: [
+                { e: "Pie Chart", h: "पाई चार्ट", correct: false },
+                { e: "Population Pyramid (Age-Sex Pyramid)", h: "जनसंख्या पिरामिड (आयु-लिंग पिरामिड)", correct: true },
+                { e: "Venn Diagram", h: "वेन आरेख (Venn Diagram)", correct: false },
+                { e: "Flowchart", h: "फ़्लोचार्ट", correct: false }
+            ],
+            expE: "A population pyramid visually represents the percentage of males and females across various age groups in a country.",
+            expH: "जनसंख्या पिरामिड एक देश में विभिन्न आयु समूहों में पुरुषों और महिलाओं के प्रतिशत को दृष्टिगत रूप से दर्शाता है।"
+        },
+        {
+            qE: "If a country's Population Pyramid has a very broad base and a narrow top, it indicates:",
+            qH: "यदि किसी देश के जनसंख्या पिरामिड का आधार बहुत चौड़ा और शीर्ष संकरा है, तो यह क्या दर्शाता है?",
+            options: [
+                { e: "A very old population with low birth rates", h: "कम जन्म दर वाली बहुत पुरानी आबादी", correct: false },
+                { e: "A high birth rate and a large percentage of young people", h: "उच्च जन्म दर और युवाओं का एक बड़ा प्रतिशत", correct: true },
+                { e: "Zero population growth", h: "शून्य जनसंख्या वृद्धि", correct: false },
+                { e: "More females than males", h: "पुरुषों की तुलना में अधिक महिलाएं", correct: false }
+            ],
+            expE: "A broad base means many children are being born (high natality), which is typical for developing countries like India.",
+            expH: "एक व्यापक आधार का मतलब है कि बहुत सारे बच्चे पैदा हो रहे हैं (उच्च जन्म दर), जो भारत जैसे विकासशील देशों के लिए विशिष्ट है।"
+        },
+        {
+            qE: "How does rapid population growth primarily negatively impact the environment?",
+            qH: "तेजी से जनसंख्या वृद्धि मुख्य रूप से पर्यावरण पर नकारात्मक प्रभाव कैसे डालती है?",
+            options: [
+                { e: "It creates more oxygen in the air", h: "यह हवा में अधिक ऑक्सीजन बनाता है", correct: false },
+                { e: "It causes over-exploitation of natural resources, deforestation, and increased pollution", h: "यह प्राकृतिक संसाधनों के अत्यधिक दोहन, वनों की कटाई और प्रदूषण में वृद्धि का कारण बनता है", correct: true },
+                { e: "It makes animals reproduce faster", h: "यह जानवरों को तेजी से प्रजनन कराता है", correct: false },
+                { e: "It stops global warming", h: "यह ग्लोबल वार्मिंग को रोकता है", correct: false }
+            ],
+            expE: "More people need more land, food, water, and energy, putting immense stress on the planet's ecosystems.",
+            expH: "अधिक लोगों को अधिक भूमि, भोजन, पानी और ऊर्जा की आवश्यकता होती है, जिससे ग्रह के पारिस्थितिक तंत्र पर अत्यधिक दबाव पड़ता है।"
+        },
+        {
+            qE: "The movement of people from rural areas (villages) to urban areas (cities) for better jobs and living standards is known as:",
+            qH: "बेहतर नौकरियों और जीवन स्तर के लिए लोगों का ग्रामीण क्षेत्रों (गांवों) से शहरी क्षेत्रों (शहरों) में जाना क्या कहलाता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Ruralization", h: "ग्रामीणकरण", correct: false },
+                { e: "Urbanization / Migration", h: "शहरीकरण / प्रवास (Migration)", correct: true },
+                { e: "Industrialization", h: "औद्योगीकरण", correct: false }
+            ],
+            expE: "Migration causes rapid urbanization, often leading to overcrowded cities, slum formations, and severe pollution.",
+            expH: "प्रवास से तेजी से शहरीकरण होता है, जिससे अक्सर भीड़भाड़ वाले शहर, मलिन बस्तियां (slums) और गंभीर प्रदूषण होता है।"
+        },
+        {
+            qE: "When is 'Zero Population Growth' achieved in a country?",
+            qH: "किसी देश में 'शून्य जनसंख्या वृद्धि' (Zero Population Growth) कब प्राप्त होती है?",
+            options: [
+                { e: "When no babies are born at all", h: "जब कोई बच्चा बिल्कुल पैदा नहीं होता", correct: false },
+                { e: "When everyone moves to another country", h: "जब हर कोई दूसरे देश में चला जाता है", correct: false },
+                { e: "When the number of births equals the number of deaths (Birth Rate = Death Rate)", h: "जब जन्मों की संख्या मौतों की संख्या के बराबर हो जाती है (जन्म दर = मृत्यु दर)", correct: true },
+                { e: "When the government bans marriages", h: "जब सरकार शादियों पर प्रतिबंध लगा देती है", correct: false }
+            ],
+            expE: "At this stage, the population size remains stable and does not grow or shrink.",
+            expH: "इस स्तर पर, जनसंख्या का आकार स्थिर रहता है और न बढ़ता है न सिकुड़ता है।"
+        },
+        {
+            qE: "Which state in India has the highest human population?",
+            qH: "भारत के किस राज्य में मानव आबादी सबसे अधिक है?",
+            options: [
+                { e: "Maharashtra", h: "महाराष्ट्र", correct: false },
+                { e: "Bihar", h: "बिहार", correct: false },
+                { e: "Uttar Pradesh", h: "उत्तर प्रदेश", correct: true },
+                { e: "Madhya Pradesh", h: "मध्य प्रदेश", correct: false }
+            ],
+            expE: "Uttar Pradesh is the most populous state in India, with a population larger than many independent countries.",
+            expH: "उत्तर प्रदेश भारत का सबसे अधिक आबादी वाला राज्य है, जिसकी आबादी कई स्वतंत्र देशों से भी बड़ी है।"
+        },
+        {
+            qE: "What is the primary aim of National Family Planning programs?",
+            qH: "राष्ट्रीय परिवार नियोजन कार्यक्रमों का प्राथमिक उद्देश्य क्या है?",
+            options: [
+                { e: "To force people to leave the country", h: "लोगों को देश छोड़ने के लिए मजबूर करना", correct: false },
+                { e: "To stabilize population growth, create awareness about birth control, and improve maternal and child health", h: "जनसंख्या वृद्धि को स्थिर करना, जन्म नियंत्रण के बारे में जागरूकता पैदा करना और मातृ एवं शिशु स्वास्थ्य में सुधार करना", correct: true },
+                { e: "To increase the birth rate rapidly", h: "जन्म दर को तेजी से बढ़ाना", correct: false },
+                { e: "To build more hospitals", h: "अधिक अस्पताल बनाना", correct: false }
+            ],
+            expE: "India was one of the first countries in the world to launch a national family planning program (in 1952) to control population growth.",
+            expH: "जनसंख्या वृद्धि को नियंत्रित करने के लिए भारत (1952 में) राष्ट्रीय परिवार नियोजन कार्यक्रम शुरू करने वाले दुनिया के पहले देशों में से एक था।"
+        },
+        {
+            qE: "Which of the following acts as a natural check (limitation) on human population growth according to environmental science?",
+            qH: "पर्यावरण विज्ञान के अनुसार निम्नलिखित में से कौन सा मानव जनसंख्या वृद्धि पर प्राकृतिक जांच (सीमा) के रूप में कार्य करता है?",
+            options: [
+                { e: "Television and internet", h: "टेलीविजन और इंटरनेट", correct: false },
+                { e: "Famines, natural disasters, and disease outbreaks (Epidemics)", h: "अकाल, प्राकृतिक आपदाएँ, और बीमारी का प्रकोप (महामारी)", correct: true },
+                { e: "Building more schools", h: "अधिक स्कूल बनाना", correct: false },
+                { e: "Planting more trees", h: "अधिक पेड़ लगाना", correct: false }
+            ],
+            expE: "Thomas Malthus theorized that if populations grow beyond the food supply, nature restores balance through 'positive checks' like starvation and disease.",
+            expH: "थॉमस माल्थस ने सिद्धांत दिया कि यदि जनसंख्या खाद्य आपूर्ति से अधिक बढ़ती है, तो प्रकृति भुखमरी और बीमारी जैसी 'सकारात्मक जांच' के माध्यम से संतुलन बहाल करती है।"
+        },
+        {
+            qE: "Why is demographic education important for IT and BCA/BBA students?",
+            qH: "आईटी (IT) और BCA/BBA छात्रों के लिए जनसांख्यिकीय शिक्षा क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because they will become doctors", h: "क्योंकि वे डॉक्टर बनेंगे", correct: false },
+                { e: "To understand market size, workforce availability, and design sustainable tech/business solutions for a growing population", h: "बाजार के आकार, कार्यबल की उपलब्धता को समझने और बढ़ती आबादी के लिए टिकाऊ तकनीकी/व्यावसायिक समाधान डिजाइन करने के लिए", correct: true },
+                { e: "Because computers only work for small populations", h: "क्योंकि कंप्यूटर केवल छोटी आबादी के लिए काम करते हैं", correct: false },
+                { e: "To write faster algorithms", h: "तेज़ एल्गोरिदम लिखने के लिए", correct: false }
+            ],
+            expE: "Understanding demographics helps professionals target products, analyze user bases, and address the massive scale of Indian consumers sustainably.",
+            expH: "जनसांख्यिकी (demographics) को समझने से पेशेवरों को उत्पादों को लक्षित करने, उपयोगकर्ता आधार का विश्लेषण करने और भारतीय उपभोक्ताओं के बड़े पैमाने को स्थायी रूप से संबोधित करने में मदद मिलती है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

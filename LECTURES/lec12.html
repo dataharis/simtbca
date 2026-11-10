@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 12 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 12: Ecosystem Dynamics</h2>
+            <p>Ecosystem Resilience, Homeostasis, Carrying Capacity & Sustainable Management</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does 'Ecosystem Resilience' mean?",
+            qH: "'पारिस्थितिकी तंत्र का लचीलापन' (Ecosystem Resilience) का क्या अर्थ है?",
+            options: [
+                { e: "An ecosystem's inability to change", h: "बदलने में पारिस्थितिकी तंत्र की अक्षमता", correct: false },
+                { e: "The ability of an ecosystem to recover and bounce back after a disturbance", h: "किसी गड़बड़ी (disturbance) के बाद पारिस्थितिकी तंत्र के ठीक होने और वापस सामान्य स्थिति में आने की क्षमता", correct: true },
+                { e: "The complete destruction of a forest", h: "जंगल का पूर्ण विनाश", correct: false },
+                { e: "An ecosystem with zero animals", h: "शून्य जानवरों वाला पारिस्थितिकी तंत्र", correct: false }
+            ],
+            expE: "Resilience is like a rubber band; it's how well a natural system can absorb a shock (like a fire or flood) and return to its original state.",
+            expH: "लचीलापन एक रबर बैंड की तरह है; यह वह क्षमता है कि एक प्राकृतिक प्रणाली (जैसे आग या बाढ़) के झटके को कितनी अच्छी तरह अवशोषित कर सकती है और अपनी मूल स्थिति में लौट सकती है।"
+        },
+        {
+            qE: "Which term describes the state of steady internal, physical, and chemical balance maintained by an ecosystem?",
+            qH: "कौन सा शब्द एक पारिस्थितिकी तंत्र द्वारा बनाए गए स्थिर आंतरिक, भौतिक और रासायनिक संतुलन की स्थिति का वर्णन करता है?",
+            options: [
+                { e: "Deforestation", h: "वनों की कटाई", correct: false },
+                { e: "Homeostasis", h: "होमियोस्टैसिस (Homeostasis)", correct: true },
+                { e: "Overpopulation", h: "अधिक जनसंख्या", correct: false },
+                { e: "Pollution", h: "प्रदूषण", correct: false }
+            ],
+            expE: "Homeostasis in an ecosystem is the natural 'balance of nature' where populations and resources remain relatively stable.",
+            expH: "पारिस्थितिकी तंत्र में होमियोस्टैसिस 'प्रकृति का संतुलन' है जहां आबादी और संसाधन अपेक्षाकृत स्थिर रहते हैं।"
+        },
+        {
+            qE: "The maximum population size of a biological species that a specific environment can sustainably support is called its:",
+            qH: "किसी जैविक प्रजाति की अधिकतम जनसंख्या का आकार जिसे एक विशिष्ट पर्यावरण स्थायी रूप से समर्थन दे सकता है, कहलाता है:",
+            options: [
+                { e: "Minimum Viable Population", h: "न्यूनतम व्यवहार्य जनसंख्या", correct: false },
+                { e: "Carrying Capacity", h: "वहन क्षमता (Carrying Capacity)", correct: true },
+                { e: "Ecological Footprint", h: "पारिस्थितिक पदचिह्न", correct: false },
+                { e: "Birth Rate", h: "जन्म दर", correct: false }
+            ],
+            expE: "Carrying capacity is limited by available food, water, habitat, and other necessities.",
+            expH: "वहन क्षमता उपलब्ध भोजन, पानी, आवास और अन्य आवश्यकताओं द्वारा सीमित होती है।"
+        },
+        {
+            qE: "In ecology, 'Carrying Capacity' is commonly represented by which letter in mathematical models?",
+            qH: "पारिस्थितिकी में, 'वहन क्षमता' (Carrying Capacity) को गणितीय मॉडल में आमतौर पर किस अक्षर से दर्शाया जाता है?",
+            options: [
+                { e: "C", h: "C", correct: false },
+                { e: "X", h: "X", correct: false },
+                { e: "K", h: "K", correct: true },
+                { e: "P", h: "P", correct: false }
+            ],
+            expE: "The letter 'K' originally comes from the German word 'Kapazitätsgrenze' (capacity limit).",
+            expH: "'K' अक्षर मूल रूप से जर्मन शब्द 'Kapazitätsgrenze' (क्षमता सीमा) से आया है।"
+        },
+        {
+            qE: "What usually happens if a population temporarily exceeds (overshoots) its carrying capacity?",
+            qH: "यदि कोई जनसंख्या अस्थायी रूप से अपनी वहन क्षमता से अधिक (overshoot) हो जाती है, तो आमतौर पर क्या होता है?",
+            options: [
+                { e: "The ecosystem instantly grows bigger to support them", h: "पारिस्थितिकी तंत्र उनका समर्थन करने के लिए तुरंत बड़ा हो जाता है", correct: false },
+                { e: "The population experiences a crash or die-off due to resource depletion", h: "संसाधनों की कमी के कारण जनसंख्या में भारी गिरावट या मृत्यु (die-off) होती है", correct: true },
+                { e: "Animals stop needing food and water", h: "जानवरों को भोजन और पानी की आवश्यकता नहीं रहती", correct: false },
+                { e: "The carrying capacity doubles permanently", h: "वहन क्षमता स्थायी रूप से दोगुनी हो जाती है", correct: false }
+            ],
+            expE: "When there are too many individuals and not enough resources, starvation and disease will naturally reduce the population back below the carrying capacity.",
+            expH: "जब बहुत अधिक व्यक्ति होते हैं और पर्याप्त संसाधन नहीं होते हैं, तो भुखमरी और बीमारी स्वाभाविक रूप से जनसंख्या को वहन क्षमता से नीचे कर देगी।"
+        },
+        {
+            qE: "Which of the following makes an ecosystem MORE resilient?",
+            qH: "निम्नलिखित में से क्या एक पारिस्थितिकी तंत्र को अधिक लचीला (Resilient) बनाता है?",
+            options: [
+                { e: "High biodiversity (many different species)", h: "उच्च जैव विविधता (कई अलग-अलग प्रजातियां)", correct: true },
+                { e: "High pollution levels", h: "उच्च प्रदूषण स्तर", correct: false },
+                { e: "Having only one type of plant (monoculture)", h: "केवल एक प्रकार का पौधा होना (मोनोकल्चर)", correct: false },
+                { e: "Complete removal of top predators", h: "शीर्ष शिकारियों को पूरी तरह हटाना", correct: false }
+            ],
+            expE: "More species mean a more complex web of life. If one species fails, others can take its place, helping the ecosystem recover.",
+            expH: "अधिक प्रजातियों का अर्थ है जीवन का अधिक जटिल जाल। यदि एक प्रजाति विफल हो जाती है, तो अन्य उसका स्थान ले सकती हैं, जिससे पारिस्थितिकी तंत्र को ठीक होने में मदद मिलती है।"
+        },
+        {
+            qE: "A natural mechanism that keeps an ecosystem in homeostasis by reducing the effect of a change (e.g., predator-prey relationship) is called a:",
+            qH: "एक प्राकृतिक तंत्र जो परिवर्तन के प्रभाव को कम करके (जैसे, शिकारी-शिकार संबंध) एक पारिस्थितिकी तंत्र को होमियोस्टैसिस में रखता है, क्या कहलाता है?",
+            options: [
+                { e: "Positive feedback loop", h: "सकारात्मक फीडबैक लूप", correct: false },
+                { e: "Negative feedback loop", h: "नकारात्मक फीडबैक लूप (Negative feedback loop)", correct: true },
+                { e: "Domino effect", h: "डोमिनोज़ प्रभाव", correct: false },
+                { e: "Greenhouse effect", h: "ग्रीनहाउस प्रभाव", correct: false }
+            ],
+            expE: "Negative feedback loops counteract changes. For example, if rabbit population increases, wolves eat more rabbits, bringing the rabbit population back down.",
+            expH: "नकारात्मक फीडबैक लूप परिवर्तनों का प्रतिकार करते हैं। उदाहरण के लिए, यदि खरगोशों की आबादी बढ़ती है, तो भेड़िये अधिक खरगोश खाते हैं, जिससे खरगोशों की आबादी वापस नीचे आ जाती है।"
+        },
+        {
+            qE: "What is an example of an 'Abiotic' limiting factor that determines carrying capacity?",
+            qH: "वहन क्षमता निर्धारित करने वाले 'अजैविक' (Abiotic) सीमित कारक का एक उदाहरण क्या है?",
+            options: [
+                { e: "Number of predators", h: "शिकारियों की संख्या", correct: false },
+                { e: "Availability of clean water", h: "स्वच्छ जल की उपलब्धता", correct: true },
+                { e: "Diseases spreading", h: "बीमारियों का फैलना", correct: false },
+                { e: "Competition for mates", h: "साथी के लिए प्रतिस्पर्धा", correct: false }
+            ],
+            expE: "Water is non-living (abiotic). Without enough water, a region can only support a limited number of animals and plants.",
+            expH: "पानी निर्जीव (अजैविक) है। पर्याप्त पानी के बिना, एक क्षेत्र केवल सीमित संख्या में जानवरों और पौधों का समर्थन कर सकता है।"
+        },
+        {
+            qE: "If a forest is completely cut down and replaced by a concrete city, it has lost its:",
+            qH: "यदि किसी जंगल को पूरी तरह से काटकर कंक्रीट के शहर में बदल दिया जाए, तो उसने अपना क्या खो दिया है?",
+            options: [
+                { e: "Resilience and Homeostasis", h: "लचीलापन (Resilience) और होमियोस्टैसिस", correct: true },
+                { e: "Solar radiation", h: "सौर विकिरण", correct: false },
+                { e: "Gravity", h: "गुरुत्वाकर्षण", correct: false },
+                { e: "Economic value completely", h: "आर्थिक मूल्य पूरी तरह से", correct: false }
+            ],
+            expE: "The ecosystem is completely destroyed beyond its tipping point, meaning it cannot bounce back or maintain balance.",
+            expH: "पारिस्थितिकी तंत्र अपने टिपिंग पॉइंट (tipping point) से परे पूरी तरह से नष्ट हो गया है, जिसका अर्थ है कि यह वापस नहीं उछल सकता है या संतुलन बनाए नहीं रख सकता है।"
+        },
+        {
+            qE: "Sustainable Ecosystem Management involves:",
+            qH: "सतत पारिस्थितिकी तंत्र प्रबंधन (Sustainable Ecosystem Management) में क्या शामिल है?",
+            options: [
+                { e: "Banning humans from all forests globally", h: "विश्व स्तर पर सभी जंगलों से इंसानों पर प्रतिबंध लगाना", correct: false },
+                { e: "Using natural resources in a way that maintains the ecosystem's resilience and structure for the future", h: "प्राकृतिक संसाधनों का इस तरह से उपयोग करना जो भविष्य के लिए पारिस्थितिकी तंत्र के लचीलेपन और संरचना को बनाए रखे", correct: true },
+                { e: "Extracting all resources as fast as possible to maximize business profits", h: "व्यापारिक लाभ को अधिकतम करने के लिए जितनी जल्दी हो सके सभी संसाधनों को निकालना", correct: false },
+                { e: "Replacing natural forests with artificial plastic trees", h: "प्राकृतिक वनों को कृत्रिम प्लास्टिक के पेड़ों से बदलना", correct: false }
+            ],
+            expE: "Sustainable management respects the carrying capacity of the environment while meeting human needs.",
+            expH: "सतत प्रबंधन मानवीय जरूरतों को पूरा करते हुए पर्यावरण की वहन क्षमता का सम्मान करता है।"
+        },
+        {
+            qE: "Which of the following acts as a severe threat to ecosystem homeostasis?",
+            qH: "निम्नलिखित में से कौन पारिस्थितिकी तंत्र के होमियोस्टैसिस के लिए एक गंभीर खतरे के रूप में कार्य करता है?",
+            options: [
+                { e: "Planting native trees", h: "देसी पेड़ लगाना", correct: false },
+                { e: "Introduction of Invasive (foreign) species", h: "आक्रामक (विदेशी) प्रजातियों का प्रवेश", correct: true },
+                { e: "Normal seasonal rainfall", h: "सामान्य मौसमी वर्षा", correct: false },
+                { e: "Using renewable energy", h: "नवीकरणीय ऊर्जा का उपयोग करना", correct: false }
+            ],
+            expE: "Invasive species lack natural predators in the new environment. They overbreed and destroy the existing natural balance.",
+            expH: "आक्रामक प्रजातियों (Invasive species) के नए वातावरण में प्राकृतिक शिकारी नहीं होते हैं। वे अत्यधिक प्रजनन करते हैं और मौजूदा प्राकृतिक संतुलन को नष्ट कर देते हैं।"
+        },
+        {
+            qE: "Why is understanding 'Carrying Capacity' important for businesses and BBA/BCA students?",
+            qH: "व्यवसायों और BBA/BCA छात्रों के लिए 'वहन क्षमता' (Carrying Capacity) को समझना क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "Because they need to know how heavy physical servers are", h: "क्योंकि उन्हें यह जानने की जरूरत है कि भौतिक सर्वर कितने भारी हैं", correct: false },
+                { e: "To realize that infinite economic growth is impossible on a planet with finite resources", h: "यह महसूस करने के लिए कि सीमित संसाधनों वाले ग्रह पर अनंत आर्थिक विकास असंभव है", correct: true },
+                { e: "Because carrying capacity tells you how many employees fit in an office", h: "क्योंकि वहन क्षमता बताती है कि एक कार्यालय में कितने कर्मचारी फिट होते हैं", correct: false },
+                { e: "It is only important for biology students, not business students", h: "यह केवल जीव विज्ञान के छात्रों के लिए महत्वपूर्ण है, बिजनेस के छात्रों के लिए नहीं", correct: false }
+            ],
+            expE: "Businesses rely on natural resources. Ignoring carrying capacity leads to resource depletion and eventual economic collapse.",
+            expH: "व्यवसाय प्राकृतिक संसाधनों पर निर्भर हैं। वहन क्षमता को नजरअंदाज करने से संसाधनों की कमी होती है और अंततः आर्थिक पतन होता है।"
+        },
+        {
+            qE: "The ability of an ecosystem to resist change in the first place (staying unchanged despite disturbance) is called:",
+            qH: "एक पारिस्थितिकी तंत्र की सबसे पहले परिवर्तन का विरोध करने की क्षमता (गड़बड़ी के बावजूद अपरिवर्तित रहना) क्या कहलाती है?",
+            options: [
+                { e: "Ecosystem Resistance", h: "पारिस्थितिकी तंत्र का प्रतिरोध (Resistance)", correct: true },
+                { e: "Ecosystem Fragility", h: "पारिस्थितिकी तंत्र की नाजुकता", correct: false },
+                { e: "Vulnerability", h: "भेद्यता", correct: false },
+                { e: "Evolution", h: "विकास", correct: false }
+            ],
+            expE: "Resistance is avoiding change, while Resilience is recovering quickly after the change happens.",
+            expH: "प्रतिरोध (Resistance) परिवर्तन से बचना है, जबकि लचीलापन (Resilience) परिवर्तन होने के बाद जल्दी से ठीक होना है।"
+        },
+        {
+            qE: "A forest recovers after a moderate natural fire and new plants grow. This demonstrates:",
+            qH: "एक मध्यम प्राकृतिक आग के बाद एक जंगल ठीक हो जाता है और नए पौधे उग आते हैं। यह क्या दर्शाता है?",
+            options: [
+                { e: "Zero carrying capacity", h: "शून्य वहन क्षमता", correct: false },
+                { e: "Ecosystem destruction", h: "पारिस्थितिकी तंत्र का विनाश", correct: false },
+                { e: "Ecological resilience", h: "पारिस्थितिक लचीलापन (Resilience)", correct: true },
+                { e: "Urbanization", h: "शहरीकरण", correct: false }
+            ],
+            expE: "The ecosystem absorbed the shock of the fire and naturally rebuilt itself, showing high resilience.",
+            expH: "पारिस्थितिकी तंत्र ने आग के झटके को अवशोषित कर लिया और स्वाभाविक रूप से खुद का पुनर्निर्माण किया, जो उच्च लचीलेपन को दर्शाता है।"
+        },
+        {
+            qE: "Which type of environment typically has the highest ecological resilience due to its vast biodiversity?",
+            qH: "अपनी विशाल जैव विविधता के कारण आमतौर पर किस प्रकार के वातावरण में सबसे अधिक पारिस्थितिक लचीलापन (resilience) होता है?",
+            options: [
+                { e: "A concrete city center", h: "कंक्रीट का सिटी सेंटर", correct: false },
+                { e: "A single-crop wheat farm (Monoculture)", h: "एकल फसल गेहूं का खेत (मोनोकल्चर)", correct: false },
+                { e: "A barren desert", h: "एक बंजर रेगिस्तान", correct: false },
+                { e: "A Tropical Rainforest", h: "एक उष्णकटिबंधीय वर्षावन (Tropical Rainforest)", correct: true }
+            ],
+            expE: "Tropical rainforests have millions of species and complex food webs, allowing them to recover efficiently from natural disturbances.",
+            expH: "उष्णकटिबंधीय वर्षावनों में लाखों प्रजातियां और जटिल खाद्य जाल होते हैं, जो उन्हें प्राकृतिक गड़बड़ी से कुशलतापूर्वक उबरने की अनुमति देते हैं।"
+        },
+        {
+            qE: "What is a 'Tipping Point' in ecosystem dynamics?",
+            qH: "पारिस्थितिकी तंत्र की गतिशीलता में 'टिपिंग पॉइंट' (Tipping Point) क्या है?",
+            options: [
+                { e: "The highest branch of a tree", h: "पेड़ की सबसे ऊंची शाखा", correct: false },
+                { e: "A threshold beyond which an ecosystem cannot recover and permanently changes state", h: "एक सीमा जिसके पार पारिस्थितिकी तंत्र ठीक नहीं हो सकता और स्थायी रूप से अपनी स्थिति बदल लेता है", correct: true },
+                { e: "The exact center of a forest", h: "जंगल का बिल्कुल केंद्र", correct: false },
+                { e: "The best time to plant seeds", h: "बीज बोने का सबसे अच्छा समय", correct: false }
+            ],
+            expE: "If humans push an ecosystem past its tipping point (e.g., severe climate change or total deforestation), resilience is lost forever.",
+            expH: "यदि मनुष्य किसी पारिस्थितिकी तंत्र को उसके टिपिंग पॉइंट (जैसे, गंभीर जलवायु परिवर्तन या कुल वनों की कटाई) से आगे धकेलते हैं, तो लचीलापन हमेशा के लिए खो जाता है।"
+        },
+        {
+            qE: "The removal of a 'Keystone Species' (like a top predator) usually causes:",
+            qH: "किसी 'कीस्टोन प्रजाति' (Keystone Species - जैसे शीर्ष शिकारी) को हटाने से आमतौर पर क्या होता है?",
+            options: [
+                { e: "A rapid increase in ecosystem homeostasis", h: "पारिस्थितिकी तंत्र होमियोस्टैसिस में तेजी से वृद्धि", correct: false },
+                { e: "No effect on the ecosystem", h: "पारिस्थितिकी तंत्र पर कोई प्रभाव नहीं", correct: false },
+                { e: "A collapse or severe disruption of the ecosystem balance", h: "पारिस्थितिकी तंत्र के संतुलन का पतन या गंभीर व्यवधान", correct: true },
+                { e: "An immediate increase in carrying capacity", h: "वहन क्षमता में तत्काल वृद्धि", correct: false }
+            ],
+            expE: "Keystone species hold the food web together. E.g., without wolves, deer overpopulate and eat all vegetation, breaking homeostasis.",
+            expH: "कीस्टोन प्रजातियाँ खाद्य जाल को एक साथ बांध कर रखती हैं। उदाहरण के लिए, भेड़ियों के बिना, हिरण अत्यधिक आबादी वाले हो जाते हैं और सभी वनस्पतियों को खा जाते हैं, जिससे संतुलन टूट जाता है।"
+        },
+        {
+            qE: "What happens to the carrying capacity of a lake if it suffers from severe toxic chemical pollution?",
+            qH: "यदि कोई झील गंभीर जहरीले रासायनिक प्रदूषण से ग्रस्त हो जाए तो उसकी वहन क्षमता (Carrying capacity) का क्या होता है?",
+            options: [
+                { e: "It decreases, supporting fewer living organisms", h: "यह कम हो जाती है, जिससे कम जीवित जीवों को समर्थन मिलता है", correct: true },
+                { e: "It increases significantly", h: "यह काफी बढ़ जाती है", correct: false },
+                { e: "It stays exactly the same", h: "यह बिल्कुल वैसी ही रहती है", correct: false },
+                { e: "The pollution creates new types of fish", h: "प्रदूषण नए प्रकार की मछलियाँ बनाता है", correct: false }
+            ],
+            expE: "Pollution degrades the habitat, lowering the amount of clean resources available, which lowers the carrying capacity 'K'.",
+            expH: "प्रदूषण आवास को खराब कर देता है, जिससे उपलब्ध स्वच्छ संसाधनों की मात्रा कम हो जाती है, जो वहन क्षमता 'K' को कम कर देता है।"
+        },
+        {
+            qE: "Which phrase best describes 'Sustainable Management'?",
+            qH: "'सतत प्रबंधन' (Sustainable Management) का सबसे अच्छा वर्णन कौन सा वाक्यांश करता है?",
+            options: [
+                { e: "Take everything today, ignore tomorrow", h: "आज सब कुछ ले लो, कल की उपेक्षा करो", correct: false },
+                { e: "Meeting current human needs without breaking the Earth's homeostasis", h: "पृथ्वी के होमियोस्टैसिस (संतुलन) को तोड़े बिना वर्तमान मानवीय जरूरतों को पूरा करना", correct: true },
+                { e: "Only producing technology, not food", h: "केवल तकनीक का उत्पादन, भोजन का नहीं", correct: false },
+                { e: "Protecting nature by ending all human business", h: "सभी मानव व्यवसाय को समाप्त करके प्रकृति की रक्षा करना", correct: false }
+            ],
+            expE: "It is the balanced integration of ecological health, economic growth, and social well-being.",
+            expH: "यह पारिस्थितिक स्वास्थ्य, आर्थिक विकास और सामाजिक भलाई का संतुलित एकीकरण है।"
+        },
+        {
+            qE: "Populations that grow extremely fast without any limiting factors exhibit:",
+            qH: "ऐसी जनसंख्या जो बिना किसी सीमित कारक (limiting factor) के अत्यंत तेजी से बढ़ती है, क्या प्रदर्शित करती है?",
+            options: [
+                { e: "Homeostasis", h: "होमियोस्टैसिस", correct: false },
+                { e: "Exponential growth (J-curve)", h: "घातीय वृद्धि (Exponential growth - J-curve)", correct: true },
+                { e: "Zero population growth", h: "शून्य जनसंख्या वृद्धि", correct: false },
+                { e: "Resilience collapse", h: "लचीलेपन का पतन", correct: false }
+            ],
+            expE: "In a perfect environment with unlimited food (which is rare), populations grow exponentially. Eventually, they hit carrying capacity and stabilize (S-curve).",
+            expH: "असीमित भोजन वाले उत्तम वातावरण में (जो दुर्लभ है), आबादी तेजी से बढ़ती है। अंततः, वे वहन क्षमता से टकराते हैं और स्थिर (S-वक्र) हो जाते हैं।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

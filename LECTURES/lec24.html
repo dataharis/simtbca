@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 24 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 24: India's NAPCC</h2>
+            <p>National Action Plan on Climate Change & Its Major Missions</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does the abbreviation 'NAPCC' stand for?",
+            qH: "संक्षिप्त नाम 'NAPCC' का पूर्ण रूप क्या है?",
+            options: [
+                { e: "National Agency for Pollution Control and Climate", h: "नेशनल एजेंसी फॉर पॉल्यूशन कंट्रोल एंड क्लाइमेट", correct: false },
+                { e: "National Action Plan on Climate Change", h: "नेशनल एक्शन प्लान ऑन क्लाइमेट चेंज (जलवायु परिवर्तन पर राष्ट्रीय कार्य योजना)", correct: true },
+                { e: "New Agriculture Policy on Climate Change", h: "न्यू एग्रीकल्चर पॉलिसी ऑन क्लाइमेट चेंज", correct: false },
+                { e: "Nature and Public Conservation Committee", h: "नेचर एंड पब्लिक कंजर्वेशन कमेटी", correct: false }
+            ],
+            expE: "The NAPCC outlines a national strategy that aims to enable the country to adapt to climate change and enhance ecological sustainability.",
+            expH: "NAPCC एक राष्ट्रीय रणनीति की रूपरेखा तैयार करता है जिसका उद्देश्य देश को जलवायु परिवर्तन के अनुकूल बनाने और पारिस्थितिक स्थिरता बढ़ाने में सक्षम बनाना है।"
+        },
+        {
+            qE: "In which year was the NAPCC officially launched by the Government of India?",
+            qH: "भारत सरकार द्वारा आधिकारिक तौर पर NAPCC किस वर्ष लॉन्च किया गया था?",
+            options: [
+                { e: "1998", h: "1998", correct: false },
+                { e: "2008", h: "2008", correct: true },
+                { e: "2015", h: "2015", correct: false },
+                { e: "2020", h: "2020", correct: false }
+            ],
+            expE: "It was released on June 30, 2008, by the Prime Minister's Council on Climate Change.",
+            expH: "इसे 30 जून 2008 को जलवायु परिवर्तन पर प्रधान मंत्री की परिषद द्वारा जारी किया गया था।"
+        },
+        {
+            qE: "How many core 'National Missions' are there under the NAPCC?",
+            qH: "NAPCC के तहत कितने मुख्य 'राष्ट्रीय मिशन' (National Missions) हैं?",
+            options: [
+                { e: "4", h: "4", correct: false },
+                { e: "8", h: "8", correct: true },
+                { e: "12", h: "12", correct: false },
+                { e: "17", h: "17", correct: false }
+            ],
+            expE: "The NAPCC comprises 8 distinct National Missions focusing on solar energy, water, agriculture, forests, and more.",
+            expH: "NAPCC में सौर ऊर्जा, जल, कृषि, वनों और बहुत कुछ पर ध्यान केंद्रित करने वाले 8 विशिष्ट राष्ट्रीय मिशन शामिल हैं।"
+        },
+        {
+            qE: "Which mission under NAPCC specifically focuses on promoting and utilizing the sun's energy?",
+            qH: "NAPCC के तहत कौन सा मिशन विशेष रूप से सूर्य की ऊर्जा को बढ़ावा देने और उपयोग करने पर केंद्रित है?",
+            options: [
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false },
+                { e: "National Solar Mission", h: "राष्ट्रीय सौर मिशन (National Solar Mission)", correct: true },
+                { e: "National Mission for Green India", h: "ग्रीन इंडिया के लिए राष्ट्रीय मिशन", correct: false },
+                { e: "National Mission on Sustainable Habitat", h: "सतत आवास पर राष्ट्रीय मिशन", correct: false }
+            ],
+            expE: "The National Solar Mission aims to establish India as a global leader in solar energy and heavily reduce reliance on fossil fuels.",
+            expH: "राष्ट्रीय सौर मिशन का उद्देश्य भारत को सौर ऊर्जा में वैश्विक नेता के रूप में स्थापित करना और जीवाश्म ईंधन पर निर्भरता को भारी रूप से कम करना है।"
+        },
+        {
+            qE: "Which NAPCC mission deals with improving energy conservation in industries and household appliances?",
+            qH: "कौन सा NAPCC मिशन उद्योगों और घरेलू उपकरणों में ऊर्जा संरक्षण (energy conservation) में सुधार से संबंधित है?",
+            options: [
+                { e: "National Mission for Enhanced Energy Efficiency", h: "उन्नत ऊर्जा दक्षता के लिए राष्ट्रीय मिशन (NMEEE)", correct: true },
+                { e: "National Mission for Sustainable Agriculture", h: "सतत कृषि के लिए राष्ट्रीय मिशन", correct: false },
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false },
+                { e: "National Mission on Strategic Knowledge", h: "रणनीतिक ज्ञान पर राष्ट्रीय मिशन", correct: false }
+            ],
+            expE: "NMEEE promotes the use of energy-efficient appliances (like LED bulbs) and mandates large industries to reduce their energy consumption.",
+            expH: "NMEEE ऊर्जा-कुशल उपकरणों (जैसे एलईडी बल्ब) के उपयोग को बढ़ावा देता है और बड़े उद्योगों को अपनी ऊर्जा खपत कम करने का आदेश देता है।"
+        },
+        {
+            qE: "Which mission aims to make cities more sustainable through better waste management, public transport, and green buildings?",
+            qH: "बेहतर अपशिष्ट प्रबंधन, सार्वजनिक परिवहन और हरित भवनों के माध्यम से शहरों को अधिक टिकाऊ बनाने का लक्ष्य किस मिशन का है?",
+            options: [
+                { e: "National Solar Mission", h: "राष्ट्रीय सौर मिशन", correct: false },
+                { e: "National Mission on Sustainable Habitat", h: "सतत आवास पर राष्ट्रीय मिशन (Sustainable Habitat)", correct: true },
+                { e: "National Mission for Green India", h: "ग्रीन इंडिया के लिए राष्ट्रीय मिशन", correct: false },
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false }
+            ],
+            expE: "This mission focuses on urban planning, ensuring our cities (habitats) can handle climate change efficiently.",
+            expH: "यह मिशन शहरी नियोजन पर केंद्रित है, यह सुनिश्चित करते हुए कि हमारे शहर (आवास) जलवायु परिवर्तन को कुशलता से संभाल सकें।"
+        },
+        {
+            qE: "Which mission under the NAPCC is dedicated to protecting the fragile ecosystems, glaciers, and biodiversity of northern India?",
+            qH: "NAPCC के तहत कौन सा मिशन उत्तरी भारत के नाजुक पारिस्थितिक तंत्र, ग्लेशियरों और जैव विविधता की रक्षा के लिए समर्पित है?",
+            options: [
+                { e: "National Mission for Sustaining the Himalayan Ecosystem", h: "हिमालयी पारिस्थितिकी तंत्र को बनाए रखने के लिए राष्ट्रीय मिशन", correct: true },
+                { e: "National Mission for Sustainable Agriculture", h: "सतत कृषि के लिए राष्ट्रीय मिशन", correct: false },
+                { e: "National Mission for Enhanced Energy Efficiency", h: "उन्नत ऊर्जा दक्षता के लिए राष्ट्रीय मिशन", correct: false },
+                { e: "National Mission for Green India", h: "ग्रीन इंडिया के लिए राष्ट्रीय मिशन", correct: false }
+            ],
+            expE: "The Himalayas are crucial for India's water supply and climate; protecting its melting glaciers is the core of this mission.",
+            expH: "हिमालय भारत की जल आपूर्ति और जलवायु के लिए महत्वपूर्ण हैं; इसके पिघलते ग्लेशियरों की रक्षा करना इस मिशन का मूल है।"
+        },
+        {
+            qE: "What is the primary objective of the 'National Water Mission'?",
+            qH: "'राष्ट्रीय जल मिशन' का प्राथमिक उद्देश्य क्या है?",
+            options: [
+                { e: "To drain all lakes for agriculture", h: "कृषि के लिए सभी झीलों को सुखाना", correct: false },
+                { e: "To conserve water, minimize wastage, and ensure equitable distribution of water resources", h: "जल का संरक्षण करना, बर्बादी को कम करना और जल संसाधनों का समान वितरण सुनिश्चित करना", correct: true },
+                { e: "To export water to other countries", h: "अन्य देशों को पानी का निर्यात करना", correct: false },
+                { e: "To stop all rainfall", h: "सभी वर्षा को रोकना", correct: false }
+            ],
+            expE: "The mission seeks to increase water use efficiency by 20% through better management and rainwater harvesting.",
+            expH: "मिशन बेहतर प्रबंधन और वर्षा जल संचयन के माध्यम से जल उपयोग दक्षता को 20% तक बढ़ाना चाहता है।"
+        },
+        {
+            qE: "The 'National Mission for a Green India' primarily focuses on:",
+            qH: "'ग्रीन इंडिया के लिए राष्ट्रीय मिशन' (Green India Mission) मुख्य रूप से किस पर केंद्रित है?",
+            options: [
+                { e: "Painting government buildings green", h: "सरकारी इमारतों को हरे रंग में रंगना", correct: false },
+                { e: "Protecting, restoring, and increasing forest and tree cover across the country", h: "देश भर में वन और वृक्षों के आवरण की रक्षा, बहाली और वृद्धि करना", correct: true },
+                { e: "Promoting green-colored cars", h: "हरे रंग की कारों को बढ़ावा देना", correct: false },
+                { e: "Importing green vegetables", h: "हरी सब्जियां आयात करना", correct: false }
+            ],
+            expE: "This mission aims to increase forest/tree cover by 5 million hectares and improve the quality of another 5 million hectares.",
+            expH: "इस मिशन का लक्ष्य वन/वृक्ष क्षेत्र में 50 लाख हेक्टेयर की वृद्धि करना और अन्य 50 लाख हेक्टेयर की गुणवत्ता में सुधार करना है।"
+        },
+        {
+            qE: "Which mission aims to make farming more resilient to climate change by promoting organic farming, micro-irrigation, and better crop varieties?",
+            qH: "जैविक खेती, सूक्ष्म-सिंचाई और बेहतर फसल किस्मों को बढ़ावा देकर खेती को जलवायु परिवर्तन के प्रति अधिक लचीला (resilient) बनाने का लक्ष्य किस मिशन का है?",
+            options: [
+                { e: "National Mission for Sustainable Agriculture", h: "सतत कृषि के लिए राष्ट्रीय मिशन (Sustainable Agriculture)", correct: true },
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false },
+                { e: "National Solar Mission", h: "राष्ट्रीय सौर मिशन", correct: false },
+                { e: "National Mission on Strategic Knowledge", h: "रणनीतिक ज्ञान पर राष्ट्रीय मिशन", correct: false }
+            ],
+            expE: "It focuses on safeguarding Indian farmers from droughts and unpredictable weather through sustainable agricultural practices.",
+            expH: "यह टिकाऊ कृषि पद्धतियों के माध्यम से भारतीय किसानों को सूखे और अप्रत्याशित मौसम से बचाने पर केंद्रित है।"
+        },
+        {
+            qE: "What is the role of the 'National Mission on Strategic Knowledge for Climate Change'?",
+            qH: "'जलवायु परिवर्तन के लिए रणनीतिक ज्ञान पर राष्ट्रीय मिशन' की क्या भूमिका है?",
+            options: [
+                { e: "To completely ignore scientific research", h: "वैज्ञानिक अनुसंधान को पूरी तरह से नजरअंदाज करना", correct: false },
+                { e: "To build a strong research network and gather data to understand climate change better", h: "जलवायु परिवर्तन को बेहतर ढंग से समझने के लिए एक मजबूत अनुसंधान नेटवर्क बनाना और डेटा एकत्र करना", correct: true },
+                { e: "To only teach history in schools", h: "स्कूलों में केवल इतिहास पढ़ाना", correct: false },
+                { e: "To ban computers in environmental studies", h: "पर्यावरण अध्ययन में कंप्यूटर पर प्रतिबंध लगाना", correct: false }
+            ],
+            expE: "This mission funds research, universities, and scientists to help India make informed, data-driven climate policies.",
+            expH: "यह मिशन भारत को सूचित, डेटा-संचालित जलवायु नीतियां बनाने में मदद करने के लिए अनुसंधान, विश्वविद्यालयों और वैज्ञानिकों को वित्त पोषित (fund) करता है।"
+        },
+        {
+            qE: "Which of the following is NOT one of the 8 missions under the NAPCC?",
+            qH: "निम्नलिखित में से कौन NAPCC के तहत 8 मिशनों में से एक नहीं है?",
+            options: [
+                { e: "National Solar Mission", h: "राष्ट्रीय सौर मिशन", correct: false },
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false },
+                { e: "National Mission for Space Exploration", h: "अंतरिक्ष अन्वेषण के लिए राष्ट्रीय मिशन", correct: true },
+                { e: "National Mission for a Green India", h: "ग्रीन इंडिया के लिए राष्ट्रीय मिशन", correct: false }
+            ],
+            expE: "Space exploration is not part of the climate change action plan. All 8 missions focus directly on earthly environmental sustainability.",
+            expH: "अंतरिक्ष अन्वेषण जलवायु परिवर्तन कार्य योजना का हिस्सा नहीं है। सभी 8 मिशन सीधे तौर पर पृथ्वी की पर्यावरणीय स्थिरता पर ध्यान केंद्रित करते हैं।"
+        },
+        {
+            qE: "Why is India considered highly vulnerable to climate change?",
+            qH: "भारत को जलवायु परिवर्तन के प्रति अत्यधिक संवेदनशील क्यों माना जाता है?",
+            options: [
+                { e: "Because it has no rivers", h: "क्योंकि यहाँ कोई नदियाँ नहीं हैं", correct: false },
+                { e: "Due to its long coastline, high dependence on monsoon agriculture, and dense population", h: "इसकी लंबी तटरेखा, मानसून कृषि पर उच्च निर्भरता और घनी आबादी के कारण", correct: true },
+                { e: "Because it snows everywhere in India", h: "क्योंकि भारत में हर जगह बर्फ गिरती है", correct: false },
+                { e: "Because it has no forests left", h: "क्योंकि यहाँ कोई जंगल नहीं बचा है", correct: false }
+            ],
+            expE: "A slight change in monsoons or sea levels can displace millions of people and destroy food security in India.",
+            expH: "मानसून या समुद्र के स्तर में मामूली बदलाव लाखों लोगों को विस्थापित कर सकता है और भारत में खाद्य सुरक्षा को नष्ट कर सकता है।"
+        },
+        {
+            qE: "What is the primary greenhouse gas responsible for global warming that the NAPCC aims to reduce?",
+            qH: "ग्लोबल वार्मिंग के लिए जिम्मेदार प्राथमिक ग्रीनहाउस गैस कौन सी है जिसे NAPCC का लक्ष्य कम करना है?",
+            options: [
+                { e: "Oxygen (O2)", h: "ऑक्सीजन (O2)", correct: false },
+                { e: "Carbon Dioxide (CO2)", h: "कार्बन डाइऑक्साइड (CO2)", correct: true },
+                { e: "Nitrogen (N2)", h: "नाइट्रोजन (N2)", correct: false },
+                { e: "Argon (Ar)", h: "आर्गन (Ar)", correct: false }
+            ],
+            expE: "Reducing CO2 emissions by shifting to solar energy and increasing forest cover is the core philosophy of NAPCC.",
+            expH: "सौर ऊर्जा की ओर रुख करके और वन क्षेत्र को बढ़ाकर CO2 उत्सर्जन को कम करना NAPCC का मुख्य दर्शन है।"
+        },
+        {
+            qE: "The popular 'UJALA' scheme, which distributed millions of LED bulbs to save electricity, falls under the objectives of which mission?",
+            qH: "लोकप्रिय 'उजाला' (UJALA) योजना, जिसके तहत बिजली बचाने के लिए करोड़ों एलईडी बल्ब बांटे गए, किस मिशन के उद्देश्यों के अंतर्गत आती है?",
+            options: [
+                { e: "National Mission on Sustainable Agriculture", h: "सतत कृषि पर राष्ट्रीय मिशन", correct: false },
+                { e: "National Water Mission", h: "राष्ट्रीय जल मिशन", correct: false },
+                { e: "National Mission for Enhanced Energy Efficiency", h: "उन्नत ऊर्जा दक्षता के लिए राष्ट्रीय मिशन (NMEEE)", correct: true },
+                { e: "National Solar Mission", h: "राष्ट्रीय सौर मिशन", correct: false }
+            ],
+            expE: "NMEEE focuses on reducing energy consumption at the consumer and industrial levels by promoting highly efficient technologies.",
+            expH: "NMEEE अत्यधिक कुशल प्रौद्योगिकियों को बढ़ावा देकर उपभोक्ता और औद्योगिक स्तर पर ऊर्जा खपत को कम करने पर केंद्रित है।"
+        },
+        {
+            qE: "In the context of the Green India Mission, what does 'Afforestation' mean?",
+            qH: "ग्रीन इंडिया मिशन के संदर्भ में, 'वनीकरण' (Afforestation) का क्या अर्थ है?",
+            options: [
+                { e: "Cutting down forests to build cities", h: "शहर बसाने के लिए जंगल काटना", correct: false },
+                { e: "Planting trees on land that was not previously a forest", h: "उस भूमि पर पेड़ लगाना जो पहले जंगल नहीं था", correct: true },
+                { e: "Burning dry leaves", h: "सूखे पत्ते जलाना", correct: false },
+                { e: "Building greenhouses made of glass", h: "कांच के ग्रीनहाउस बनाना", correct: false }
+            ],
+            expE: "Afforestation creates new forests, which act as 'carbon sinks' to absorb excess CO2 from the atmosphere.",
+            expH: "वनीकरण नए जंगल बनाता है, जो वायुमंडल से अतिरिक्त CO2 को अवशोषित करने के लिए 'कार्बन सिंक' के रूप में कार्य करते हैं।"
+        },
+        {
+            qE: "Under the National Mission on Sustainable Habitat, there is a strong focus on:",
+            qH: "सतत आवास (Sustainable Habitat) पर राष्ट्रीय मिशन के तहत, किस बात पर विशेष ध्यान दिया जाता है?",
+            options: [
+                { e: "Increasing the number of personal cars", h: "निजी कारों की संख्या बढ़ाना", correct: false },
+                { e: "Encouraging public transport, energy-saving building codes, and waste recycling", h: "सार्वजनिक परिवहन, ऊर्जा-बचत भवन कोड और अपशिष्ट रीसाइक्लिंग को प्रोत्साहित करना", correct: true },
+                { e: "Building more coal factories in cities", h: "शहरों में अधिक कोयला कारखाने बनाना", correct: false },
+                { e: "Stopping the construction of all new houses", h: "सभी नए घरों का निर्माण रोकना", correct: false }
+            ],
+            expE: "A sustainable city must move people efficiently (metro/buses) and manage its waste without polluting the environment.",
+            expH: "एक टिकाऊ शहर को लोगों को कुशलतापूर्वक (मेट्रो/बसों से) ले जाना चाहिए और पर्यावरण को प्रदूषित किए बिना अपने कचरे का प्रबंधन करना चाहिए।"
+        },
+        {
+            qE: "Climate change in India is most likely to cause an increase in which of the following?",
+            qH: "भारत में जलवायु परिवर्तन के कारण निम्नलिखित में से किसमें वृद्धि होने की सबसे अधिक संभावना है?",
+            options: [
+                { e: "Extreme weather events like intense floods, severe droughts, and heatwaves", h: "बाढ़, गंभीर सूखा और हीटवेव (लू) जैसी चरम मौसम की घटनाएं", correct: true },
+                { e: "A completely stable and predictable monsoon season", h: "पूरी तरह से स्थिर और अनुमानित मानसून का मौसम", correct: false },
+                { e: "Cooler summers everywhere", h: "हर जगह ठंडी गर्मियाँ", correct: false },
+                { e: "Less air pollution automatically", h: "स्वतः कम वायु प्रदूषण", correct: false }
+            ],
+            expE: "Global warming disrupts weather patterns, leading to more frequent and dangerous extreme climate events.",
+            expH: "ग्लोबल वार्मिंग मौसम के मिजाज को बाधित करती है, जिससे अधिक लगातार और खतरनाक चरम जलवायु घटनाएं होती हैं।"
+        },
+        {
+            qE: "Which government body coordinates the implementation of the NAPCC?",
+            qH: "कौन सा सरकारी निकाय NAPCC के कार्यान्वयन का समन्वय करता है?",
+            options: [
+                { e: "Ministry of Finance", h: "वित्त मंत्रालय", correct: false },
+                { e: "Ministry of Environment, Forest and Climate Change (MoEFCC)", h: "पर्यावरण, वन और जलवायु परिवर्तन मंत्रालय (MoEFCC)", correct: true },
+                { e: "Ministry of Defense", h: "रक्षा मंत्रालय", correct: false },
+                { e: "Ministry of Education", h: "शिक्षा मंत्रालय", correct: false }
+            ],
+            expE: "The MoEFCC works alongside various other ministries to execute the 8 missions of the NAPCC effectively.",
+            expH: "MoEFCC NAPCC के 8 मिशनों को प्रभावी ढंग से क्रियान्वित करने के लिए विभिन्न अन्य मंत्रालयों के साथ काम करता है।"
+        },
+        {
+            qE: "Why is it important for BCA/BBA students to learn about India's NAPCC?",
+            qH: "BCA/BBA छात्रों के लिए भारत के NAPCC के बारे में सीखना क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "To pass a single exam and forget it", h: "सिर्फ एक परीक्षा पास करने और इसे भूलने के लिए", correct: false },
+                { e: "Because future businesses and IT solutions must align with national climate goals, energy efficiency, and sustainability regulations", h: "क्योंकि भविष्य के व्यवसायों और आईटी (IT) समाधानों को राष्ट्रीय जलवायु लक्ष्यों, ऊर्जा दक्षता और स्थिरता नियमों के साथ जुड़ना होगा", correct: true },
+                { e: "Because it teaches them how to grow wheat", h: "क्योंकि यह उन्हें गेहूं उगाना सिखाता है", correct: false },
+                { e: "Because all offices will be moved to forests", h: "क्योंकि सभी कार्यालयों को जंगलों में स्थानांतरित कर दिया जाएगा", correct: false }
+            ],
+            expE: "Understanding climate policy helps future managers and developers build green technologies and sustainable business models.",
+            expH: "जलवायु नीति को समझना भविष्य के प्रबंधकों और डेवलपर्स को हरित प्रौद्योगिकियों और टिकाऊ व्यापार मॉडल बनाने में मदद करता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

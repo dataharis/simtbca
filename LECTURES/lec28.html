@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 28 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 28: Global Environmental Issues</h2>
+            <p>Climate Change, Ozone Depletion & Acid Rain</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is the natural process that warms the Earth's surface by trapping heat in the atmosphere?",
+            qH: "वह प्राकृतिक प्रक्रिया क्या है जो वायुमंडल में गर्मी को फंसाकर पृथ्वी की सतह को गर्म करती है?",
+            options: [
+                { e: "Greenhouse Effect", h: "ग्रीनहाउस प्रभाव (Greenhouse Effect)", correct: true },
+                { e: "Global Warming", h: "ग्लोबल वार्मिंग", correct: false },
+                { e: "Ozone Depletion", h: "ओजोन क्षरण", correct: false },
+                { e: "Acid Rain", h: "अम्लीय वर्षा", correct: false }
+            ],
+            expE: "The Greenhouse Effect is a natural and necessary process. Without it, Earth would be freezing cold. Problems arise when humans enhance it too much.",
+            expH: "ग्रीनहाउस प्रभाव एक प्राकृतिक और आवश्यक प्रक्रिया है। इसके बिना, पृथ्वी बहुत ठंडी होगी। समस्याएँ तब उत्पन्न होती हैं जब मनुष्य इसे बहुत अधिक बढ़ा देते हैं।"
+        },
+        {
+            qE: "Which of the following is the most abundant human-made greenhouse gas contributing to global warming?",
+            qH: "निम्नलिखित में से कौन सी ग्लोबल वार्मिंग में योगदान देने वाली मानव निर्मित सबसे प्रचुर ग्रीनहाउस गैस है?",
+            options: [
+                { e: "Methane", h: "मीथेन", correct: false },
+                { e: "Carbon Dioxide (CO2)", h: "कार्बन डाइऑक्साइड (CO2)", correct: true },
+                { e: "Chlorofluorocarbons (CFCs)", h: "क्लोरोफ्लोरोकार्बन (CFCs)", correct: false },
+                { e: "Nitrous Oxide", h: "नाइट्रस ऑक्साइड", correct: false }
+            ],
+            expE: "CO2 is released in massive amounts through the burning of fossil fuels like coal, oil, and natural gas.",
+            expH: "कोयला, तेल और प्राकृतिक गैस जैसे जीवाश्म ईंधन के जलने से भारी मात्रा में CO2 निकलती है।"
+        },
+        {
+            qE: "The continuous rise in the average temperature of the Earth's climate system is called:",
+            qH: "पृथ्वी की जलवायु प्रणाली के औसत तापमान में निरंतर वृद्धि क्या कहलाती है?",
+            options: [
+                { e: "Climate Cooling", h: "जलवायु शीतलन", correct: false },
+                { e: "Thermal Pollution", h: "तापीय प्रदूषण", correct: false },
+                { e: "Acidification", h: "अम्लीकरण", correct: false },
+                { e: "Global Warming", h: "ग्लोबल वार्मिंग (Global Warming)", correct: true }
+            ],
+            expE: "Global warming is a major aspect of climate change, causing glaciers to melt and sea levels to rise.",
+            expH: "ग्लोबल वार्मिंग जलवायु परिवर्तन का एक प्रमुख पहलू है, जिसके कारण ग्लेशियर पिघलते हैं और समुद्र का स्तर बढ़ता है।"
+        },
+        {
+            qE: "In which layer of the atmosphere is the protective ozone layer located?",
+            qH: "वायुमंडल की किस परत में सुरक्षात्मक ओजोन परत (Ozone layer) स्थित है?",
+            options: [
+                { e: "Troposphere", h: "क्षोभ मंडल", correct: false },
+                { e: "Stratosphere", h: "समताप मंडल (Stratosphere)", correct: true },
+                { e: "Mesosphere", h: "मध्यमण्डल", correct: false },
+                { e: "Thermosphere", h: "बाह्यमण्डल", correct: false }
+            ],
+            expE: "About 90% of Earth's ozone is found in the Stratosphere, protecting us from harmful space radiation.",
+            expH: "पृथ्वी का लगभग 90% ओजोन समताप मंडल (Stratosphere) में पाया जाता है, जो हमें हानिकारक अंतरिक्ष विकिरण से बचाता है।"
+        },
+        {
+            qE: "The primary function of the ozone layer is to protect the Earth from:",
+            qH: "ओजोन परत का प्राथमिक कार्य पृथ्वी को किससे बचाना है?",
+            options: [
+                { e: "Visible light", h: "दृश्य प्रकाश", correct: false },
+                { e: "Ultraviolet (UV) radiation", h: "पराबैंगनी (UV) विकिरण", correct: true },
+                { e: "Infrared rays", h: "इन्फ्रारेड किरणें", correct: false },
+                { e: "X-rays", h: "एक्स-रे", correct: false }
+            ],
+            expE: "The ozone layer acts like a giant shield, absorbing the sun's dangerous UV-B and UV-C rays.",
+            expH: "ओजोन परत एक विशाल ढाल की तरह काम करती है, जो सूर्य की खतरनाक UV-B और UV-C किरणों को अवशोषित करती है।"
+        },
+        {
+            qE: "Which synthetic chemicals are primarily responsible for the depletion of the ozone layer?",
+            qH: "ओजोन परत के क्षय (depletion) के लिए मुख्य रूप से कौन से कृत्रिम रसायन जिम्मेदार हैं?",
+            options: [
+                { e: "Chlorofluorocarbons (CFCs)", h: "क्लोरोफ्लोरोकार्बन (CFCs)", correct: true },
+                { e: "Carbon Monoxide", h: "कार्बन मोनोऑक्साइड", correct: false },
+                { e: "Sulfur Dioxide", h: "सल्फर डाइऑक्साइड", correct: false },
+                { e: "Ammonia", h: "अमोनिया", correct: false }
+            ],
+            expE: "When CFCs reach the stratosphere, UV rays break them apart, releasing Chlorine atoms which destroy ozone molecules.",
+            expH: "जब CFC समताप मंडल में पहुंचते हैं, तो UV किरणें उन्हें तोड़ देती हैं, जिससे क्लोरीन परमाणु निकलते हैं जो ओजोन अणुओं को नष्ट कर देते हैं।"
+        },
+        {
+            qE: "Acid rain is primarily caused by the emission of which two gases into the atmosphere?",
+            qH: "अम्लीय वर्षा (Acid rain) मुख्य रूप से वायुमंडल में किन दो गैसों के उत्सर्जन के कारण होती है?",
+            options: [
+                { e: "Sulfur dioxide and Nitrogen oxides", h: "सल्फर डाइऑक्साइड और नाइट्रोजन ऑक्साइड", correct: true },
+                { e: "Carbon dioxide and Methane", h: "कार्बन डाइऑक्साइड और मीथेन", correct: false },
+                { e: "Ozone and Argon", h: "ओजोन और आर्गन", correct: false },
+                { e: "Carbon monoxide and Helium", h: "कार्बन मोनोऑक्साइड और हीलियम", correct: false }
+            ],
+            expE: "SO2 and NOx react with water vapor in the sky to form sulfuric and nitric acids, which then fall as acid rain.",
+            expH: "SO2 और NOx आसमान में जलवाष्प के साथ प्रतिक्रिया करके सल्फ्यूरिक और नाइट्रिक एसिड बनाते हैं, जो फिर अम्लीय वर्षा के रूप में गिरते हैं।"
+        },
+        {
+            qE: "Rain is generally considered 'Acid Rain' when its pH value falls below:",
+            qH: "सामान्यतः बारिश को 'अम्लीय वर्षा' तब माना जाता है जब इसका pH मान किससे नीचे गिर जाता है?",
+            options: [
+                { e: "7.0", h: "7.0", correct: false },
+                { e: "5.6", h: "5.6", correct: true },
+                { e: "8.5", h: "8.5", correct: false },
+                { e: "9.0", h: "9.0", correct: false }
+            ],
+            expE: "Normal rain is slightly acidic (pH 5.6) due to natural CO2. But when industrial acids mix in, the pH drops lower (more acidic).",
+            expH: "प्राकृतिक CO2 के कारण सामान्य बारिश थोड़ी अम्लीय (pH 5.6) होती है। लेकिन जब औद्योगिक एसिड मिल जाते हैं, तो pH नीचे गिर जाता है (अधिक अम्लीय)।"
+        },
+        {
+            qE: "Which international treaty was signed in 1987 to phase out the production of ozone-depleting substances?",
+            qH: "ओजोन क्षयकारी पदार्थों के उत्पादन को चरणबद्ध तरीके से समाप्त करने के लिए 1987 में किस अंतर्राष्ट्रीय संधि पर हस्ताक्षर किए गए थे?",
+            options: [
+                { e: "Kyoto Protocol", h: "क्योटो प्रोटोकॉल", correct: false },
+                { e: "Paris Agreement", h: "पेरिस समझौता", correct: false },
+                { e: "Montreal Protocol", h: "मॉन्ट्रियल प्रोटोकॉल (Montreal Protocol)", correct: true },
+                { e: "Geneva Convention", h: "जिनेवा कन्वेंशन", correct: false }
+            ],
+            expE: "The Montreal Protocol is one of the most successful environmental treaties ever, successfully phasing out CFCs globally.",
+            expH: "मॉन्ट्रियल प्रोटोकॉल अब तक की सबसे सफल पर्यावरण संधियों में से एक है, जिसने विश्व स्तर पर CFCs को सफलतापूर्वक समाप्त कर दिया है।"
+        },
+        {
+            qE: "Which international agreement specifically aimed to reduce greenhouse gas emissions to fight climate change (adopted in 1997)?",
+            qH: "किस अंतर्राष्ट्रीय समझौते का उद्देश्य विशेष रूप से जलवायु परिवर्तन से लड़ने के लिए ग्रीनहाउस गैस उत्सर्जन को कम करना था (1997 में अपनाया गया)?",
+            options: [
+                { e: "Montreal Protocol", h: "मॉन्ट्रियल प्रोटोकॉल", correct: false },
+                { e: "Kyoto Protocol", h: "क्योटो प्रोटोकॉल (Kyoto Protocol)", correct: true },
+                { e: "Earth Summit", h: "पृथ्वी शिखर सम्मेलन", correct: false },
+                { e: "Ramsar Convention", h: "रामसर कन्वेंशन", correct: false }
+            ],
+            expE: "The Kyoto Protocol committed industrialized countries and economies in transition to limit and reduce GHG emissions.",
+            expH: "क्योटो प्रोटोकॉल ने औद्योगिक देशों को ग्रीनहाउस गैस (GHG) उत्सर्जन को सीमित करने और कम करने के लिए प्रतिबद्ध किया।"
+        },
+        {
+            qE: "What is one of the most dangerous consequences of global warming and melting glaciers?",
+            qH: "ग्लोबल वार्मिंग और पिघलते ग्लेशियरों के सबसे खतरनाक परिणामों में से एक क्या है?",
+            options: [
+                { e: "Decrease in ocean water", h: "समुद्र के पानी में कमी", correct: false },
+                { e: "Rise in global sea levels", h: "वैश्विक समुद्र के स्तर में वृद्धि (Rise in sea levels)", correct: true },
+                { e: "Increased snowfall everywhere", h: "हर जगह बर्फबारी में वृद्धि", correct: false },
+                { e: "Faster Earth rotation", h: "पृथ्वी का तेजी से घूमना", correct: false }
+            ],
+            expE: "Rising sea levels threaten to permanently submerge coastal cities, islands, and vital agricultural lands globally.",
+            expH: "समुद्र के स्तर में वृद्धि से तटीय शहरों, द्वीपों और विश्व स्तर पर महत्वपूर्ण कृषि भूमि के स्थायी रूप से जलमग्न होने का खतरा है।"
+        },
+        {
+            qE: "Chlorofluorocarbons (CFCs) were widely used in which everyday appliances before being banned?",
+            qH: "प्रतिबंध लगने से पहले क्लोरोफ्लोरोकार्बन (CFC) का व्यापक रूप से किन रोजमर्रा के उपकरणों में उपयोग किया जाता था?",
+            options: [
+                { e: "Refrigerators and Air Conditioners", h: "रेफ्रिजरेटर और एयर कंडीशनर", correct: true },
+                { e: "Microwave ovens", h: "माइक्रोवेव ओवन", correct: false },
+                { e: "Televisions", h: "टेलीविजन", correct: false },
+                { e: "Washing machines", h: "वाशिंग मशीन", correct: false }
+            ],
+            expE: "CFCs were used as coolants (refrigerants) and in aerosol spray cans because they were stable and non-toxic to humans.",
+            expH: "CFCs का उपयोग शीतलक (refrigerants) के रूप में और एयरोसोल स्प्रे कैन में किया जाता था क्योंकि वे मनुष्यों के लिए स्थिर और गैर-विषाक्त थे।"
+        },
+        {
+            qE: "Increased exposure to UV radiation due to ozone depletion can cause which major health problem in humans?",
+            qH: "ओजोन क्षरण के कारण यूवी (UV) विकिरण के अधिक संपर्क में आने से मनुष्यों में कौन सी प्रमुख स्वास्थ्य समस्या हो सकती है?",
+            options: [
+                { e: "Malaria", h: "मलेरिया", correct: false },
+                { e: "Skin Cancer and Cataracts", h: "त्वचा का कैंसर और मोतियाबिंद (Skin Cancer and Cataracts)", correct: true },
+                { e: "Cholera", h: "हैजा", correct: false },
+                { e: "Typhoid", h: "टाइफाइड", correct: false }
+            ],
+            expE: "UV radiation directly damages human DNA, leading to skin cancers like melanoma and eye issues like cataracts.",
+            expH: "यूवी विकिरण सीधे मानव डीएनए को नुकसान पहुंचाता है, जिससे मेलेनोमा जैसे त्वचा कैंसर और मोतियाबिंद जैसी आंखों की समस्याएं होती हैं।"
+        },
+        {
+            qE: "The yellowing and degradation of the white marble of the Taj Mahal is primarily caused by:",
+            qH: "ताजमहल के सफेद संगमरमर का पीला पड़ना और क्षरण मुख्य रूप से किसके कारण होता है?",
+            options: [
+                { e: "Ozone depletion", h: "ओजोन क्षरण", correct: false },
+                { e: "Acid Rain", h: "अम्लीय वर्षा (Acid Rain)", correct: true },
+                { e: "Global warming", h: "ग्लोबल वार्मिंग", correct: false },
+                { e: "Noise pollution", h: "ध्वनि प्रदूषण", correct: false }
+            ],
+            expE: "This phenomenon is known as 'Marble Cancer'. The acid in the rain reacts with the calcium carbonate in the marble, dissolving it.",
+            expH: "इस घटना को 'संगमरमर कैंसर' (Marble Cancer) के रूप में जाना जाता है। बारिश में मौजूद एसिड संगमरमर में मौजूद कैल्शियम कार्बोनेट के साथ प्रतिक्रिया करके उसे घोल देता है।"
+        },
+        {
+            qE: "Which of the following is NOT a greenhouse gas?",
+            qH: "निम्नलिखित में से कौन सी ग्रीनहाउस गैस नहीं है?",
+            options: [
+                { e: "Methane (CH4)", h: "मीथेन (CH4)", correct: false },
+                { e: "Nitrous Oxide (N2O)", h: "नाइट्रस ऑक्साइड (N2O)", correct: false },
+                { e: "Nitrogen (N2)", h: "नाइट्रोजन (N2)", correct: true },
+                { e: "Carbon Dioxide (CO2)", h: "कार्बन डाइऑक्साइड (CO2)", correct: false }
+            ],
+            expE: "Nitrogen (N2) makes up 78% of our atmosphere but it does not trap heat, so it is not a greenhouse gas.",
+            expH: "नाइट्रोजन (N2) हमारे वायुमंडल का 78% हिस्सा बनाती है लेकिन यह गर्मी को नहीं फंसाती है, इसलिए यह ग्रीनहाउस गैस नहीं है।"
+        },
+        {
+            qE: "The total amount of greenhouse gases generated by our actions is known as our:",
+            qH: "हमारे कार्यों द्वारा उत्पन्न ग्रीनहाउस गैसों की कुल मात्रा को क्या कहा जाता है?",
+            options: [
+                { e: "Ecological balance", h: "पारिस्थितिक संतुलन", correct: false },
+                { e: "Ozone hole", h: "ओजोन छिद्र", correct: false },
+                { e: "Carbon Footprint", h: "कार्बन फुटप्रिंट (Carbon Footprint)", correct: true },
+                { e: "Natural reserve", h: "प्राकृतिक रिजर्व", correct: false }
+            ],
+            expE: "Everything from driving a car to charging a laptop contributes to your personal or corporate Carbon Footprint.",
+            expH: "कार चलाने से लेकर लैपटॉप चार्ज करने तक सब कुछ आपके व्यक्तिगत या कॉर्पोरेट कार्बन फुटप्रिंट में योगदान देता है।"
+        },
+        {
+            qE: "How does large-scale deforestation contribute to global warming?",
+            qH: "बड़े पैमाने पर वनों की कटाई ग्लोबल वार्मिंग में कैसे योगदान देती है?",
+            options: [
+                { e: "By cooling the earth", h: "पृथ्वी को ठंडा करके", correct: false },
+                { e: "By producing ozone", h: "ओजोन का निर्माण करके", correct: false },
+                { e: "By reducing the amount of trees that absorb CO2", h: "CO2 को अवशोषित करने वाले पेड़ों की मात्रा कम करके", correct: true },
+                { e: "By creating acid rain", h: "अम्लीय वर्षा बनाकर", correct: false }
+            ],
+            expE: "Trees naturally absorb CO2 (a greenhouse gas). Cutting them down leaves more CO2 in the atmosphere to trap heat.",
+            expH: "पेड़ स्वाभाविक रूप से CO2 (एक ग्रीनहाउस गैस) को अवशोषित करते हैं। उन्हें काटने से गर्मी को फंसाने के लिए वायुमंडल में अधिक CO2 रह जाती है।"
+        },
+        {
+            qE: "Which greenhouse gas is produced heavily by agricultural practices, especially in flooded rice paddies and the digestive systems of cattle?",
+            qH: "कौन सी ग्रीनहाउस गैस कृषि पद्धतियों, विशेष रूप से पानी से भरे धान के खेतों और मवेशियों के पाचन तंत्र द्वारा भारी मात्रा में उत्पन्न होती है?",
+            options: [
+                { e: "Methane", h: "मीथेन (Methane)", correct: true },
+                { e: "Carbon Monoxide", h: "कार्बन मोनोऑक्साइड", correct: false },
+                { e: "Sulfur Dioxide", h: "सल्फर डाइऑक्साइड", correct: false },
+                { e: "CFCs", h: "CFCs", correct: false }
+            ],
+            expE: "Methane is over 25 times more potent than CO2 at trapping heat in the atmosphere.",
+            expH: "वायुमंडल में गर्मी को फंसाने में मीथेन CO2 की तुलना में 25 गुना अधिक शक्तिशाली है।"
+        },
+        {
+            qE: "What is the phenomenon called where a hole or significant thinning appears in the stratospheric ozone layer over Antarctica?",
+            qH: "उस घटना को क्या कहा जाता है जहां अंटार्कटिका के ऊपर समताप मंडलीय ओजोन परत में एक छेद या महत्वपूर्ण पतलापन दिखाई देता है?",
+            options: [
+                { e: "Acid Rain", h: "अम्लीय वर्षा", correct: false },
+                { e: "Ozone Hole", h: "ओजोन छिद्र (Ozone Hole)", correct: true },
+                { e: "Greenhouse Effect", h: "ग्रीनहाउस प्रभाव", correct: false },
+                { e: "Global Warming", h: "ग्लोबल वार्मिंग", correct: false }
+            ],
+            expE: "The 'Ozone Hole' is not a literal hole, but an area of exceptionally depleted ozone in the stratosphere over the Antarctic.",
+            expH: "'ओजोन छिद्र' कोई वास्तविक छेद नहीं है, बल्कि अंटार्कटिक के ऊपर समताप मंडल में असाधारण रूप से कम ओजोन वाला क्षेत्र है।"
+        },
+        {
+            qE: "Which famous environmental slogan encourages individuals to take everyday actions to help solve global environmental issues?",
+            qH: "कौन सा प्रसिद्ध पर्यावरण नारा व्यक्तियों को वैश्विक पर्यावरणीय मुद्दों को हल करने में मदद करने के लिए रोजमर्रा की कार्रवाई करने के लिए प्रोत्साहित करता है?",
+            options: [
+                { e: "Save Water Save Life", h: "जल बचाओ जीवन बचाओ", correct: false },
+                { e: "Think Globally, Act Locally", h: "वैश्विक स्तर पर सोचें, स्थानीय स्तर पर कार्य करें (Think Globally, Act Locally)", correct: true },
+                { e: "Plant a Tree", h: "एक पेड़ लगाओ", correct: false },
+                { e: "Reduce Reuse Recycle", h: "रिड्यूस रीयूज रीसायकल", correct: false }
+            ],
+            expE: "This slogan means that while climate change is a massive global issue, the solution starts with local, individual actions.",
+            expH: "इस नारे का अर्थ है कि जबकि जलवायु परिवर्तन एक बड़ा वैश्विक मुद्दा है, समाधान स्थानीय, व्यक्तिगत कार्यों से शुरू होता है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

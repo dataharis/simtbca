@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 22 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 22: Development vs Environment</h2>
+            <p>Displacement, Resettlement, and Rehabilitation</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What does 'Displacement' mean in the context of development projects?",
+            qH: "विकास परियोजनाओं के संदर्भ में 'विस्थापन' (Displacement) का क्या अर्थ है?",
+            options: [
+                { e: "Moving factory machines to a new place", h: "कारखाने की मशीनों को नई जगह पर ले जाना", correct: false },
+                { e: "Forcing local people to leave their homes and ancestral lands due to a project", h: "किसी परियोजना के कारण स्थानीय लोगों को अपने घर और पैतृक भूमि छोड़ने के लिए मजबूर करना", correct: true },
+                { e: "Planting trees in a new forest", h: "नए जंगल में पेड़ लगाना", correct: false },
+                { e: "Travelling to a new city for a holiday", h: "छुट्टी के लिए नए शहर की यात्रा करना", correct: false }
+            ],
+            expE: "Displacement occurs when people are uprooted from their natural habitat against their will to make way for dams, mines, or industries.",
+            expH: "विस्थापन तब होता है जब लोगों को बांधों, खदानों या उद्योगों के लिए रास्ता बनाने के लिए उनकी इच्छा के विरुद्ध उनके प्राकृतिक आवास से उखाड़ दिया जाता है।"
+        },
+        {
+            qE: "Which type of development project usually displaces the highest number of people globally?",
+            qH: "किस प्रकार की विकास परियोजना आमतौर पर विश्व स्तर पर सबसे अधिक लोगों को विस्थापित करती है?",
+            options: [
+                { e: "Building small schools", h: "छोटे स्कूल बनाना", correct: false },
+                { e: "Large Hydroelectric Dams", h: "बड़े जलविद्युत बांध", correct: true },
+                { e: "Solar Power Parks", h: "सौर ऊर्जा पार्क", correct: false },
+                { e: "Windmills", h: "पवन चक्कियां", correct: false }
+            ],
+            expE: "Large dams create massive artificial reservoirs that submerge entire villages and forests, displacing millions of people.",
+            expH: "बड़े बांध विशाल कृत्रिम जलाशय बनाते हैं जो पूरे के पूरे गांवों और जंगलों को जलमग्न कर देते हैं, जिससे लाखों लोग विस्थापित हो जाते हैं।"
+        },
+        {
+            qE: "What does the term 'Resettlement' mean?",
+            qH: "'पुनर्वास' (Resettlement) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Moving displaced people to a new physical location and providing them housing", h: "विस्थापित लोगों को एक नए भौतिक स्थान पर ले जाना और उन्हें आवास प्रदान करना", correct: true },
+                { e: "Giving people money to travel", h: "लोगों को यात्रा करने के लिए पैसे देना", correct: false },
+                { e: "Destroying old houses", h: "पुराने घरों को नष्ट करना", correct: false },
+                { e: "Teaching people new languages", h: "लोगों को नई भाषाएँ सिखाना", correct: false }
+            ],
+            expE: "Resettlement is the process of physically relocating the affected people to a new settlement or colony.",
+            expH: "पुनर्वास (Resettlement) प्रभावित लोगों को एक नई बस्ती या कॉलोनी में भौतिक रूप से स्थानांतरित करने की प्रक्रिया है।"
+        },
+        {
+            qE: "Is providing only a new house (Resettlement) enough to solve the problems of displaced people?",
+            qH: "क्या विस्थापित लोगों की समस्याओं को हल करने के लिए केवल एक नया घर (Resettlement) प्रदान करना पर्याप्त है?",
+            options: [
+                { e: "Yes, a house is all they need", h: "हाँ, उन्हें केवल एक घर की आवश्यकता है", correct: false },
+                { e: "No, they also need 'Rehabilitation' (livelihood, social support, and jobs)", h: "नहीं, उन्हें 'पुनर्वास/पुनर्स्थापन' (Rehabilitation - आजीविका, सामाजिक समर्थन और नौकरी) की भी आवश्यकता है", correct: true },
+                { e: "Yes, as long as the house is big", h: "हाँ, जब तक घर बड़ा है", correct: false },
+                { e: "No, they need a car as well", h: "नहीं, उन्हें एक कार की भी आवश्यकता है", correct: false }
+            ],
+            expE: "A house alone cannot sustain a family. They need their lost livelihood, social structure, and income restored (Rehabilitation).",
+            expH: "अकेला एक घर परिवार का भरण-पोषण नहीं कर सकता। उन्हें अपनी खोई हुई आजीविका, सामाजिक संरचना और आय बहाल करने की आवश्यकता है (Rehabilitation)।"
+        },
+        {
+            qE: "What does 'Rehabilitation' involve?",
+            qH: "'पुनर्स्थापन/पुनर्वास' (Rehabilitation) में क्या शामिल है?",
+            options: [
+                { e: "Restoring the social, economic, and cultural livelihoods of the displaced people", h: "विस्थापित लोगों की सामाजिक, आर्थिक और सांस्कृतिक आजीविका को बहाल करना", correct: true },
+                { e: "Only giving a one-time cash check", h: "केवल एक बार नकद चेक देना", correct: false },
+                { e: "Sending people back to their submerged villages", h: "लोगों को उनके जलमग्न गांवों में वापस भेजना", correct: false },
+                { e: "Forcing them to work in the new factories for free", h: "उन्हें नए कारखानों में मुफ्त में काम करने के लिए मजबूर करना", correct: false }
+            ],
+            expE: "Rehabilitation is a long-term process aimed at improving or restoring the living standards of the affected communities.",
+            expH: "पुनर्वास (Rehabilitation) एक दीर्घकालिक प्रक्रिया है जिसका उद्देश्य प्रभावित समुदायों के जीवन स्तर में सुधार या बहाली करना है।"
+        },
+        {
+            qE: "In India, which group of people is historically the most affected by development-induced displacement?",
+            qH: "भारत में, ऐतिहासिक रूप से विकास-प्रेरित विस्थापन से कौन सा समूह सबसे अधिक प्रभावित है?",
+            options: [
+                { e: "Rich businessmen", h: "अमीर व्यापारी", correct: false },
+                { e: "Urban IT professionals", h: "शहरी आईटी (IT) पेशेवर", correct: false },
+                { e: "Tribal (Adivasi) and rural communities", h: "आदिवासी और ग्रामीण समुदाय", correct: true },
+                { e: "Foreign tourists", h: "विदेशी पर्यटक", correct: false }
+            ],
+            expE: "Most natural resources (minerals, rivers, forests) are located in tribal areas, making indigenous people the primary victims of displacement.",
+            expH: "अधिकांश प्राकृतिक संसाधन (खनिज, नदियाँ, जंगल) आदिवासी क्षेत्रों में स्थित हैं, जिससे स्वदेशी लोग विस्थापन के प्राथमिक शिकार बन जाते हैं।"
+        },
+        {
+            qE: "The 'Development vs. Environment' conflict is best described as:",
+            qH: "'विकास बनाम पर्यावरण' संघर्ष को सबसे अच्छे तरीके से कैसे वर्णित किया जा सकता है?",
+            options: [
+                { e: "A debate on whether computers are better than books", h: "कंप्यूटर किताबों से बेहतर हैं या नहीं, इस पर एक बहस", correct: false },
+                { e: "The tension between building infrastructure for economic growth and protecting nature and local communities", h: "आर्थिक विकास के लिए बुनियादी ढांचे के निर्माण और प्रकृति तथा स्थानीय समुदायों की रक्षा के बीच का तनाव", correct: true },
+                { e: "A fight between two different political parties", h: "दो अलग-अलग राजनीतिक दलों के बीच लड़ाई", correct: false },
+                { e: "The choice between planting trees or flowers", h: "पेड़ या फूल लगाने के बीच का विकल्प", correct: false }
+            ],
+            expE: "It is the difficult balance between industrial/economic progress and the conservation of ecosystems and human rights.",
+            expH: "यह औद्योगिक/आर्थिक प्रगति और पारिस्थितिक तंत्र और मानवाधिकारों के संरक्षण के बीच एक कठिन संतुलन है।"
+        },
+        {
+            qE: "What does 'PAP' stand for in environmental and social policies?",
+            qH: "पर्यावरण और सामाजिक नीतियों में 'PAP' का क्या अर्थ है?",
+            options: [
+                { e: "Primary Action Plan", h: "प्राइमरी एक्शन प्लान", correct: false },
+                { e: "Project-Affected People", h: "परियोजना प्रभावित लोग (Project-Affected People)", correct: true },
+                { e: "Pollution Assessment Policy", h: "पॉल्यूशन असेसमेंट पॉलिसी", correct: false },
+                { e: "Public Awareness Program", h: "पब्लिक अवेयरनेस प्रोग्राम", correct: false }
+            ],
+            expE: "PAPs are the individuals or communities whose lives, lands, or livelihoods are negatively impacted by a development project.",
+            expH: "PAP वे व्यक्ति या समुदाय हैं जिनका जीवन, भूमि, या आजीविका किसी विकास परियोजना से नकारात्मक रूप से प्रभावित होती है।"
+        },
+        {
+            qE: "Which social movement became the symbol of the fight against displacement caused by large dams in India?",
+            qH: "भारत में बड़े बांधों के कारण होने वाले विस्थापन के खिलाफ लड़ाई का प्रतीक कौन सा सामाजिक आंदोलन बन गया?",
+            options: [
+                { e: "Chipko Movement", h: "चिपको आंदोलन", correct: false },
+                { e: "Narmada Bachao Andolan", h: "नर्मदा बचाओ आंदोलन", correct: true },
+                { e: "Silent Valley Movement", h: "साइलेंट वैली आंदोलन", correct: false },
+                { e: "Appiko Movement", h: "अप्पिको आंदोलन", correct: false }
+            ],
+            expE: "The Narmada Bachao Andolan (NBA) strongly fought for the proper rehabilitation of people displaced by the Sardar Sarovar Dam.",
+            expH: "नर्मदा बचाओ आंदोलन (NBA) ने सरदार सरोवर बांध से विस्थापित हुए लोगों के उचित पुनर्वास के लिए कड़ा संघर्ष किया।"
+        },
+        {
+            qE: "What is usually the biggest economic loss for a farmer who is displaced by a mining project?",
+            qH: "खनन परियोजना से विस्थापित होने वाले किसान को आमतौर पर सबसे बड़ा आर्थिक नुकसान क्या होता है?",
+            options: [
+                { e: "Loss of their television", h: "उनके टेलीविजन का नुकसान", correct: false },
+                { e: "Loss of their agricultural land and sustainable livelihood", h: "उनकी कृषि भूमि और स्थायी आजीविका का नुकसान", correct: true },
+                { e: "Loss of internet connection", h: "इंटरनेट कनेक्शन का नुकसान", correct: false },
+                { e: "Loss of a nearby shopping mall", h: "पास के शॉपिंग मॉल का नुकसान", correct: false }
+            ],
+            expE: "For rural communities, land is their only source of income and food. Losing it pushes them into severe poverty.",
+            expH: "ग्रामीण समुदायों के लिए, भूमि उनकी आय और भोजन का एकमात्र स्रोत है। इसे खोने से वे गंभीर गरीबी में धकेल दिए जाते हैं।"
+        },
+        {
+            qE: "Why is 'Cash Compensation' alone often considered a failure in rehabilitation?",
+            qH: "पुनर्वास में अकेले 'नकद मुआवजा' (Cash Compensation) अक्सर विफलता क्यों माना जाता है?",
+            options: [
+                { e: "Because cash is too heavy to carry", h: "क्योंकि नकदी ले जाने में बहुत भारी होती है", correct: false },
+                { e: "Because money runs out quickly, and rural people lack the skills to invest it or find jobs in cities", h: "क्योंकि पैसा जल्दी खत्म हो जाता है, और ग्रामीण लोगों में इसे निवेश करने या शहरों में नौकरी खोजने के कौशल की कमी होती है", correct: true },
+                { e: "Because people don't like money", h: "क्योंकि लोगों को पैसा पसंद नहीं है", correct: false },
+                { e: "Because it makes them too rich", h: "क्योंकि यह उन्हें बहुत अमीर बना देता है", correct: false }
+            ],
+            expE: "Without land for farming or skills for urban jobs, displaced people quickly spend the cash and end up in poverty.",
+            expH: "खेती के लिए भूमि या शहरी नौकरियों के लिए कौशल के बिना, विस्थापित लोग जल्दी से नकदी खर्च कर देते हैं और गरीबी में समाप्त हो जाते हैं।"
+        },
+        {
+            qE: "When indigenous tribes are displaced from forests to urban slums, what happens to their traditional knowledge?",
+            qH: "जब स्वदेशी जनजातियों को जंगलों से शहरी मलिन बस्तियों (slums) में विस्थापित किया जाता है, तो उनके पारंपरिक ज्ञान का क्या होता है?",
+            options: [
+                { e: "It becomes highly valued by IT companies", h: "आईटी कंपनियों द्वारा इसे अत्यधिक महत्व दिया जाता है", correct: false },
+                { e: "It is lost or becomes useless since their knowledge is tied to the forest ecosystem", h: "यह नष्ट हो जाता है या बेकार हो जाता है क्योंकि उनका ज्ञान वन पारिस्थितिकी तंत्र से जुड़ा होता है", correct: true },
+                { e: "They use it to build skyscrapers", h: "वे इसका इस्तेमाल गगनचुंबी इमारतें बनाने के लिए करते हैं", correct: false },
+                { e: "It makes them instantly wealthy", h: "यह उन्हें तुरंत अमीर बना देता है", correct: false }
+            ],
+            expE: "Tribal knowledge of medicinal plants and forest survival is irrelevant in a concrete city, causing a profound loss of cultural identity.",
+            expH: "औषधीय पौधों और जंगल के अस्तित्व का आदिवासी ज्ञान एक कंक्रीट शहर में अप्रासंगिक है, जिससे सांस्कृतिक पहचान का गहरा नुकसान होता है।"
+        },
+        {
+            qE: "What should be the ultimate goal of a 'National Rehabilitation Policy'?",
+            qH: "एक 'राष्ट्रीय पुनर्वास नीति' (National Rehabilitation Policy) का अंतिम लक्ष्य क्या होना चाहिए?",
+            options: [
+                { e: "To ensure that the living standards of displaced people improve or at least remain the same, without worsening", h: "यह सुनिश्चित करने के लिए कि विस्थापित लोगों का जीवन स्तर सुधरे या कम से कम वैसा ही रहे, खराब न हो", correct: true },
+                { e: "To displace as many people as possible", h: "जितना संभव हो उतने लोगों को विस्थापित करना", correct: false },
+                { e: "To save money for the government", h: "सरकार के लिए पैसे बचाना", correct: false },
+                { e: "To ignore the complaints of the poor", h: "गरीबों की शिकायतों को नजरअंदाज करना", correct: false }
+            ],
+            expE: "Ethical rehabilitation dictates that people sacrificing their land for national development should not suffer for it.",
+            expH: "नैतिक पुनर्वास यह तय करता है कि राष्ट्रीय विकास के लिए अपनी भूमि का बलिदान करने वाले लोगों को इसके लिए नुकसान नहीं उठाना चाहिए।"
+        },
+        {
+            qE: "Before starting a major development project (like a dam or mine), what study is legally required to balance development and environment?",
+            qH: "एक प्रमुख विकास परियोजना (जैसे बांध या खदान) शुरू करने से पहले, विकास और पर्यावरण को संतुलित करने के लिए कानूनी रूप से किस अध्ययन की आवश्यकता है?",
+            options: [
+                { e: "Astrological prediction", h: "ज्योतिषीय भविष्यवाणी", correct: false },
+                { e: "Environmental and Social Impact Assessment (EIA & SIA)", h: "पर्यावरण और सामाजिक प्रभाव आकलन (EIA और SIA)", correct: true },
+                { e: "Stock market analysis", h: "शेयर बाजार विश्लेषण", correct: false },
+                { e: "Marketing survey", h: "विपणन (Marketing) सर्वेक्षण", correct: false }
+            ],
+            expE: "EIA and SIA predict the ecological damage and the number of people who will be displaced, helping the government make informed decisions.",
+            expH: "EIA और SIA पारिस्थितिक क्षति और विस्थापित होने वाले लोगों की संख्या की भविष्यवाणी करते हैं, जिससे सरकार को सूचित निर्णय लेने में मदद मिलती है।"
+        },
+        {
+            qE: "Which of the following is a 'Psychological impact' of displacement?",
+            qH: "विस्थापन का 'मनोवैज्ञानिक प्रभाव' (Psychological impact) निम्नलिखित में से कौन सा है?",
+            options: [
+                { e: "Loss of a bank account", h: "बैंक खाते का नुकसान", correct: false },
+                { e: "Severe stress, trauma, and a sense of alienation from losing one's ancestral home", h: "गंभीर तनाव, आघात और अपना पैतृक घर खोने से अलगाव (alienation) की भावना", correct: true },
+                { e: "Getting a new job", h: "नई नौकरी मिलना", correct: false },
+                { e: "Learning how to use a computer", h: "कंप्यूटर का उपयोग करना सीखना", correct: false }
+            ],
+            expE: "Being forced out of the land where a family has lived for generations causes deep emotional trauma and loss of identity.",
+            expH: "जिस भूमि पर कोई परिवार पीढ़ियों से रह रहा हो, वहां से बाहर निकाले जाने से गहरा भावनात्मक आघात और पहचान का नुकसान होता है।"
+        },
+        {
+            qE: "A proper Resettlement colony MUST provide which basic amenities?",
+            qH: "एक उचित पुनर्वास (Resettlement) कॉलोनी में कौन सी बुनियादी सुविधाएं प्रदान की जानी चाहिए?",
+            options: [
+                { e: "Only a place to sleep", h: "केवल सोने की जगह", correct: false },
+                { e: "Drinking water, schools, healthcare centers, and sanitation", h: "पीने का पानी, स्कूल, स्वास्थ्य केंद्र और स्वच्छता", correct: true },
+                { e: "Free luxury cars", h: "मुफ्त लग्जरी कारें", correct: false },
+                { e: "A movie theater only", h: "केवल एक मूवी थियेटर", correct: false }
+            ],
+            expE: "Rehabilitation policies mandate that resettlement sites must have fully functional civic amenities before people are moved there.",
+            expH: "पुनर्वास नीतियां यह अनिवार्य करती हैं कि लोगों को वहां ले जाने से पहले पुनर्वास स्थलों पर पूरी तरह कार्यात्मक नागरिक सुविधाएं होनी चाहिए।"
+        },
+        {
+            qE: "Can a developed city be truly 'sustainable' if it destroys surrounding villages to get its water and electricity?",
+            qH: "क्या कोई विकसित शहर वास्तव में 'टिकाऊ' (sustainable) हो सकता है यदि वह अपना पानी और बिजली प्राप्त करने के लिए आसपास के गांवों को नष्ट कर दे?",
+            options: [
+                { e: "Yes, because cities are more important", h: "हाँ, क्योंकि शहर अधिक महत्वपूर्ण हैं", correct: false },
+                { e: "No, because sustainable development requires social equity and regional balance", h: "नहीं, क्योंकि सतत विकास के लिए सामाजिक समानता और क्षेत्रीय संतुलन की आवश्यकता होती है", correct: true },
+                { e: "Yes, if the city looks beautiful", h: "हाँ, यदि शहर सुंदर दिखता है", correct: false },
+                { e: "Yes, as long as it has free Wi-Fi", h: "हाँ, जब तक इसमें मुफ्त वाई-फाई है", correct: false }
+            ],
+            expE: "Development at the cost of rural destruction creates inequality and violates the core principles of sustainability.",
+            expH: "ग्रामीण विनाश की कीमत पर विकास असमानता पैदा करता है और स्थिरता के मूल सिद्धांतों का उल्लंघन करता है।"
+        },
+        {
+            qE: "Which of these is a common strategy to 'Rehabilitate' a displaced farmer?",
+            qH: "विस्थापित किसान का 'पुनर्वास/पुनर्स्थापन' (Rehabilitate) करने के लिए इनमें से कौन सी एक सामान्य रणनीति है?",
+            options: [
+                { e: "Giving them a free smartphone", h: "उन्हें एक मुफ्त स्मार्टफोन देना", correct: false },
+                { e: "Providing them with 'Land for Land' (fertile agricultural land in the new location)", h: "उन्हें 'भूमि के बदले भूमि' (नए स्थान पर उपजाऊ कृषि भूमि) प्रदान करना", correct: true },
+                { e: "Telling them to stop working", h: "उन्हें काम बंद करने के लिए कहना", correct: false },
+                { e: "Sending them to another country", h: "उन्हें दूसरे देश भेजना", correct: false }
+            ],
+            expE: "Providing 'Land for Land' is considered the best rehabilitation strategy for farmers, as it restores their traditional livelihood.",
+            expH: "किसानों के लिए 'भूमि के बदले भूमि' प्रदान करना सर्वोत्तम पुनर्वास रणनीति माना जाता है, क्योंकि यह उनकी पारंपरिक आजीविका को बहाल करता है।"
+        },
+        {
+            qE: "What does 'Eminent Domain' mean in relation to land acquisition?",
+            qH: "भूमि अधिग्रहण के संबंध में 'प्रख्यात डोमेन' (Eminent Domain) का क्या अर्थ है?",
+            options: [
+                { e: "The power of a king to rule", h: "शासन करने की राजा की शक्ति", correct: false },
+                { e: "The legal power of the government to take private land for public use (like building a highway)", h: "सार्वजनिक उपयोग (जैसे राजमार्ग बनाने) के लिए निजी भूमि लेने की सरकार की कानूनी शक्ति", correct: true },
+                { e: "A domain name on the internet", h: "इंटरनेट पर एक डोमेन नाम", correct: false },
+                { e: "The right of animals to own land", h: "जानवरों का जमीन पर अधिकार", correct: false }
+            ],
+            expE: "Governments use the principle of Eminent Domain to acquire land for development, but they are legally obligated to compensate and rehabilitate the owners.",
+            expH: "सरकारें विकास के लिए भूमि अधिग्रहण करने के लिए 'प्रख्यात डोमेन' (Eminent Domain) के सिद्धांत का उपयोग करती हैं, लेकिन वे कानूनी रूप से मालिकों को मुआवजा देने और उनका पुनर्वास करने के लिए बाध्य हैं।"
+        },
+        {
+            qE: "What is the key takeaway of the 'Development vs Environment' debate for business students?",
+            qH: "बिजनेस छात्रों के लिए 'विकास बनाम पर्यावरण' बहस का मुख्य निष्कर्ष (takeaway) क्या है?",
+            options: [
+                { e: "Businesses should avoid doing any development at all", h: "व्यवसायों को कोई भी विकास करने से बचना चाहिए", correct: false },
+                { e: "Development is necessary, but it must be inclusive, ethical, and minimize ecological and human damage", h: "विकास आवश्यक है, लेकिन यह समावेशी, नैतिक होना चाहिए और पारिस्थितिक व मानवीय क्षति को कम से कम करना चाहिए", correct: true },
+                { e: "Only the environment matters, businesses should close", h: "केवल पर्यावरण मायने रखता है, व्यापार बंद होना चाहिए", correct: false },
+                { e: "Profits are more important than people's lives", h: "मुनाफा लोगों के जीवन से ज्यादा महत्वपूर्ण है", correct: false }
+            ],
+            expE: "Sustainable development proves that economic growth and environmental/social protection can and must go hand in hand.",
+            expH: "सतत विकास यह साबित करता है कि आर्थिक विकास और पर्यावरण/सामाजिक सुरक्षा एक साथ चल सकते हैं और चलने चाहिए।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>

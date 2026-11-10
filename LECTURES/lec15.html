@@ -3,45 +3,700 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Lecture 15 Quiz - SIMT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --teal-light: #00b4db;
+            --teal-dark: #0083b0;
+            --black-main: #0f172a;
+            --black-card: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --bg-body: linear-gradient(135deg, #000000 0%, #0f2027 50%, #203a43 100%);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-light);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Sidebar Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: linear-gradient(160deg, #0a0a0a 0%, #004d40 100%);
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 10px; }
+
+        /* Home Button */
+        .home-btn {
+            display: flex;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--teal-light);
+            color: var(--black-main);
+            box-shadow: 0 0 15px rgba(0, 180, 219, 0.4);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .college-info {
             text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
         }
-        .container {
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+
+        .college-info h1 {
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(var(--teal-light), var(--teal-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.25rem;
+
+        .instructor-badge {
+            display: inline-block;
+            background: rgba(0, 180, 219, 0.15);
+            border: 1px solid var(--teal-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: var(--teal-light);
+        }
+
+        .score-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-title {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 180, 219, 0.5);
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active { border-color: var(--teal-light); color: #fff; box-shadow: 0 0 10px rgba(0,180,219,0.3); }
+        .dot.correct { background: var(--success); border-color: var(--success); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .dot.wrong { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Quiz Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .lecture-header {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--teal-dark);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .lecture-header h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .lecture-header p {
+            color: var(--teal-light);
+            font-size: 1rem;
+        }
+
+        .question-card {
+            background: var(--black-card);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid var(--teal-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .bilingual-text {
+            margin-bottom: 20px;
+        }
+
+        .text-eng {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .text-hin {
+            font-size: 1.05rem;
+            color: var(--teal-light);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 180, 219, 0.1);
+            border-color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .option-btn.correct-ans {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            opacity: 1;
+        }
+
+        .option-btn.wrong-ans {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            opacity: 1;
+        }
+
+        .opt-eng { font-weight: 500; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: var(--text-dim); }
+
+        /* Explanations */
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideDown 0.4s ease forwards;
+        }
+
+        .explanation-box.correct { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+        .explanation-box.wrong { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .exp-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; }
+        .explanation-box.correct .exp-title { color: var(--success); }
+        .explanation-box.wrong .exp-title { color: var(--danger); }
+
+        .exp-content-eng { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.5; }
+        .exp-content-hin { color: var(--teal-light); font-size: 0.95rem; line-height: 1.5; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { 
+                position: relative; 
+                top: 0; 
+                height: auto; 
+                flex: none; 
+                width: 100%; 
+                border-radius: 15px;
+                padding: 20px;
+            }
+            .progress-grid { grid-template-columns: repeat(10, 1fr); margin-top: 20px; }
+            .score-display { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 600px) {
+            .progress-grid { grid-template-columns: repeat(5, 1fr); }
+            .college-info h1 { font-size: 1.8rem; }
+            .text-eng { font-size: 1.05rem; }
+            .text-hin { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <p>This lecture material is currently under construction.</p>
-    </div>
+
+<div class="layout-container">
+    <!-- Tracker Sidebar -->
+    <aside class="sidebar">
+        <!-- Home Button -->
+        <a href="index.html" class="home-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Back to Main Course Page
+        </a>
+
+        <div class="college-info">
+            <h1>SIMT</h1>
+            <div style="font-size: 1.1rem; font-weight: 500; margin-top: 5px;">BBA / BCA 1st Year</div>
+            <div style="color: var(--text-dim); font-size: 0.9rem;">Environmental Science</div>
+            <div class="instructor-badge">Instructor: HARIS SAIFI</div>
+        </div>
+
+        <div class="score-section">
+            <div class="score-title">
+                स्कोर / Score
+            </div>
+            <div class="score-display">
+                <span id="current-score">0</span><span style="font-size: 1.5rem; color: var(--text-dim);">/20</span>
+            </div>
+        </div>
+
+        <div class="score-title" style="text-align: center; font-size: 1rem;">
+            प्रगति / Progress
+        </div>
+        <div class="progress-grid" id="progress-grid">
+            <!-- JS will generate 20 dots here -->
+        </div>
+    </aside>
+
+    <!-- Quiz Content -->
+    <main class="main-content">
+        
+        <div class="lecture-header">
+            <h2>Lecture 15: India as a Mega Diverse Nation</h2>
+            <p>Biogeographic Zones, Hotspots, and Flora/Fauna of India</p>
+        </div>
+
+        <div id="quiz-container" style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- JS will generate questions here -->
+        </div>
+    </main>
+</div>
+
+<script>
+    const quizData = [
+        {
+            qE: "What is a 'Megadiverse' country?",
+            qH: "'मेगाडाइवर्स' (Megadiverse) देश क्या होता है?",
+            options: [
+                { e: "A country with very little wildlife", h: "एक देश जिसमें बहुत कम वन्यजीव हैं", correct: false },
+                { e: "A country that harbors a high number of Earth's species and many endemic species", h: "एक ऐसा देश जहाँ पृथ्वी की प्रजातियों की एक बड़ी संख्या और कई स्थानिक प्रजातियाँ पाई जाती हैं", correct: true },
+                { e: "A country with the largest land area in the world", h: "दुनिया में सबसे बड़े भूमि क्षेत्र वाला देश", correct: false },
+                { e: "A country entirely covered by oceans", h: "पूरी तरह से महासागरों से ढका देश", correct: false }
+            ],
+            expE: "Megadiverse countries are a group of nations that contain the majority of Earth's species.",
+            expH: "मेगाडाइवर्स देश उन देशों का एक समूह है जिनमें पृथ्वी की अधिकांश प्रजातियां पाई जाती हैं।"
+        },
+        {
+            qE: "Is India recognized globally as one of the 17 Megadiverse countries?",
+            qH: "क्या भारत को विश्व स्तर पर 17 मेगाडाइवर्स देशों में से एक के रूप में मान्यता प्राप्त है?",
+            options: [
+                { e: "No, it does not have enough species", h: "नहीं, इसके पास पर्याप्त प्रजातियाँ नहीं हैं", correct: false },
+                { e: "Yes, it is one of the 17 megadiverse countries", h: "हाँ, यह 17 मेगाडाइवर्स देशों में से एक है", correct: true },
+                { e: "Only partially recognized", h: "केवल आंशिक रूप से मान्यता प्राप्त है", correct: false },
+                { e: "It used to be, but not anymore", h: "यह हुआ करता था, लेकिन अब नहीं", correct: false }
+            ],
+            expE: "Yes, India is extremely rich in biodiversity and officially recognized as one of the 17 megadiverse nations.",
+            expH: "हाँ, भारत जैव विविधता में अत्यंत समृद्ध है और आधिकारिक तौर पर 17 मेगाडाइवर्स राष्ट्रों में से एक के रूप में मान्यता प्राप्त है।"
+        },
+        {
+            qE: "India accounts for approximately what percentage of the world's total land area?",
+            qH: "विश्व के कुल भूमि क्षेत्रफल का लगभग कितना प्रतिशत भाग भारत के पास है?",
+            options: [
+                { e: "10.5%", h: "10.5%", correct: false },
+                { e: "5.1%", h: "5.1%", correct: false },
+                { e: "2.4%", h: "2.4%", correct: true },
+                { e: "15%", h: "15%", correct: false }
+            ],
+            expE: "India is geographically relatively small globally, covering only about 2.4% of the Earth's land surface.",
+            expH: "भौगोलिक दृष्टि से भारत विश्व स्तर पर अपेक्षाकृत छोटा है, जो पृथ्वी की सतह के केवल 2.4% हिस्से को कवर करता है।"
+        },
+        {
+            qE: "Despite having only 2.4% of the world's land, India harbors roughly what percentage of the recorded global biodiversity?",
+            qH: "दुनिया की केवल 2.4% भूमि होने के बावजूद, भारत में दर्ज वैश्विक जैव विविधता का लगभग कितना प्रतिशत है?",
+            options: [
+                { e: "1-2%", h: "1-2%", correct: false },
+                { e: "7-8%", h: "7-8%", correct: true },
+                { e: "25-30%", h: "25-30%", correct: false },
+                { e: "50%", h: "50%", correct: false }
+            ],
+            expE: "This high concentration (7-8%) is what makes India a megadiverse hotspot relative to its size.",
+            expH: "यह उच्च सांद्रता (7-8%) ही है जो भारत को उसके आकार के सापेक्ष मेगाडाइवर्स हॉटस्पॉट बनाती है।"
+        },
+        {
+            qE: "What is a 'Biodiversity Hotspot'?",
+            qH: "'जैव विविधता हॉटस्पॉट' (Biodiversity Hotspot) क्या है?",
+            options: [
+                { e: "A place where the temperature is very high", h: "एक ऐसा स्थान जहाँ तापमान बहुत अधिक होता है", correct: false },
+                { e: "A region with very high levels of biodiversity that is threatened by human destruction", h: "मानव विनाश के खतरे वाले अत्यधिक उच्च स्तर की जैव विविधता वाला क्षेत्र", correct: true },
+                { e: "An active volcano", h: "एक सक्रिय ज्वालामुखी", correct: false },
+                { e: "A zoo where exotic animals are kept", h: "एक चिड़ियाघर जहां विदेशी जानवरों को रखा जाता है", correct: false }
+            ],
+            expE: "To qualify as a hotspot, a region must have a high percentage of endemic species and have lost at least 70% of its original habitat.",
+            expH: "हॉटस्पॉट के रूप में अर्हता प्राप्त करने के लिए, किसी क्षेत्र में स्थानिक प्रजातियों का उच्च प्रतिशत होना चाहिए और उसका कम से कम 70% मूल आवास नष्ट हो चुका हो।"
+        },
+        {
+            qE: "How many recognized global Biodiversity Hotspots are present (partially or fully) in India?",
+            qH: "भारत में (आंशिक रूप से या पूरी तरह से) कितने मान्यता प्राप्त वैश्विक जैव विविधता हॉटस्पॉट मौजूद हैं?",
+            options: [
+                { e: "1", h: "1", correct: false },
+                { e: "4", h: "4", correct: true },
+                { e: "10", h: "10", correct: false },
+                { e: "25", h: "25", correct: false }
+            ],
+            expE: "The four hotspots are the Himalayas, Western Ghats, Indo-Burma region, and Sundaland (Nicobar Islands).",
+            expH: "चार हॉटस्पॉट हिमालय, पश्चिमी घाट, इंडो-बर्मा क्षेत्र और सुंडालैंड (निकोबार द्वीप समूह) हैं।"
+        },
+        {
+            qE: "Which of the following is a famous biodiversity hotspot located along the western coast of India?",
+            qH: "निम्नलिखित में से कौन सा प्रसिद्ध जैव विविधता हॉटस्पॉट भारत के पश्चिमी तट पर स्थित है?",
+            options: [
+                { e: "Eastern Ghats", h: "पूर्वी घाट", correct: false },
+                { e: "The Himalayas", h: "हिमालय", correct: false },
+                { e: "Western Ghats", h: "पश्चिमी घाट", correct: true },
+                { e: "Thar Desert", h: "थार मरुस्थल", correct: false }
+            ],
+            expE: "The Western Ghats are older than the Himalayas and possess exceptionally high levels of biological diversity and endemism.",
+            expH: "पश्चिमी घाट हिमालय से भी पुराने हैं और इनमें जैविक विविधता और स्थानिकता का असाधारण रूप से उच्च स्तर है।"
+        },
+        {
+            qE: "For the study of biodiversity, India is divided into how many major 'Biogeographic Zones'?",
+            qH: "जैव विविधता के अध्ययन के लिए, भारत को कितने प्रमुख 'जैव-भौगोलिक क्षेत्रों' (Biogeographic Zones) में विभाजित किया गया है?",
+            options: [
+                { e: "5", h: "5", correct: false },
+                { e: "10", h: "10", correct: true },
+                { e: "2", h: "2", correct: false },
+                { e: "50", h: "50", correct: false }
+            ],
+            expE: "India has 10 biogeographic zones, including the Trans-Himalayan, Desert, Semi-arid, Western Ghats, Deccan Peninsula, etc.",
+            expH: "भारत में 10 जैव-भौगोलिक क्षेत्र हैं, जिनमें ट्रांस-हिमालयन, मरुस्थल, अर्ध-शुष्क, पश्चिमी घाट, दक्कन प्रायद्वीप आदि शामिल हैं।"
+        },
+        {
+            qE: "The Western Ghats are exceptionally rich in which type of animals?",
+            qH: "पश्चिमी घाट किस प्रकार के जानवरों से असाधारण रूप से समृद्ध हैं?",
+            options: [
+                { e: "Polar bears", h: "ध्रुवीय भालू", correct: false },
+                { e: "Amphibians (like frogs) and endemic reptiles", h: "उभयचर (जैसे मेंढक) और स्थानिक सरीसृप", correct: true },
+                { e: "Penguins", h: "पेंगुइन", correct: false },
+                { e: "Camels", h: "ऊंट", correct: false }
+            ],
+            expE: "The Western Ghats have a massive variety of frogs and reptiles that are found nowhere else on Earth (endemic).",
+            expH: "पश्चिमी घाटों में मेंढकों और सरीसृपों की एक विशाल विविधता है जो पृथ्वी पर कहीं और नहीं पाई जाती है (स्थानिक)।"
+        },
+        {
+            qE: "What does the term 'Endemic species' mean in the context of India's biodiversity?",
+            qH: "भारत की जैव विविधता के संदर्भ में 'स्थानिक प्रजाति' (Endemic species) शब्द का क्या अर्थ है?",
+            options: [
+                { e: "Species that are dangerous to humans", h: "प्रजातियां जो इंसानों के लिए खतरनाक हैं", correct: false },
+                { e: "Species found ONLY in India and nowhere else in the world", h: "वे प्रजातियाँ जो केवल भारत में पाई जाती हैं और दुनिया में कहीं और नहीं", correct: true },
+                { e: "Species that have migrated from Africa", h: "प्रजातियां जो अफ्रीका से प्रवास कर आई हैं", correct: false },
+                { e: "Species that live in water", h: "पानी में रहने वाली प्रजातियां", correct: false }
+            ],
+            expE: "Endemism refers to the ecological state of a species being unique to a defined geographic location.",
+            expH: "स्थानिकता (Endemism) एक प्रजाति की पारिस्थितिक स्थिति को संदर्भित करता है जो एक परिभाषित भौगोलिक स्थान के लिए अद्वितीय है।"
+        },
+        {
+            qE: "India is the ONLY country in the world that is home to both Tigers and ________ in the wild.",
+            qH: "भारत दुनिया का एकमात्र ऐसा देश है जो जंगल में बाघों और ________ दोनों का घर है।",
+            options: [
+                { e: "Polar Bears", h: "ध्रुवीय भालू", correct: false },
+                { e: "Lions", h: "शेर (Lions)", correct: true },
+                { e: "Kangaroos", h: "कंगारू", correct: false },
+                { e: "Cheetahs (historically naturally occurring, though reintroduced recently)", h: "चीता", correct: false }
+            ],
+            expE: "India uniquely harbors both the Royal Bengal Tiger and the Asiatic Lion (found in Gir, Gujarat) in their natural habitats.",
+            expH: "भारत विशिष्ट रूप से अपने प्राकृतिक आवासों में रॉयल बंगाल टाइगर और एशियाई शेर (गिर, गुजरात में पाया जाने वाला) दोनों को आश्रय देता है।"
+        },
+        {
+            qE: "The 'One-horned Rhinoceros' is a highly protected species primarily found in which Indian National Park?",
+            qH: "'एक सींग वाला गैंडा' एक अत्यधिक संरक्षित प्रजाति है जो मुख्य रूप से किस भारतीय राष्ट्रीय उद्यान में पाई जाती है?",
+            options: [
+                { e: "Jim Corbett National Park", h: "जिम कॉर्बेट राष्ट्रीय उद्यान", correct: false },
+                { e: "Gir National Park", h: "गिर राष्ट्रीय उद्यान", correct: false },
+                { e: "Kaziranga National Park", h: "काजीरंगा राष्ट्रीय उद्यान", correct: true },
+                { e: "Sundarbans National Park", h: "सुंदरबन राष्ट्रीय उद्यान", correct: false }
+            ],
+            expE: "Kaziranga in Assam is famous worldwide for hosting two-thirds of the world's Great One-horned Rhinoceroses.",
+            expH: "असम में काजीरंगा दुनिया के दो-तिहाई महान एक सींग वाले गैंडों की मेजबानी के लिए दुनिया भर में प्रसिद्ध है।"
+        },
+        {
+            qE: "Which region in India is famous for the 'Sundarbans', the largest mangrove forest in the world?",
+            qH: "भारत का कौन सा क्षेत्र 'सुंदरबन' के लिए प्रसिद्ध है, जो दुनिया का सबसे बड़ा मैंग्रोव जंगल है?",
+            options: [
+                { e: "Kerala", h: "केरल", correct: false },
+                { e: "Gujarat", h: "गुजरात", correct: false },
+                { e: "West Bengal", h: "पश्चिम बंगाल", correct: true },
+                { e: "Rajasthan", h: "राजस्थान", correct: false }
+            ],
+            expE: "The Sundarbans delta in West Bengal is a unique ecosystem and a UNESCO World Heritage site.",
+            expH: "पश्चिम बंगाल में सुंदरबन डेल्टा एक अनूठा पारिस्थितिकी तंत्र और यूनेस्को विश्व धरोहर स्थल है।"
+        },
+        {
+            qE: "The Sundarbans mangrove forest is world-famous as the natural habitat of which iconic predator?",
+            qH: "सुंदरबन मैंग्रोव वन किस प्रतिष्ठित शिकारी के प्राकृतिक आवास के रूप में विश्व प्रसिद्ध है?",
+            options: [
+                { e: "Asiatic Lion", h: "एशियाई शेर", correct: false },
+                { e: "Snow Leopard", h: "हिम तेंदुआ", correct: false },
+                { e: "Royal Bengal Tiger", h: "रॉयल बंगाल टाइगर", correct: true },
+                { e: "Grizzly Bear", h: "ग्रिजली भालू", correct: false }
+            ],
+            expE: "It is the only mangrove forest in the world where tigers are found.",
+            expH: "यह दुनिया का एकमात्र मैंग्रोव वन है जहां बाघ पाए जाते हैं।"
+        },
+        {
+            qE: "India has a rich variety of naturally occurring medicinal plants. This rich biodiversity forms the foundation of which traditional Indian medicine system?",
+            qH: "भारत में प्राकृतिक रूप से पाए जाने वाले औषधीय पौधों की समृद्ध विविधता है। यह समृद्ध जैव विविधता किस पारंपरिक भारतीय चिकित्सा प्रणाली का आधार बनती है?",
+            options: [
+                { e: "Allopathy", h: "एलोपैथी", correct: false },
+                { e: "Ayurveda", h: "आयुर्वेद (Ayurveda)", correct: true },
+                { e: "Homeopathy", h: "होम्योपैथी", correct: false },
+                { e: "Acupuncture", h: "एक्यूपंक्चर", correct: false }
+            ],
+            expE: "Ayurveda heavily relies on India's diverse flora, using thousands of native plant species for natural healing.",
+            expH: "आयुर्वेद भारत की विविध वनस्पतियों पर बहुत अधिक निर्भर करता है, और प्राकृतिक उपचार के लिए हजारों देशी पौधों की प्रजातियों का उपयोग करता है।"
+        },
+        {
+            qE: "Which of these is a major 'Marine Biodiversity' rich area in India?",
+            qH: "इनमें से कौन सा भारत में एक प्रमुख 'समुद्री जैव विविधता' (Marine Biodiversity) समृद्ध क्षेत्र है?",
+            options: [
+                { e: "The Thar Desert", h: "थार मरुस्थल", correct: false },
+                { e: "The Himalayas", h: "हिमालय", correct: false },
+                { e: "The Gulf of Mannar / Andaman and Nicobar Islands", h: "मन्नार की खाड़ी / अंडमान और निकोबार द्वीप समूह", correct: true },
+                { e: "The Deccan Plateau", h: "दक्कन का पठार", correct: false }
+            ],
+            expE: "These regions are extremely rich in marine life, including coral reefs, sea turtles, and varied fish species.",
+            expH: "ये क्षेत्र प्रवाल भित्तियों (coral reefs), समुद्री कछुओं और विभिन्न मछली प्रजातियों सहित समुद्री जीवन में अत्यंत समृद्ध हैं।"
+        },
+        {
+            qE: "Which of the following is India's National Animal, representing its rich wildlife heritage?",
+            qH: "निम्नलिखित में से कौन भारत का राष्ट्रीय पशु है, जो इसकी समृद्ध वन्यजीव विरासत का प्रतिनिधित्व करता है?",
+            options: [
+                { e: "Elephant", h: "हाथी", correct: false },
+                { e: "Leopard", h: "तेंदुआ", correct: false },
+                { e: "Tiger", h: "बाघ (Tiger)", correct: true },
+                { e: "Lion", h: "शेर", correct: false }
+            ],
+            expE: "The Tiger (Panthera tigris) is the national animal of India, symbolizing power, strength, and grace.",
+            expH: "बाघ (पैंथेरा टाइग्रिस) भारत का राष्ट्रीय पशु है, जो शक्ति, ताकत और अनुग्रह का प्रतीक है।"
+        },
+        {
+            qE: "Which Biogeographic zone in India covers the largest land area?",
+            qH: "भारत में कौन सा जैव-भौगोलिक क्षेत्र सबसे बड़े भूमि क्षेत्र को कवर करता है?",
+            options: [
+                { e: "The Deccan Peninsula", h: "दक्कन का पठार (The Deccan Peninsula)", correct: true },
+                { e: "The Himalayas", h: "हिमालय", correct: false },
+                { e: "The Western Ghats", h: "पश्चिमी घाट", correct: false },
+                { e: "The Coasts", h: "तट (Coasts)", correct: false }
+            ],
+            expE: "The Deccan Peninsula is the largest zone, covering about 42% of the country's landmass.",
+            expH: "दक्कन का पठार सबसे बड़ा क्षेत्र है, जो देश के लगभग 42% भूभाग को कवर करता है।"
+        },
+        {
+            qE: "The 'Indo-Burma' region is globally recognized as:",
+            qH: "'इंडो-बर्मा' क्षेत्र को विश्व स्तर पर किस रूप में मान्यता प्राप्त है?",
+            options: [
+                { e: "The driest desert in the world", h: "दुनिया का सबसे सूखा रेगिस्तान", correct: false },
+                { e: "A Biodiversity Hotspot", h: "एक जैव विविधता हॉटस्पॉट", correct: true },
+                { e: "A dead zone with no life", h: "बिना जीवन वाला एक मृत क्षेत्र (Dead zone)", correct: false },
+                { e: "The highest mountain peak", h: "सबसे ऊँची पर्वत चोटी", correct: false }
+            ],
+            expE: "It is a biodiversity hotspot covering parts of North-East India, Myanmar, and other Southeast Asian countries.",
+            expH: "यह उत्तर-पूर्व भारत, म्यांमार और अन्य दक्षिण पूर्व एशियाई देशों के कुछ हिस्सों को कवर करने वाला एक जैव विविधता हॉटस्पॉट है।"
+        },
+        {
+            qE: "Protecting India's mega diversity is important primarily because:",
+            qH: "भारत की मेगा विविधता की रक्षा करना मुख्य रूप से क्यों महत्वपूर्ण है?",
+            options: [
+                { e: "It makes the country look good on maps", h: "यह देश को नक्शे पर अच्छा दिखाता है", correct: false },
+                { e: "It ensures ecological balance and provides essential food, medicine, and economic resources", h: "यह पारिस्थितिक संतुलन सुनिश्चित करता है और आवश्यक भोजन, दवा और आर्थिक संसाधन प्रदान करता है", correct: true },
+                { e: "It prevents other countries from visiting India", h: "यह अन्य देशों को भारत आने से रोकता है", correct: false },
+                { e: "It decreases the human population automatically", h: "यह मानव आबादी को स्वचालित रूप से कम करता है", correct: false }
+            ],
+            expE: "Biodiversity is the backbone of Indian agriculture, medicine (Ayurveda), and the overall survival of millions of people.",
+            expH: "जैव विविधता भारतीय कृषि, चिकित्सा (आयुर्वेद) और लाखों लोगों के समग्र अस्तित्व की रीढ़ है।"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const progressGrid = document.getElementById('progress-grid');
+    const scoreElement = document.getElementById('current-score');
+    let currentScore = 0;
+
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const qNum = index + 1;
+            
+            // 1. Create Progress Dot
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${qNum}`;
+            dot.innerText = qNum;
+            progressGrid.appendChild(dot);
+
+            // 2. Create Question Card
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${qNum}`;
+
+            // Header Texts (Eng/Hin)
+            const headerHTML = `
+                <div class="bilingual-text">
+                    <div class="text-eng">${qNum}. ${q.qE}</div>
+                    <div class="text-hin">${q.qH}</div>
+                </div>
+                <div class="options-grid" id="options-${qNum}"></div>
+                <div class="explanation-box" id="exp-${qNum}"></div>
+            `;
+            card.innerHTML = headerHTML;
+            quizContainer.appendChild(card);
+
+            // Options logic
+            const optionsContainer = document.getElementById(`options-${qNum}`);
+            const expBox = document.getElementById(`exp-${qNum}`);
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${String.fromCharCode(65 + optIndex)}. ${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                `;
+                
+                btn.onclick = () => handleAnswer(btn, qNum, opt.correct, q, optionsContainer, expBox);
+                optionsContainer.appendChild(btn);
+            });
+        });
+    }
+
+    function handleAnswer(selectedBtn, qNum, isCorrect, qData, optionsContainer, expBox) {
+        // Disable all buttons in this question
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const dot = document.getElementById(`dot-${qNum}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct-ans');
+            expBox.classList.add('correct');
+            expBox.innerHTML = `
+                <div class="exp-title">✓ Correct! / सही उत्तर!</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('correct');
+            currentScore++;
+            scoreElement.innerText = currentScore;
+        } else {
+            selectedBtn.classList.add('wrong-ans');
+            expBox.classList.add('wrong');
+            
+            // Find and highlight correct answer
+            allBtns.forEach((btn, idx) => {
+                if(qData.options[idx].correct) {
+                    btn.classList.add('correct-ans');
+                }
+            });
+
+            expBox.innerHTML = `
+                <div class="exp-title">✕ Incorrect / गलत उत्तर</div>
+                <div class="exp-content-eng">${qData.expE}</div>
+                <div class="exp-content-hin">${qData.expH}</div>
+            `;
+            dot.classList.add('wrong');
+        }
+
+        expBox.style.display = 'block';
+    }
+
+    // Render on load
+    window.onload = initQuiz;
+</script>
+
 </body>
 </html>
